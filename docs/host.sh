@@ -101,6 +101,9 @@ Next:
   • Sign in to the AI tools you want to offer on this server (claude, codex,
     grok — headless device-code login works); credentials never leave it.
   • In the console, create a space and click "Invite a Guest".
+  • If this server's firewall only allows listed ports (an INPUT chain ending in
+    REJECT/DROP), let spaces reach the AI gateway on the docker bridge:
+      sudo iptables -I INPUT -i docker0 -p tcp --dport 18930 -j ACCEPT
 EOF
 else
   cat <<'EOF'
