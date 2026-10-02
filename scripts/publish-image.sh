@@ -1,19 +1,28 @@
 #!/bin/bash
-# Build the space base image and push it to ghcr.io under the tag the daemon
-# pins (internal/dist BaseImage). Bump that tag whenever image/ changes, so
-# existing daemons keep pulling the image they were tested with.
+# Publish the space base image under the tag the daemon pins (internal/dist
+# BaseImage). The multi-arch build (linux/arm64 + linux/amd64) runs on GitHub
+# Actions (.github/workflows/space-image.yml) and pushes to ghcr.io with the
+# workflow's own token. Bump the tag whenever image/ changes, so existing
+# daemons keep pulling the image they were tested with.
 #
-#   scripts/publish-image.sh            build + push
-#   scripts/publish-image.sh --build    build only (local test as `-image <ref>`)
+#   scripts/publish-image.sh            run the workflow on master and wait for it
+#   scripts/publish-image.sh --force    same, overwriting an existing tag
+#   scripts/publish-image.sh --build    local arm64 build only (test with -image <ref>)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ref=$(sed -n 's/.*BaseImage = "\(.*\)"/\1/p' internal/dist/dist.go)
 [ -n "$ref" ] || { echo "publish-image: BaseImage not found in internal/dist/dist.go" >&2; exit 1; }
 
-container build --platform linux/arm64 -t "$ref" -f image/Dockerfile image/
-[ "${1:-}" = "--build" ] && { echo "built $ref"; exit 0; }
+if [ "${1:-}" = "--build" ]; then
+  container build --platform linux/arm64 -t "$ref" -f image/Dockerfile image/
+  echo "built $ref locally"
+  exit 0
+fi
 
-# ghcr.io needs a token with write:packages:  gh auth refresh -s write:packages
-gh auth token | container registry login ghcr.io --username "$(gh api user -q .login)" --password-stdin
-container image push "$ref"
-echo "pushed $ref — make the package public once: GitHub → Packages → cospace-base → Settings → Change visibility"
+force=false
+[ "${1:-}" = "--force" ] && force=true
+gh workflow run space-image.yml --ref master -f force="$force"
+sleep 5
+run=$(gh run list --workflow space-image.yml --limit 1 --json databaseId -q '.[0].databaseId')
+echo "publishing $ref — https://github.com/JingxuanKang/cospace/actions/runs/$run"
+gh run watch "$run" --exit-status

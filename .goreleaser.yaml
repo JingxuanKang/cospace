@@ -1,5 +1,5 @@
 # GoReleaser config for CoSpace — publishes everything to GitHub Releases:
-# cospace (guest, all platforms), cospaced (host, Apple Silicon), the relay,
+# cospace (guest, all platforms), cospaced (host: Apple Silicon macOS, Linux), the relay,
 # VERSION (read by the installers), and the guest cask in JingxuanKang/homebrew-tap.
 # Run through scripts/release.sh. Dry run without publishing anything:
 #   goreleaser release --snapshot --clean --skip=publish
@@ -23,8 +23,13 @@ builds:
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
     ldflags: ["-s -w -X main.version={{.Version}}"]
-    goos: [darwin]           # host daemon: Apple container needs Apple Silicon
-    goarch: [arm64]
+    # Host daemon: macOS needs Apple Silicon (Apple container); Linux hosts
+    # run on either architecture.
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: darwin
+        goarch: amd64
 
   - id: cospace-relay
     main: ./cmd/cospace-relay
