@@ -1,0 +1,1713 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>CoSpace · Host Console</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 13px;
+      color: #334155;
+      background: #F9FAFB;
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #F9FAFB 0%, #FDF8EF 45%, #F3F4F6 100%);
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:disabled { cursor: not-allowed; opacity: 0.58; }
+    a { color: #B45309; text-decoration: none; }
+    a:hover { color: #92400E; text-decoration: underline; }
+    :focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; }
+    .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .grad-text {
+      background: linear-gradient(90deg, #B45309 0%, #F59E0B 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94A3B8;
+    }
+
+    .app-shell {
+      width: 100vw;
+      height: 100vh;
+      min-height: 620px;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(135deg, #F9FAFB 0%, #FDF8EF 45%, #F3F4F6 100%);
+    }
+    .backdrop-wash, .backdrop-grid, .gold-orb { position: absolute; pointer-events: none; z-index: -1; }
+    .backdrop-wash {
+      inset: 0;
+      background:
+        radial-gradient(at 38% 18%, rgba(245, 158, 11, 0.07) 0px, transparent 50%),
+        radial-gradient(at 82% 2%, rgba(251, 191, 36, 0.05) 0px, transparent 45%),
+        radial-gradient(at 0% 55%, rgba(245, 158, 11, 0.04) 0px, transparent 50%);
+    }
+    .backdrop-grid {
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(180, 83, 9, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 83, 9, 0.035) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+    .orb-top {
+      top: -160px; right: -120px; width: 380px; height: 380px; border-radius: 50%;
+      background: rgba(245, 158, 11, 0.14); filter: blur(90px);
+    }
+    .orb-bottom {
+      bottom: -180px; left: 180px; width: 420px; height: 420px; border-radius: 50%;
+      background: rgba(217, 119, 6, 0.08); filter: blur(100px);
+    }
+
+    .sidebar {
+      width: 248px;
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 14px 18px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.72);
+      border-right: 1px solid rgba(15, 23, 42, 0.07);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      position: relative;
+      z-index: 2;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 24px; }
+    .logo-tile {
+      width: 38px; height: 38px; border-radius: 12px; flex: none;
+      display: flex; align-items: center; justify-content: center; color: #FFFBEB;
+      background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    .brand-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .wordmark { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+    .brand-kicker { font-size: 10.5px; color: #94A3B8; letter-spacing: 0.06em; }
+    .nav-scroll { min-height: 0; overflow: auto; scrollbar-width: thin; }
+    .nav-item {
+      width: 100%; height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
+      border: 0; border-radius: 12px; color: #475569; background: transparent;
+      font-size: 13.5px; font-weight: 500; text-align: left; cursor: pointer; transition: all 0.2s ease;
+    }
+    .nav-item:hover { background: rgba(15, 23, 42, 0.04); }
+    .nav-item.active { color: #B45309; background: rgba(245, 158, 11, 0.13); }
+    .nav-item .space-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-label { padding: 20px 12px 8px; }
+    .nav-spaces { display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-spacer { flex: 1; min-height: 18px; }
+    .host-state {
+      display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 14px 10px 0;
+      color: #64748B; font-size: 11.5px;
+    }
+    .host-state span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .content-shell {
+      flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 1;
+    }
+    .battery-banner {
+      flex: none; display: flex; align-items: center; gap: 10px; padding: 9px 32px;
+      color: #92400E; background: rgba(245, 158, 11, 0.1);
+      border-bottom: 1px solid rgba(217, 119, 6, 0.18); font-size: 12.5px;
+    }
+    .battery-banner .banner-copy { flex: 1; }
+    .image-banner {
+      flex: none; display: flex; align-items: center; gap: 14px; padding: 10px 32px;
+      color: #78350F; background: rgba(245, 158, 11, 0.08);
+      border-bottom: 1px solid rgba(217, 119, 6, 0.16); font-size: 12.5px;
+    }
+    .image-banner .banner-copy { flex: 1; }
+    .image-banner.error { color: #991B1B; background: rgba(239, 68, 68, 0.07); border-bottom-color: rgba(220, 38, 38, 0.18); }
+    .image-progress { width: 180px; height: 6px; border-radius: 3px; background: rgba(217, 119, 6, 0.15); overflow: hidden; flex: none; }
+    .image-progress span { display: block; height: 100%; background: linear-gradient(90deg, #F59E0B, #D97706); transition: width .4s ease; }
+    .content-scroll { flex: 1; overflow: auto; }
+    .page { max-width: 1020px; margin: 0 auto; padding: 36px 40px 48px; }
+    .detail-page { max-width: 980px; }
+    .page-title { margin: 0; color: #0F172A; font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+    .page-subtitle { margin: 5px 0 0; color: #64748B; font-size: 13px; }
+
+    .card {
+      background: #FFFFFF; border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .lift { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+    .lift:hover {
+      transform: translateY(-2px); border-color: rgba(245, 158, 11, 0.35);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 0 24px rgba(245, 158, 11, 0.08);
+    }
+    .btn-gold {
+      height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 18px;
+      border: none; border-radius: 10px; color: #451A03;
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease-out;
+    }
+    .btn-gold:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45); }
+    .btn-gold:active:not(:disabled), .btn-ghost:active:not(:disabled) { transform: scale(0.98); }
+    .btn-danger {
+      height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 18px;
+      border: none; border-radius: 10px; color: #FFFFFF;
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease-out;
+    }
+    .btn-danger:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4); }
+    .btn-danger:active:not(:disabled) { transform: scale(0.98); }
+    .btn-danger:disabled { opacity: 0.6; cursor: default; }
+    .btn-ghost {
+      height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px;
+      border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 10px; color: #334155; background: #FFFFFF;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s ease-out;
+    }
+    .btn-ghost:hover:not(:disabled) { background: #F8FAFC; border-color: rgba(15, 23, 42, 0.2); }
+    .text-button {
+      min-height: 30px; padding: 6px 8px; border: none; border-radius: 8px;
+      color: inherit; background: none; font-size: 13px; cursor: pointer; transition: background 0.15s ease;
+    }
+    .text-button:hover:not(:disabled) { background: rgba(15, 23, 42, 0.05); }
+    .danger { color: #DC2626; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #CBD5E1; color: #CBD5E1; }
+    .dot.awake { background: #10B981; color: #10B981; }
+    .pulse { animation: pulseDot 2s ease-in-out infinite; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }
+    .summary-card { min-width: 0; padding: 18px 20px; display: flex; align-items: center; gap: 14px; }
+    .summary-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .summary-label { color: #64748B; font-size: 11.5px; font-weight: 500; }
+    .summary-value { color: #0F172A; font-size: 21px; font-weight: 700; white-space: nowrap; }
+    .summary-unit { color: #94A3B8; font-size: 12px; font-weight: 500; }
+    .summary-note { color: #94A3B8; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tile { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+    .sponsor-section { margin-top: 16px; }
+    .sponsor-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 10px; }
+    .sponsor-heading-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .sponsor-caption { color: #94A3B8; font-size: 11px; }
+    .sponsor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .provider-card {
+      position: relative; min-width: 0; min-height: 118px; overflow: hidden; padding: 16px;
+      border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .provider-card::after {
+      content: ""; position: absolute; width: 92px; height: 92px; top: -48px; right: -34px; border-radius: 50%;
+      background: var(--provider-glow); filter: blur(2px); pointer-events: none;
+    }
+    .provider-card:hover { transform: translateY(-1px); border-color: rgba(15, 23, 42, 0.14); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07); }
+    .provider-card.active { border-color: rgba(5, 150, 105, 0.24); box-shadow: 0 8px 26px rgba(5, 150, 105, 0.08); }
+    .provider-card.anthropic { --provider-glow: rgba(204, 120, 92, 0.13); }
+    .provider-card.openai { --provider-glow: rgba(16, 163, 127, 0.12); }
+    .provider-card.xai { --provider-glow: rgba(15, 23, 42, 0.08); }
+    .provider-top { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .provider-logo {
+      width: 42px; height: 42px; flex: none; display: flex; align-items: center; justify-content: center;
+      border-radius: 13px; border: 1px solid rgba(15, 23, 42, 0.05);
+    }
+    .provider-logo svg { width: 24px; height: 24px; display: block; }
+    .provider-logo img { width: 29px; height: 29px; display: block; border-radius: 8px; }
+    .provider-logo.anthropic { color: #9A5139; background: #F8ECE7; }
+    .provider-logo.openai { color: #0F766E; background: #E8F7F2; }
+    .provider-logo.xai { background: #F6F7F8; }
+    .provider-copy { position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; margin-top: 12px; }
+    .provider-name { color: #172033; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+    .provider-product { margin-top: 1px; color: #94A3B8; font-size: 11px; }
+    .provider-status { display: flex; align-items: center; gap: 6px; margin-top: 9px; color: #64748B; font-size: 11.5px; line-height: 1.35; }
+    .provider-status-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #CBD5E1; }
+    .provider-status.active { color: #047857; }
+    .provider-status.active .provider-status-dot { background: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.10); }
+    .provider-status.unavailable { color: #94A3B8; }
+    .sponsor-switch {
+      position: relative; z-index: 2; width: 40px; height: 23px; flex: none; border: 0; border-radius: 12px; padding: 2px;
+      box-sizing: border-box; cursor: pointer; transition: background 0.25s ease;
+      background: rgba(15, 23, 42, 0.15);
+    }
+    .sponsor-switch.on { background: linear-gradient(135deg, #F59E0B, #D97706); }
+    .sponsor-switch.unavailable { background: rgba(15, 23, 42, 0.15); opacity: 0.62; }
+    .sponsor-knob {
+      width: 19px; height: 19px; display: block; border-radius: 50%; background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3); transition: margin 0.25s ease; margin-left: 0;
+    }
+    .sponsor-switch.on .sponsor-knob { margin-left: 17px; }
+    .space-list { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+    .space-card {
+      width: 100%; min-height: 79px; display: grid;
+      grid-template-columns: 9px minmax(150px, 220px) 90px 70px 120px minmax(100px, 1fr) auto 15px;
+      align-items: center; gap: 18px; padding: 20px 24px; color: inherit; text-align: left; cursor: pointer;
+    }
+    .space-identity { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .space-identity strong { overflow: hidden; color: #0F172A; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+    .awake-text { color: #059669; }
+    .asleep-text { color: #94A3B8; }
+    .space-meta { color: #64748B; font-size: 12.5px; white-space: nowrap; }
+    .created-meta { overflow: hidden; color: #94A3B8; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+    .space-toggle { height: 30px; font-size: 12.5px; }
+    .empty-card { padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+    .empty-icon {
+      width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      color: #CBD5E1; background: rgba(15, 23, 42, 0.04);
+    }
+    .empty-title { color: #334155; font-size: 15px; font-weight: 600; }
+    .empty-copy { color: #94A3B8; font-size: 13px; }
+
+    .detail-head { display: flex; align-items: center; gap: 16px; }
+    .detail-title { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .detail-name { overflow: hidden; color: #0F172A; font-size: 25px; font-weight: 700; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
+    .detail-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px;
+      border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 999px;
+      background: rgba(255, 255, 255, 0.8); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      font-size: 12px; font-weight: 500;
+    }
+    .detail-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; margin-top: 26px; align-items: start; }
+    .detail-column { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+    .hair-row {
+      min-height: 48px; display: flex; align-items: center; gap: 14px; padding: 0 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    }
+    .hair-row:last-child { border-bottom: none; }
+    .card-heading { color: #0F172A; font-size: 13.5px; font-weight: 600; }
+    .guest-count { margin-left: auto; color: #94A3B8; font-size: 12px; }
+    .guest-name { width: 96px; overflow: hidden; color: #1E293B; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .guest-fingerprint { min-width: 0; flex: 1; overflow: hidden; color: #94A3B8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .guest-added { width: 92px; color: #64748B; font-size: 12px; white-space: nowrap; }
+    .guest-row {
+      display: grid; grid-template-columns: minmax(72px, 96px) minmax(110px, 1fr) 112px auto;
+      column-gap: 14px;
+    }
+    .guest-row .guest-name, .guest-row .guest-added { width: auto; }
+    .guest-row .guest-added { text-align: right; }
+    .guest-revoke {
+      min-width: 72px; min-height: 28px; padding: 4px 10px; border: 1px solid rgba(220, 38, 38, 0.16);
+      color: #B91C1C; background: rgba(254, 242, 242, 0.68); white-space: nowrap;
+    }
+    .guest-revoke:hover:not(:disabled) { color: #991B1B; background: #FEF2F2; border-color: rgba(220, 38, 38, 0.28); }
+    .chart-card { padding: 20px 24px; }
+    .chart-head { display: flex; align-items: baseline; gap: 12px; }
+    .chart-total { margin-left: auto; color: #64748B; font-size: 12px; }
+    .chart { height: 104px; display: flex; align-items: flex-end; gap: 4px; margin-top: 18px; }
+    .bar {
+      flex: 1; min-width: 3px; min-height: 4px; position: relative; border-radius: 3px 3px 0 0;
+      background: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      transition: filter 0.16s ease, transform 0.16s ease;
+    }
+    .bar.zero { background: #E2E8F0; }
+    .bar:hover, .bar:focus-visible { filter: brightness(1.06); transform: scaleY(1.025); transform-origin: bottom; }
+    .bar .tip {
+      display: none; position: absolute; bottom: 100%; left: 50%; z-index: 2; transform: translateX(-50%);
+      margin-bottom: 7px; padding: 3px 8px; border-radius: 6px; color: #F8FAFC; background: #0F172A;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2); font-size: 11px; white-space: nowrap;
+    }
+    .bar:hover .tip, .bar:focus .tip { display: block; }
+    .chart-axis { display: flex; justify-content: space-between; margin-top: 9px; color: #CBD5E1; font-size: 11px; }
+
+    .access-card, .resources-card { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .terminal {
+      overflow: hidden; border-radius: 14px; color: #E2E8F0;
+      background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+      box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .terminal-head {
+      min-height: 34px; display: flex; align-items: center; gap: 7px; padding: 7px 15px;
+      background: rgba(30, 41, 59, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .traffic-light { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+    .terminal-title { margin-left: 6px; overflow: hidden; color: #64748B; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .terminal-body { padding: 14px 16px; overflow-x: auto; font-size: 12px; line-height: 1.9; scrollbar-width: thin; }
+    .prompt { color: #22C55E; font-weight: 700; }
+    .command-name { color: #38BDF8; }
+    .command-flag { color: #A78BFA; }
+    .command-value { color: #E2E8F0; }
+    .command-accent { color: #FBBF24; font-weight: 600; }
+    .access-note { color: #64748B; font-size: 12px; }
+    .host-key { display: flex; flex-direction: column; gap: 5px; padding-top: 13px; border-top: 1px solid rgba(15, 23, 42, 0.06); }
+    .host-key-value { overflow-wrap: anywhere; color: #94A3B8; font-size: 11px; line-height: 1.5; }
+    .resource-block { display: flex; flex-direction: column; gap: 7px; }
+    .resource-line { display: flex; justify-content: space-between; gap: 12px; color: #64748B; font-size: 12.5px; }
+    .resource-line span:last-child { color: #334155; text-align: right; }
+    .space-provider-list { display: flex; flex-direction: column; }
+    .space-provider-row { min-height: 49px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(15, 23, 42, 0.06); }
+    .space-provider-row:last-child { border-bottom: 0; }
+    .space-provider-logo { width: 30px; height: 30px; border-radius: 9px; }
+    .space-provider-logo svg { width: 17px; height: 17px; }
+    .space-provider-logo img { width: 21px; height: 21px; border-radius: 6px; }
+    .space-provider-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+    .space-provider-name { color: #334155; font-size: 12.5px; font-weight: 600; }
+    .space-provider-state { color: #94A3B8; font-size: 10.5px; }
+    .space-provider-state.active { color: #059669; }
+    .meter { height: 5px; overflow: hidden; border-radius: 3px; background: rgba(15, 23, 42, 0.07); }
+    .meter-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #D97706, #FBBF24); }
+    .cpu-line { padding-top: 14px; border-top: 1px solid rgba(15, 23, 42, 0.06); }
+    .detail-footer {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin-top: 22px; padding-top: 16px; border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .field {
+      width: 100%; height: 38px; padding: 0 12px; border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 10px; outline: none; color: #0F172A; background: #FFFFFF; font-size: 13px; transition: all 0.2s ease;
+    }
+    .field:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+    .field::placeholder { color: #94A3B8; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .segmented { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: rgba(15, 23, 42, 0.05); }
+    .segment {
+      height: 30px; flex: 1; border: none; border-radius: 8px; color: #64748B; background: none;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+    }
+    .segment.active { color: #B45309; background: #FFFFFF; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); font-weight: 600; }
+
+    .modal-backdrop {
+      position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: rgba(15, 23, 42, 0.35); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+    }
+    .modal {
+      width: min(520px, 100%); max-height: calc(100vh - 48px); overflow: auto; padding: 26px 28px;
+      display: flex; flex-direction: column; gap: 15px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    }
+    .create-modal { width: min(440px, 100%); gap: 16px; }
+    .delete-modal { width: min(440px, 100%); gap: 14px; }
+    .access-cmd-row {
+      display: flex; align-items: center; gap: 7px; background: #0B1220; border-radius: 10px;
+      padding: 9px 9px 9px 14px; font-size: 12.5px; color: #E2E8F0;
+    }
+    .access-cmd-row .terminal-copy { margin-left: auto; }
+    .modal-head { display: flex; align-items: center; gap: 12px; }
+    .modal-title { min-width: 0; color: #0F172A; font-size: 17px; font-weight: 700; }
+    .modal-close { margin-left: auto; color: #94A3B8; }
+    .modal-copy { margin: 0; color: #64748B; font-size: 13px; line-height: 1.55; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+    .invite-link-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 8px 12px; border-radius: 10px;
+      background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.22);
+    }
+    .invite-link-label { flex: 1 0 100%; color: #64748B; font-size: 12px; }
+    .invite-link-url { flex: 1; min-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #B45309; font-size: 12px; }
+    .invite-link-row .terminal-copy { border-color: rgba(180, 83, 9, 0.3); color: #B45309; }
+    .invite-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .invite-meta .pill { color: #64748B; font-size: 11px; }
+    .invite-meta .btn-gold { margin-left: auto; }
+    .terminal-copy {
+      margin-left: auto; height: 24px; padding: 0 10px; border-color: rgba(255, 255, 255, 0.15);
+      color: #E2E8F0; background: rgba(255, 255, 255, 0.08); box-shadow: none; font-size: 11.5px;
+    }
+    .terminal-copy:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.12); }
+    .invite-terminal-body { padding: 15px 16px; font-size: 12.5px; line-height: 2; }
+    .invite-step { margin-bottom: 10px; }
+    .invite-step:last-of-type { margin-bottom: 2px; }
+    .invite-step-label { font-size: 11px; letter-spacing: 0.02em; }
+    .invite-line { display: flex; align-items: center; gap: 12px; }
+    .invite-line .cmd { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+    .invite-line .terminal-copy { margin-left: 0; }
+    .terminal-comment { color: #64748B; font-style: italic; }
+    .typed-row { display: flex; width: max-content; min-width: 100%; white-space: nowrap; }
+    .typed-command {
+      width: 0; display: inline-block; overflow: hidden; white-space: nowrap;
+      animation: typeCommand 1.2s steps(var(--chars), end) 0.7s forwards;
+    }
+    .cursor-blink { display: inline-block; width: 8px; height: 15px; background: #34D399; vertical-align: text-bottom; animation: blink 1s step-end infinite; }
+    .loading-line { display: flex; align-items: center; gap: 9px; color: #94A3B8; }
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(245, 158, 11, 0.22); border-top-color: #F59E0B;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    .skeleton { overflow: hidden; position: relative; background: rgba(148, 163, 184, 0.12); }
+    .skeleton::after {
+      content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent); animation: shimmer 1.4s ease-in-out infinite;
+    }
+    .skeleton-line { width: 58%; height: 13px; border-radius: 7px; }
+    .skeleton-title { width: 150px; height: 31px; border-radius: 9px; }
+    .toast {
+      position: fixed; right: 22px; bottom: 22px; z-index: 30; max-width: min(390px, calc(100vw - 44px));
+      display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
+      border: 1px solid rgba(220, 38, 38, 0.15); border-radius: 11px; color: #7F1D1D;
+      background: rgba(255, 255, 255, 0.96); box-shadow: 0 14px 38px rgba(15, 23, 42, 0.16), 0 0 18px rgba(220, 38, 38, 0.05);
+      font-size: 12.5px; line-height: 1.45; animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .toast-icon { color: #DC2626; flex: none; margin-top: 1px; }
+    .toast-message { flex: 1; overflow-wrap: anywhere; }
+    .toast-close { min-height: 20px; padding: 0 3px; color: #94A3B8; }
+
+    .fade-up { animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.12s; } .d3 { animation-delay: 0.19s; }
+    .d4 { animation-delay: 0.26s; } .d5 { animation-delay: 0.33s; }
+    .scale-in { animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .line-in { opacity: 0; animation: lineIn 0.45s ease forwards; }
+    .l1 { animation-delay: 0.25s; } .l2 { animation-delay: 0.7s; } .l3 { animation-delay: 1.15s; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.94) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes lineIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; } 50% { opacity: 0.65; box-shadow: 0 0 8px 2px currentColor; } }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes typeCommand { from { width: 0; } to { width: var(--typed-width); } }
+
+    @media (max-width: 1120px) {
+      .space-card { grid-template-columns: 9px minmax(140px, 1fr) 80px 66px 110px auto 15px; }
+      .created-meta { display: none; }
+      .page { padding-left: 28px; padding-right: 28px; }
+    }
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .app-shell { min-height: 100vh; height: auto; overflow: visible; }
+      .sidebar { width: 210px; min-height: 100vh; position: sticky; top: 0; align-self: flex-start; }
+      .content-shell, .content-scroll { overflow: visible; }
+      .summary-grid, .detail-grid { grid-template-columns: 1fr; }
+      .sponsor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .space-card { grid-template-columns: 9px minmax(130px, 1fr) 80px 66px auto 15px; }
+      .space-tokens { display: none; }
+    }
+    @media (max-width: 680px) {
+      .app-shell { display: block; }
+      .sidebar { width: 100%; min-height: 0; position: relative; padding-bottom: 14px; border-right: 0; border-bottom: 1px solid rgba(15, 23, 42, 0.07); }
+      .brand { padding-bottom: 14px; }
+      .nav-scroll { display: flex; gap: 6px; overflow-x: auto; }
+      .nav-label, .sidebar-spacer, .host-state { display: none; }
+      .nav-spaces { display: contents; }
+      .nav-item { width: auto; flex: none; padding: 0 12px; }
+      .sidebar > .btn-gold { position: absolute; top: 23px; right: 14px; width: auto !important; }
+      .battery-banner { padding: 9px 16px; align-items: flex-start; }
+      .page { padding: 28px 18px 40px; }
+      .sponsor-heading { display: block; }
+      .sponsor-caption { display: block; }
+      .sponsor-grid { grid-template-columns: 1fr; }
+      .detail-head { align-items: flex-start; flex-wrap: wrap; }
+      .detail-actions { width: 100%; margin-left: 0; }
+      .detail-actions .btn-gold { flex: 1; }
+      .space-card { grid-template-columns: 9px minmax(0, 1fr) auto 15px; gap: 12px; padding: 17px 18px; }
+      .space-guests, .space-memory, .space-tokens { display: none; }
+      .hair-row { flex-wrap: wrap; gap: 5px 10px; padding: 10px 16px; }
+      .guest-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px; }
+      .guest-row .guest-name { grid-column: 1; grid-row: 1; width: auto; }
+      .guest-row .guest-revoke { grid-column: 2; grid-row: 1; }
+      .guest-row .guest-added { grid-column: 1; grid-row: 2; width: auto; text-align: left; }
+      .guest-row .guest-fingerprint { grid-column: 1 / -1; grid-row: 3; }
+      .modal-backdrop { position: fixed; padding: 14px; }
+      .modal { padding: 22px 20px; }
+      .invite-meta .btn-gold { width: 100%; margin-left: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+      .fade-up, .scale-in, .line-in, .toast, .typed-command { animation-duration: 1ms; animation-delay: 0ms; }
+      .typed-command { width: var(--typed-width); }
+      .pulse, .cursor-blink, .spinner, .skeleton::after { animation: none; }
+      .lift, .btn-gold, .btn-ghost, .bar { transition-duration: 1ms; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    "use strict";
+
+    const app = document.getElementById("app");
+    const batterySessionKey = "cospace:battery-warning-dismissed";
+
+    function sessionBatteryDismissed() {
+      try { return sessionStorage.getItem(batterySessionKey) === "1"; }
+      catch (_) { return false; }
+    }
+
+    const state = {
+      host: null,
+      spaces: [],
+      templates: [],
+      codexOptions: { routes: [], models: [] },
+      templateSavedFor: null,
+      sponsor: null,
+      loaded: false,
+      loading: true,
+      selected: "all",
+      usage: [],
+      usageSpace: null,
+      usageLoading: false,
+      modal: null,
+      inviteSpace: null,
+      invite: null,
+      inviteLoading: false,
+      invitePlatform: "posix",
+      copied: null,
+      newSpace: { name: "", memory_gb: 2, cpus: 4, template: "" },
+      deleteTarget: null,
+      confirmRevoke: null,
+      busy: null,
+      batteryDismissed: sessionBatteryDismissed(),
+      toast: null,
+      animate: true
+    };
+
+    let overviewRequest = null;
+    let toastTimer = null;
+
+    const icons = {
+      key: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="14" r="4"></circle><path d="M11 11 L20 2"></path><path d="M17 5 L20 8"></path><path d="M14.5 7.5 L16.5 9.5"></path></svg>',
+      grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg>',
+      plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5 L12 19"></path><path d="M5 12 L19 12"></path></svg>',
+      bolt: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 L4 14 L11 14 L10 22 L20 9 L13 9 Z"></path></svg>',
+      space: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 11 L20 11"></path><path d="M9 5 L9 11"></path></svg>',
+      users: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20 C3 16 6 14 9 14 C12 14 15 16 15 20"></path><path d="M16 5 C18.5 5.5 19 9 17 10.5"></path><path d="M17 14 C20 14.5 21 16.5 21 19"></path></svg>',
+      token: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 L4 14 L11 14 L10 22 L20 9 L13 9 Z"></path></svg>',
+      chevron: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 L15 12 L9 18"></path></svg>',
+      invite: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20 C3 16 6 14.5 9 14.5 C12 14.5 15 16 15 20"></path><path d="M18 8 L18 14"></path><path d="M15 11 L21 11"></path></svg>',
+      close: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>',
+      alert: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 L12 13"></path><path d="M12 17 L12.01 17"></path></svg>'
+    };
+
+    // Exact provider marks are inlined so the local console has no external asset dependency.
+    const providerLogos = {
+      anthropic: '<svg role="img" viewBox="0 0 24 24" fill="currentColor" aria-labelledby="anthropic-logo-title"><title id="anthropic-logo-title">Anthropic</title><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"></path></svg>',
+      openai: '<svg role="img" viewBox="0 0 100 100" fill="currentColor" aria-labelledby="openai-logo-title"><title id="openai-logo-title">OpenAI</title><path d="M38.355 36.52v-9.415c0-.793.297-1.388.99-1.784l18.93-10.902c2.578-1.486 5.65-2.18 8.82-2.18 11.894 0 19.426 9.218 19.426 19.029 0 .694 0 1.486-.1 2.28L66.799 22.05c-1.189-.694-2.379-.694-3.568 0L38.355 36.52Zm44.202 36.67V50.694c0-1.388-.596-2.38-1.785-3.073L55.897 33.15l8.126-4.658c.694-.396 1.289-.396 1.982 0l18.93 10.902c5.452 3.172 9.118 9.91 9.118 16.452 0 7.531-4.46 14.47-11.496 17.344Zm-50.05-19.82-8.127-4.757c-.693-.396-.99-.99-.99-1.784V25.025c0-10.605 8.126-18.633 19.127-18.633 4.163 0 8.028 1.388 11.3 3.865l-19.525 11.3c-1.189.693-1.784 1.684-1.784 3.072v28.74ZM50 63.478l-11.645-6.541V43.062L50 36.522l11.645 6.54v13.875L50 63.477Zm7.483 30.129c-4.163 0-8.028-1.388-11.3-3.865l19.525-11.3c1.189-.693 1.784-1.684 1.784-3.071V46.629l8.226 4.757c.694.396.991.991.991 1.784v21.803c0 10.605-8.226 18.633-19.226 18.633v.001Zm-23.49-22.101-18.93-10.902c-5.45-3.172-9.117-9.91-9.117-16.451 0-7.632 4.559-14.47 11.595-17.344v22.596c0 1.388.595 2.379 1.784 3.072l24.777 14.37-8.126 4.659c-.694.396-1.289.396-1.982 0ZM32.905 87.76c-11.2 0-19.425-8.425-19.425-18.83 0-.794.1-1.587.198-2.38L33.2 77.85c1.189.693 2.379.693 3.568 0l24.876-14.37v9.415c0 .793-.298 1.388-.992 1.784L41.724 85.58c-2.576 1.486-5.649 2.18-8.82 2.18h.001Zm24.579 11.793c11.992 0 22.001-8.523 24.281-19.822C92.864 76.857 100 66.451 100 55.846c0-6.937-2.973-13.676-8.325-18.533.496-2.081.793-4.163.793-6.243 0-14.172-11.496-24.777-24.777-24.777-2.676 0-5.253.396-7.83 1.288C55.401 3.221 49.257.445 42.517.445c-11.992 0-22.001 8.523-24.281 19.822C7.136 23.14 0 33.547 0 44.152c0 6.938 2.973 13.676 8.325 18.533-.496 2.081-.793 4.163-.793 6.243 0 14.172 11.497 24.778 24.777 24.778 2.676 0 5.253-.397 7.83-1.289 4.459 4.36 10.604 7.136 17.344 7.136Z"></path></svg>',
+      xai: '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAMKADAAQAAAABAAAAMAAAAADbN2wMAAAGvElEQVRoBe1aa2yMTRQ+u6roV3eCHwhp6u6XW4NIEERF3RLSlJakEbc/UhFEohUiiEtCQvCjIkFCpIkGCYKIS11DJG01cb/f9aItejzPfOb9dvfdbXf5ortfvklmZ3beMzPPM3PmnDPvrkeQvnz5InV1dZKQkCA1NTW94+LiMjweTypyEvJfEPFQrhGSIlUilyEXfvv27UCzZs2Kq6qqxOv1SosWLcRD8Ewo41u2bJnZpEmTHIBObgSwDU4JEqXfv3/fXF5eng/wtaZDZWWlvH//Ph7s8iBQjRztqZpYiZnYBWjl69ev2ShjAbxd3OqfmMVTXV3dOz4+viBa1SaUXoFJaW1tbZr354GNSp0PBZ7tXHBi96KSWp9gND8jdg/MZzkqidEMNBQ2qFGFBx91EGgsOx8KW7jt6o018HC0Al9gCXribC1aS2iIvHr1Su7evSsXL16UGzduyPLly2XkyJEGclQSgKOSR48eyeXLl+Xs2bNy5coVKSsro7+SNm3ayMuXL531jhoCVIuHDx/KhQsX5MSJE3L16lV5/PixAYr4RwYNGiSTJk2SCRMmSN++fR0C9MSNmrCaeuTIEZ09e7Z2795dYREV6Ezu1q2bZmdn68mTJ/XDhw9BcTYKARxELSoq0pUrV+rAgQO1adOmDmg4Jx08eLBu2rRJS0pKFGY+KHDb6FIhhtU3b940OojIlB7PbBc6SJcuXQSDm1D2nz0Mv4ZVNDp98OBBOXfunLx7987pzFCeB3POnDkybtw46dChg/Os3opl4lteu3ZNMYiCgMlcFdYxqObl5enHjx99xRusP336VHfu3KkpKSmKuMtZbQDTxMREnTJlih4/flwrKioaHCtQIKQKvX79WnNycswEnMhm6ujkyZP1zp07gWO5vj948EA3bNig/fv399NtjoV4XtPS0hQHVnEXcfUNtyEkAQ4Ac6aHDx/WXr16OQQskaSkJN2/f78imnXNBeuh69evD9qPuzl69Gg9duyY4mbl6htpQ70E7GD37t3TadOmKa5xfkTGjx+vBGsTd2379u3ar18/PzlLesCAAbpnz56IVdCOH6wMiwA7fv782axq+/btFYdZ161bp/CQZkyu5KFDh4yO+5pBC7xjx466YsUKP7LBwPxKW9gEODhN2vnz540JtJPBS+qMGTO0efPmrlXnwU9NTVWEAFZc4VHNLsDTOm2/U4mIgO9EXP01a9Zo586dXcC58l27dtVt27bpp0+fTDc6ol27dmmfPn2M/LBhwxRhgu+Qv1SPmAB34dSpUzp8+PCgwHlO4PL1+vXrDiAag9zcXGOKrVqxpGrRYeEtgyMbaSUiAm/evNFVq1Zp27Ztg4Jv166drl271jmkXHW7AzzsixcvNubTlwTVbObMmVpcXBwpdiMfNgEEVzpmzJigwAmIIUFhYaEDgno/duxYsxu3bt0y7YgmNT8/X3v06OEaBwGaHj16VBHUOWOEU2mQAG7+um/fPqPTvitn67Q6U6dO1dLSUjMfLdKWLVv8zkbPnj2NzyABJhKaOHGiy7m1atXKWKu3b98auXA+6iWAWEWXLl3q2nYLnpZn2bJlfpEiJ581a5Zrhel5lyxZos+fPze48GJKV69era1bt3bJMoxhOBNOCkmA5o6u3oINLKnvO3bsULuqvpNR7+mJGTsF9hsxYoQi5nfECwoKlA4uUI6h9d69e5WRa30pKAGGukOGDHENaiehiWQMz0SdRXSpc+fOdfK8efM0KytLk5OTg45B00uPbUOJ+/fva3p6ujLMsHOwxEVG58+fr0+ePAnJwUXg9OnTISfmoAR15swZMyABcKUZUfpOHE6dYDMyMoxj42B4z6lbt27VTp06ucYaOnSoM2cgE75WYQcSEWynLFy4UF68eMEmV0JUKYhlBE7IPINZFRDmK3nn3uDqhAbeKbCKsnv3blP6yiBuEoQlAo8tICXw9IKLjly6dMlXTGC6BedNFixYYO7F9qFDAKGvwNmYeyhss31uSpLDYRPEM+Zu6vcwgi+8nEN1hMRJiol3YV5eFi1aJKNGjTJtz549E+yG3L5925HjRQs3N5k+fbpkZmYK7hVG1iHANwG89fOHg5+bYgTsB0lxgN9NnIfZJhIhOJawarbZYODOBibKUo44mRwCgYKx8v1vGrGCNgjO/wkEWZQ/2vSf2AHjB/7osv17k6kXJhM/9cVmInYSKItN+CZ6KCOBwhgmUOiFVzwAEqWxRoKYid3L/x4gHtkMAm6/Hb2saoiZ2L0IiYX/PUDDxhghQfAbiZnYY/7PHiamjeW/2/wAz2ywXXT1froAAAAASUVORK5CYII=" alt="xAI">'
+    };
+
+    function escapeHTML(value) {
+      return String(value == null ? "" : value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setState(patch, animate = true) {
+      Object.assign(state, patch, { animate });
+      render();
+    }
+
+    function showError(error) {
+      const message = friendlyError(error instanceof Error ? error.message : String(error || "Something went wrong"));
+      const id = Date.now() + Math.random();
+      clearTimeout(toastTimer);
+      setState({ toast: { id, message } }, false);
+      toastTimer = setTimeout(() => {
+        if (state.toast && state.toast.id === id) setState({ toast: null }, false);
+      }, 5200);
+    }
+
+    async function request(path, options = {}) {
+      const headers = { Accept: "application/json", ...(options.headers || {}) };
+      let response;
+      try {
+        response = await fetch(path, { ...options, headers });
+      } catch (error) {
+        throw new Error(error && error.message ? error.message : "Could not reach the CoSpace daemon.");
+      }
+      const text = response.status === 204 ? "" : await response.text();
+      let payload = null;
+      if (text) {
+        try { payload = JSON.parse(text); }
+        catch (_) { payload = text; }
+      }
+      if (!response.ok) {
+        const detail = payload && typeof payload === "object" && payload.error
+          ? payload.error
+          : `Request failed (${response.status})`;
+        throw new Error(detail);
+      }
+      return payload;
+    }
+
+    async function refreshOverview(initial = false) {
+      if (overviewRequest) return overviewRequest;
+      if (initial) setState({ loading: true }, false);
+      overviewRequest = (async () => {
+        try {
+          const [host, spaces, sponsor, templates, codexOptions] = await Promise.all([request("/api/host"), request("/api/spaces"), request("/api/sponsor"), request("/api/templates"), request("/api/codex-options")]);
+          const normalizedSpaces = Array.isArray(spaces) ? spaces : [];
+          const selectedExists = state.selected === "all" || normalizedSpaces.some(space => space.name === state.selected);
+          const update = {
+            host,
+            spaces: normalizedSpaces,
+            templates: Array.isArray(templates) ? templates : [],
+            codexOptions: codexOptions || { routes: [], models: [] },
+            sponsor,
+            loaded: true,
+            loading: false,
+            selected: selectedExists ? state.selected : "all",
+            confirmRevoke: selectedExists ? state.confirmRevoke : null
+          };
+          if (initial || Object.entries(update).some(([key, value]) => JSON.stringify(state[key]) !== JSON.stringify(value))) setState(update, initial);
+        } catch (error) {
+          setState({ loading: false }, false);
+          showError(error);
+        } finally {
+          overviewRequest = null;
+        }
+      })();
+      return overviewRequest;
+    }
+
+    async function loadUsage(spaceName, prepared = false) {
+      if (!prepared) setState({ usageSpace: spaceName, usage: [], usageLoading: true }, false);
+      try {
+        const rows = await request(`/api/spaces/${encodeURIComponent(spaceName)}/usage?days=14`);
+        if (state.selected === spaceName) {
+          setState({ usageSpace: spaceName, usage: Array.isArray(rows) ? rows : [], usageLoading: false }, false);
+        }
+      } catch (error) {
+        if (state.selected === spaceName) setState({ usageLoading: false }, false);
+        showError(error);
+      }
+    }
+
+    async function refreshAfterMutation() {
+      const pending = overviewRequest;
+      if (pending) await pending;
+      await refreshOverview();
+    }
+
+    function spaceIsAwake(space) { return space.state === "running"; }
+    function spaceIsMissing(space) { return space.state === "missing"; }
+    function spacePowerLabel(space) {
+      if (spaceIsAwake(space)) return "awake";
+      if (spaceIsMissing(space)) return "VM missing · delete or recreate";
+      if (space.wake_blocked) return "stopped · needs Host attention";
+      return space.manual_sleep ? "sleeping · Host wake required" : "asleep · wakes on connect";
+    }
+    // Backend errors are precise but written for logs; give the host the
+    // plain-language version for the cases they can act on.
+    function friendlyError(message) {
+      const m = String(message || "");
+      if (/no VM|VM no longer exists|container not found|not found: container/i.test(m)) {
+        return "This space's VM no longer exists on this Mac (it was removed outside CoSpace). Delete the space, or recreate it and copy its workspace back.";
+      }
+      if (/needs the Host's attention/i.test(m)) return m.replace(/^conflict: /, "");
+      if (/is upgrading network controls/i.test(m)) return "This space is upgrading its network controls. Try again when the upgrade finishes.";
+      if (/cross-site|cross-origin|unexpected Host header/i.test(m)) return "Request refused: open the console from its own address (localhost or the published hostname).";
+      return m.replace(/^(conflict|invalid request): /, "");
+    }
+    function spaceTokensToday(space) {
+      const usage = space.usage_today || {};
+      return Number(usage.tokens_in || 0) + Number(usage.tokens_out || 0);
+    }
+    function formatNumber(value) {
+      return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Number(value || 0));
+    }
+    function formatTokens(value) {
+      const n = Number(value || 0);
+      if (n >= 1e9) return `${(n / 1e9).toFixed(n >= 1e10 ? 0 : 1)}B`;
+      if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M`;
+      if (n >= 1e3) return `${(n / 1e3).toFixed(n >= 1e4 ? 0 : 1)}K`;
+      return formatNumber(n);
+    }
+    function plural(value, one, many = `${one}s`) { return Number(value) === 1 ? one : many; }
+    function dateOnly(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "unknown";
+      return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(date);
+    }
+    function createdLabel(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "Creation date unavailable";
+      const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+      if (days <= 0) return "Created today";
+      if (days === 1) return "Created yesterday";
+      if (days < 14) return `Created ${days} days ago`;
+      return `Created ${dateOnly(value)}`;
+    }
+    function expiryLabel(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "expiry unavailable";
+      const minutes = Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60000));
+      return minutes > 0 ? `expires in ${minutes} min` : "expired";
+    }
+    function animationClass(delay) { return state.animate ? `fade-up d${delay}` : ""; }
+    function statusDot(space, small = false) {
+      const awake = spaceIsAwake(space);
+      return `<span class="dot ${awake ? "awake pulse" : ""}"${small ? ' style="width:8px;height:8px"' : ""}></span>`;
+    }
+    function renderTrafficLights() {
+      return '<span class="traffic-light" style="background:#EF4444"></span><span class="traffic-light" style="background:#EAB308"></span><span class="traffic-light" style="background:#22C55E"></span>';
+    }
+
+    function renderSidebar() {
+      const navSpaces = state.spaces.map(space => `
+        <button class="nav-item ${state.selected === space.name ? "active" : ""}" type="button" data-action="select-space" data-space="${escapeHTML(space.name)}" aria-current="${state.selected === space.name ? "page" : "false"}">
+          ${statusDot(space)}<span class="space-name mono">${escapeHTML(space.name)}</span>
+        </button>`).join("");
+      const hostReady = !!state.host;
+      const hostCopy = hostReady
+        ? `${formatNumber(state.host.spaces)} ${plural(state.host.spaces, "space")} · host online`
+        : "Host unavailable";
+      return `
+        <aside class="sidebar">
+          <div class="brand">
+            <div class="logo-tile">${icons.key}</div>
+            <div class="brand-copy"><span class="wordmark grad-text">CoSpace</span><span class="brand-kicker">HOST CONSOLE</span></div>
+          </div>
+          <div class="nav-scroll" aria-label="Space navigation">
+            <button class="nav-item ${state.selected === "all" ? "active" : ""}" type="button" data-action="select-all" aria-current="${state.selected === "all" ? "page" : "false"}">
+              ${icons.grid}<span>All Spaces</span>
+            </button>
+            <div class="label nav-label">Spaces</div>
+            <div class="nav-spaces">${navSpaces}</div>
+          </div>
+          <div class="sidebar-spacer"></div>
+          <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${imageReady() ? "" : 'disabled title="Available once the space image finishes downloading"'}>${icons.plus} New Space</button>
+          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span></div>
+        </aside>`;
+    }
+
+    // The base image is pulled once on a fresh host; until it lands, spaces
+    // cannot be created, so say so instead of failing on submit.
+    function imageReady() {
+      const image = state.host && state.host.image;
+      return !image || image.state === "ready";
+    }
+
+    function renderImageBanner() {
+      const image = state.host && state.host.image;
+      if (!image || image.state === "ready") return "";
+      if (image.state === "error") {
+        return `
+        <div class="image-banner error" role="status">
+          <span class="banner-copy">Couldn’t download the space image yet — retrying automatically. ${escapeHTML(image.error || "")}</span>
+        </div>`;
+      }
+      const pct = Math.max(0, Math.min(100, Number(image.percent || 0)));
+      const size = image.total_mb > 0 ? ` · ${formatNumber(image.done_mb)} / ${formatNumber(image.total_mb)} MB` : "";
+      const phase = image.phase === "unpacking" ? "Unpacking" : image.state === "checking" ? "Checking" : "Downloading";
+      return `
+        <div class="image-banner" role="status">
+          <span class="spinner"></span>
+          <span class="banner-copy">${phase} the space image — first run only, then every new space starts in seconds.<span class="mono">${image.state === "pulling" ? ` ${pct}%${size}` : ""}</span></span>
+          <span class="image-progress" aria-hidden="true"><span style="width:${pct}%"></span></span>
+        </div>`;
+    }
+
+    function renderBatteryBanner() {
+      if (!state.host || !state.host.on_battery || state.batteryDismissed) return "";
+      return `
+        <div class="battery-banner" role="status">
+          ${icons.bolt}
+          <span class="banner-copy">Running on battery — spaces go offline if the lid closes. Plug in, or host on a Mac that stays awake.</span>
+          <button class="text-button" style="color:#92400E;font-size:12px" type="button" data-action="dismiss-battery">Dismiss</button>
+        </div>`;
+    }
+
+    function renderLoadingPage() {
+      return `
+        <main class="page" aria-busy="true">
+          <div class="skeleton skeleton-title"></div><div class="skeleton skeleton-line" style="margin-top:10px"></div>
+          <div class="summary-grid">${[1, 2, 3].map(() => '<div class="card summary-card" style="height:90px"><div class="skeleton" style="width:40px;height:40px;border-radius:12px"></div><div class="skeleton skeleton-line" style="flex:1"></div></div>').join("")}</div>
+        </main>`;
+    }
+
+    function renderEmptyState(loadError = false) {
+      return `
+        <div class="card empty-card">
+          <div class="empty-icon">${icons.key}</div>
+          <span class="empty-title">${loadError ? "Couldn’t load spaces" : "No spaces yet"}</span>
+          <span class="empty-copy">${loadError ? "Check that the CoSpace daemon is running, then try again." : "Create one and invite your first guest."}</span>
+          ${loadError ? '<button class="btn-ghost" type="button" data-action="retry-overview">Try again</button>' : ""}
+        </div>`;
+    }
+
+    function renderSponsorship() {
+      const providers = [
+        { key: "anthropic", name: "Anthropic", product: "Claude Code" },
+        { key: "openai", name: "OpenAI", product: "Codex" },
+        { key: "xai", name: "xAI", product: "Grok" }
+      ];
+      const cards = providers.map(provider => {
+        const details = (state.sponsor || {})[provider.key] || {};
+        const credPresent = !!details.cred_present;
+        const on = !!details.enabled;
+        const busy = state.busy === `sponsor:${provider.key}`;
+        const status = !credPresent
+          ? "Not logged in on this Mac"
+          : on
+            ? "Ready for enabled spaces"
+            : "Paused for every space";
+        const statusClass = credPresent && on ? "active" : "unavailable";
+        return `
+          <article class="provider-card ${provider.key} ${credPresent && on ? "active" : ""}">
+            <div class="provider-top">
+              <div class="provider-logo ${provider.key}">${providerLogos[provider.key]}</div>
+              <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="Enable ${provider.product} in every space" data-action="toggle-sponsor" data-provider="${provider.key}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+            </div>
+            <div class="provider-copy">
+              <span class="provider-name">${provider.name}</span>
+              <span class="provider-product">${provider.product}</span>
+              <span class="provider-status ${statusClass}"><span class="provider-status-dot"></span>${status}</span>
+            </div>
+          </article>`;
+      }).join("");
+      return `
+        <section class="sponsor-section ${animationClass(5)}" aria-label="Sponsorship credentials">
+          <div class="sponsor-heading">
+            <div class="sponsor-heading-copy">
+              <span class="card-heading">AI for all spaces</span>
+              <span class="sponsor-caption">Let enabled spaces use the Claude Code, Codex, and Grok accounts connected on this Mac</span>
+            </div>
+          </div>
+          <div class="sponsor-grid">${cards}</div>
+        </section>`;
+    }
+
+    function renderAllSpaces() {
+      const host = state.host || {};
+      const awake = Number(host.awake || 0);
+      const totalSpaces = Number(host.spaces || state.spaces.length || 0);
+      const memoryTotal = Number(host.memory_total_gb || 0);
+      const memoryReserved = Number(host.memory_reserved_gb || 0);
+      const memoryUsed = Number(host.memory_used_gb || 0);
+      const tokensToday = state.spaces.reduce((sum, space) => sum + spaceTokensToday(space), 0);
+      const requestsToday = state.spaces.reduce((sum, space) => sum + Number((space.usage_today || {}).requests || 0), 0);
+      const rows = state.spaces.map(space => {
+        const awakeSpace = spaceIsAwake(space);
+        const powerLabel = spacePowerLabel(space);
+        const guests = Array.isArray(space.members) ? space.members.length : 0;
+        const busy = state.busy === `toggle:${space.name}`;
+        return `
+          <article class="card lift space-card ${animationClass(5)}" tabindex="0" role="button" data-action="select-space" data-space="${escapeHTML(space.name)}" aria-label="Open ${escapeHTML(space.name)}">
+            ${statusDot(space)}
+            <div class="space-identity"><strong class="mono">${escapeHTML(space.name)}</strong><span class="${awakeSpace ? "awake-text" : "asleep-text"}">${powerLabel}</span></div>
+            <span class="space-meta space-guests">${formatNumber(guests)} ${plural(guests, "guest")}</span>
+            <span class="space-meta space-memory mono num">${formatNumber(space.memory_gb)} GB</span>
+            <span class="space-meta space-tokens mono num">${formatTokens(spaceTokensToday(space))} today</span>
+            <span class="created-meta">${escapeHTML(createdLabel(space.created_at))}</span>
+            <button class="btn-ghost space-toggle" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awakeSpace ? `Sleep ${escapeHTML(space.name)} until the Host wakes it` : `Wake ${escapeHTML(space.name)}`}" ${busy ? "disabled" : ""}>${busy ? "Working…" : awakeSpace ? "Sleep" : "Wake"}</button>
+            ${icons.chevron}
+          </article>`;
+      }).join("");
+      return `
+        <main class="page">
+          <header class="${animationClass(1)}"><h1 class="page-title">All Spaces</h1><p class="page-subtitle">Shared dev spaces running on this Mac. Guests connect with plain ssh.</p></header>
+          <section class="summary-grid" aria-label="Host summary">
+            <div class="card summary-card ${animationClass(2)}">
+              <div class="tile" style="color:#D97706;background:rgba(245,158,11,.13)">${icons.space}</div>
+              <div class="summary-copy"><span class="summary-label">Memory used</span><span class="summary-value num">${formatNumber(memoryUsed)} GB <span class="summary-unit">/ ${formatNumber(memoryTotal)} GB</span></span><span class="summary-note">${formatNumber(memoryReserved)} GB reserved for ${formatNumber(awake)} awake ${plural(awake, "space")}</span></div>
+            </div>
+            <div class="card summary-card ${animationClass(3)}">
+              <div class="tile" style="color:#0284C7;background:rgba(14,165,233,.1)">${icons.users}</div>
+              <div class="summary-copy"><span class="summary-label">Spaces hosted</span><span class="summary-value num">${formatNumber(totalSpaces)}</span><span class="summary-note">${formatNumber(Math.max(0, totalSpaces - awake))} asleep</span></div>
+            </div>
+            <div class="card summary-card ${animationClass(4)}">
+              <div class="tile" style="color:#7C3AED;background:rgba(139,92,246,.1)">${icons.token}</div>
+              <div class="summary-copy"><span class="summary-label">Tokens today</span><span class="summary-value num">${formatTokens(tokensToday)}</span><span class="summary-note">${formatNumber(requestsToday)} ${plural(requestsToday, "request")} across all spaces</span></div>
+            </div>
+          </section>
+          ${renderSponsorship()}
+          <section class="space-list" aria-label="Spaces">${state.spaces.length ? rows : renderEmptyState(!state.loaded)}</section>
+        </main>`;
+    }
+
+    function filledUsage() {
+      const byDate = new Map((state.usage || []).map(day => [day.date, day]));
+      const result = [];
+      const now = new Date();
+      const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      for (let offset = 13; offset >= 0; offset -= 1) {
+        const day = new Date(todayUTC);
+        day.setUTCDate(day.getUTCDate() - offset);
+        const key = day.toISOString().slice(0, 10);
+        result.push(byDate.get(key) || { date: key, requests: 0, tokens_in: 0, tokens_out: 0 });
+      }
+      return result;
+    }
+
+    function renderUsageChart() {
+      const days = filledUsage();
+      const values = days.map(day => Number(day.tokens_in || 0) + Number(day.tokens_out || 0));
+      const max = Math.max(1, ...values);
+      const bars = days.map((day, index) => {
+        const value = values[index];
+        const height = Math.max(4, Math.round(value / max * 100));
+        return `<div class="bar ${value === 0 ? "zero" : ""}" style="height:${height}%" tabindex="0" aria-label="${escapeHTML(day.date)}: ${formatNumber(value)} tokens in and out"><span class="tip mono">${formatNumber(value)} tokens in + out</span></div>`;
+      }).join("");
+      const total = values.reduce((sum, value) => sum + value, 0);
+      return `
+        <div class="card chart-card ${animationClass(3)}">
+          <div class="chart-head"><span class="card-heading">Tokens · last 14 days</span><span class="chart-total mono num">${state.usageLoading ? "loading…" : `${formatTokens(total)} total`}</span></div>
+          <div class="chart" aria-label="Token usage for the last 14 days">${bars}</div>
+          <div class="chart-axis"><span>14 days ago</span><span>today</span></div>
+        </div>`;
+    }
+
+    function renderGuests(space) {
+      const members = Array.isArray(space.members) ? space.members : [];
+      const rows = members.map(member => {
+        const confirming = state.confirmRevoke === member.name;
+        const busy = state.busy === `revoke:${space.name}:${member.name}`;
+        return `
+          <div class="hair-row guest-row">
+            <span class="guest-name">${escapeHTML(member.name)}</span>
+            <span class="guest-fingerprint mono" title="${escapeHTML(member.fingerprint || "")}">${escapeHTML(member.fingerprint || "Fingerprint unavailable")}</span>
+            <span class="guest-added">Added ${escapeHTML(dateOnly(member.added_at))}</span>
+            <button class="text-button guest-revoke ${confirming ? "danger" : ""}" style="${confirming ? "font-weight:600" : ""}" type="button" data-action="revoke-member" data-space="${escapeHTML(space.name)}" data-member="${escapeHTML(member.name)}" ${busy ? "disabled" : ""}>${busy ? "Removing…" : confirming ? "Confirm removal" : "Revoke"}</button>
+          </div>`;
+      }).join("");
+      return `
+        <div class="card ${animationClass(2)}">
+          <div class="hair-row" style="min-height:52px"><span class="card-heading">Guests</span><span class="guest-count">${formatNumber(members.length)} ${plural(members.length, "guest")}</span></div>
+          ${rows || '<div class="hair-row" style="color:#94A3B8">No guests yet.</div>'}
+          <div class="hair-row"><button class="text-button" style="color:#B45309;margin-left:-8px;font-weight:500" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">+ Invite a Guest…</button></div>
+        </div>`;
+    }
+
+    function renderAccess(space) {
+      const name = escapeHTML(space.name);
+      return `
+        <div class="card access-card ${animationClass(3)}">
+          <span class="card-heading">Access</span>
+          <div class="access-cmd-row mono"><span class="prompt">$</span><span class="command-name"> ssh</span><span class="command-accent"> ${name}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-ssh" data-space="${name}">${state.copied === "ssh" ? "Copied" : "Copy"}</button></div>
+          <span class="access-note">The whole login for a paired guest — Cursor and VS Code Remote-SSH use the same name.</span>
+          <span class="access-note" style="color:#94A3B8">Ports 3000 · 5173 · 8000 · 8080 · 8888 auto-forward to the guest’s localhost; any other port: <span class="mono">ssh -L 4000:localhost:4000 ${name}</span>.</span>
+          <div class="host-key"><span class="label">Host key</span><span class="host-key-value mono">${escapeHTML(space.host_key_fp || "Not available")}</span></div>
+        </div>`;
+    }
+
+    function renderProviders(space) {
+      const enabled = Array.isArray(space.providers) ? space.providers : ["anthropic", "openai", "xai"];
+      const defs = [{ id: "anthropic", label: "Claude Code" }, { id: "openai", label: "Codex" }, { id: "xai", label: "Grok" }];
+      const busy = state.busy === `providers:${space.name}`;
+      const rows = defs.map(d => {
+        const on = enabled.includes(d.id);
+        const details = (state.sponsor || {})[d.id] || {};
+        const hostOn = !!details.enabled;
+        const effective = on && hostOn && !!details.cred_present;
+        const status = !on ? "Off for this space" : !details.cred_present ? "Host is not logged in" : !hostOn ? "Paused by the host for every space" : "Available in this space";
+        return `<div class="space-provider-row">
+          <div class="provider-logo space-provider-logo ${d.id}">${providerLogos[d.id]}</div>
+          <div class="space-provider-copy"><span class="space-provider-name">${d.label}</span><span class="space-provider-state ${effective ? "active" : ""}">${status}</span></div>
+          <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="Enable ${d.label} in ${escapeHTML(space.name)}" data-action="toggle-provider" data-space="${escapeHTML(space.name)}" data-provider="${d.id}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+        </div>`;
+      }).join("");
+      const fullAuto = !!space.full_auto;
+      const fullAutoBusy = state.busy === `fullauto:${space.name}`;
+      return `
+        <div class="card resources-card ${animationClass(4)}">
+          <span class="card-heading">AI in this space</span>
+          <div class="space-provider-list">${rows}
+          <div class="space-provider-row">
+            <div class="provider-logo space-provider-logo" style="color:#B45309;background:rgba(245,158,11,.13)">${icons.bolt}</div>
+            <div class="space-provider-copy"><span class="space-provider-name">Full-auto agents</span><span class="space-provider-state ${fullAuto ? "active" : ""}">${fullAuto ? "No permission prompts — the space is the sandbox" : "Agents ask before each action"}</span></div>
+            <button class="sponsor-switch ${fullAuto ? "on" : ""}" type="button" role="switch" aria-checked="${fullAuto}" aria-label="Run agents in ${escapeHTML(space.name)} without permission prompts" data-action="toggle-fullauto" data-space="${escapeHTML(space.name)}" ${fullAutoBusy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+          </div></div>
+          <span class="hint" style="font-size:11.5px;color:#94A3B8">This space's switches are saved independently. A provider also has to be on under AI for all spaces on the overview.</span>
+        </div>`;
+    }
+
+    function formatUSD(n) { return "$" + (Number(n) || 0).toFixed(2); }
+
+    function renderExecution(space) {
+      const options = state.codexOptions;
+      const route = space.codex_route || "official";
+      const model = space.codex_model || "gpt-5.6-sol";
+      const online = space.network_mode !== "gateway-only";
+      const busy = !!state.busy || !!space.network_upgrading;
+      const models = options.models.includes(model) ? options.models : options.models.concat(model);
+      const modelLabel = m => ({"gpt-6-astra":"GPT-6 Astra", "gpt-5.6-sol":"GPT-5.6 Sol", "gpt-5.6-terra":"GPT-5.6 Terra", "gpt-5.6-luna":"GPT-5.6 Luna"})[m] || m;
+      return `<section class="card resources-card ${animationClass(4)}" aria-label="Model and network settings">
+        <span class="card-heading">Model &amp; network</span>
+        <label class="field-group"><span class="label">Codex account</span>
+          <select class="field" aria-label="Codex account" data-setting="codex-route" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
+            ${options.routes.map(r => `<option value="${escapeHTML(r.id)}" ${r.id === route ? "selected" : ""} ${!r.configured ? "disabled" : ""}>${escapeHTML(r.label)}${r.configured ? "" : " · not configured"}</option>`).join("")}
+          </select>
+        </label>
+        <label class="field-group"><span class="label">Default Codex model</span>
+          <select class="field" aria-label="Default Codex model" data-setting="codex-model" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
+            ${models.map(m => `<option value="${escapeHTML(m)}" ${m === model ? "selected" : ""}>${escapeHTML(modelLabel(m))}</option>`).join("")}
+          </select>
+        </label>
+        <span class="hint" style="font-size:11.5px;color:#64748B">Account changes apply to new requests. Start a new Codex session to use the selected default model.</span>
+        <div class="space-provider-row" style="border-top:1px solid #F1F5F9;padding-top:16px">
+          <div class="space-provider-copy"><span class="space-provider-name">Internet access</span>
+            <span class="space-provider-state ${online ? "active" : ""}">${online ? "Browsing, downloads and package installs allowed" : "AI gateway only · external browsing and downloads blocked"}</span>
+          </div>
+          <button class="sponsor-switch ${online ? "on" : ""}" type="button" role="switch" aria-checked="${online}" aria-label="Internet access in ${escapeHTML(space.name)}" data-action="toggle-network" data-space="${escapeHTML(space.name)}" ${busy || !space.network_control_ready || !spaceIsAwake(space) ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+        </div>
+        ${!space.network_control_ready ? `<button class="btn-ghost" type="button" data-action="open-network-upgrade" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>Enable network controls…</button>` : ""}
+        <span class="hint" style="font-size:11.5px;color:#64748B">${space.network_upgrading ? "Saving snapshot and upgrading… You can leave this page and return." : !spaceIsAwake(space) ? "Wake this space to change Internet access." : state.busy === `network:${space.name}` ? "Applying network policy…" : "AI calls and SSH remain available when Internet access is off. Restart agents after changing network access."}</span>
+        ${space.network_upgrade_error ? `<span class="hint" role="alert" style="color:#B91C1C">${escapeHTML(space.network_upgrade_error)}</span>` : ""}
+      </section>`;
+    }
+
+    function renderBudget(space) {
+      const spent = Number(space.spent_usd || 0);
+      const limit = Number(space.usd_limit || 0);
+      const conc = Number(space.max_concurrency || 0);
+      let usageLine;
+      if (limit > 0) {
+        const percent = Math.min(100, Math.max(0, Math.round(spent / limit * 100)));
+        const over = spent >= limit;
+        usageLine = `
+          <div class="resource-block">
+            <div class="resource-line"><span>Spent</span><span class="mono num">${formatUSD(spent)} / ${formatUSD(limit)}</span></div>
+            <div class="meter"><div class="meter-fill" style="width:${percent}%;${over ? "background:#DC2626" : ""}"></div></div>
+            ${over ? `<span class="hint" style="font-size:11.5px;color:#DC2626">Spend limit reached — new requests are refused.</span>` : ""}
+          </div>`;
+      } else {
+        usageLine = `<div class="resource-line"><span>Spent</span><span class="mono num">${formatUSD(spent)} <span style="color:#94A3B8">· no cap</span></span></div>`;
+      }
+      return `
+        <div class="card resources-card ${animationClass(4)}">
+          <span class="card-heading">Budget</span>
+          ${usageLine}
+          <div class="resource-line"><span>Max concurrent</span><span class="mono num">${formatNumber(conc)}</span></div>
+          <div class="resource-line" style="margin-top:6px"><span></span><button class="text-button" style="opacity:.8" type="button" data-action="open-limits" data-space="${escapeHTML(space.name)}">Edit limits…</button></div>
+          <span class="hint" style="font-size:11.5px;color:#94A3B8">Estimated token cost for this space, saved across restarts. Your account’s actual billing may differ.</span>
+        </div>`;
+    }
+
+    function renderLimitsModal() {
+      const space = state.spaces.find(r => r.name === state.limitsSpace);
+      if (!space) return "";
+      const limit = Number(space.usd_limit || 0);
+      const conc = Number(space.max_concurrency || 0);
+      const busy = state.busy === `limits:${space.name}`;
+      return `
+        <div class="modal-backdrop" data-action="close-modal">
+          <form class="card modal create-modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="limits-title" data-form="limits">
+            <div class="modal-head"><span class="modal-title" id="limits-title">Limits · ${escapeHTML(space.name)}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
+            <label class="field-group"><span class="label">Spend cap (USD, 0 = no cap)</span><input class="field mono" id="limit-usd" name="usd" type="number" min="0" step="1" inputmode="decimal" value="${limit || ""}" placeholder="0"></label>
+            <label class="field-group"><span class="label">Max concurrent requests</span><input class="field mono" id="limit-conc" name="conc" type="number" min="1" step="1" inputmode="numeric" value="${conc || ""}" placeholder="5"></label>
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-gold" type="submit" ${busy ? "disabled" : ""}>${busy ? "Saving…" : "Save"}</button></div>
+          </form>
+        </div>`;
+    }
+
+    function renderNetworkUpgradeModal() {
+      const name = state.upgradeSpace;
+      const busy = state.busy === `upgrade:${name}`;
+      return `<div class="modal-backdrop" data-action="close-modal">
+        <section class="card modal create-modal" role="dialog" aria-modal="true" aria-labelledby="network-upgrade-title">
+          <div class="modal-head"><span class="modal-title" id="network-upgrade-title">Enable network controls · ${escapeHTML(name)}</span></div>
+          <p class="modal-copy">This older space needs a one-time upgrade. CoSpace saves a full filesystem snapshot and keeps your workspace, installed tools and SSH identity.</p>
+          <p class="modal-copy">The space restarts during the upgrade. Save your work first: running programs stop and SSH sessions disconnect. Internet stays on until you switch it off.</p>
+          <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal" ${busy ? "disabled" : ""}>Cancel</button><button class="btn-gold" type="button" data-action="confirm-network-upgrade" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? "Saving snapshot and upgrading…" : "Save snapshot & upgrade"}</button></div>
+        </section></div>`;
+    }
+
+    function renderDeleteModal() {
+      const name = state.deleteTarget;
+      if (!name) return "";
+      const space = state.spaces.find(r => r.name === name);
+      const guests = space && Array.isArray(space.members) ? space.members.length : 0;
+      const busy = state.busy === `delete:${name}`;
+      return `
+        <div class="modal-backdrop" data-action="close-modal">
+          <section class="card modal delete-modal ${state.animate ? "scale-in" : ""}" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
+            <div class="modal-head"><span class="modal-title" id="delete-title">Delete <span class="mono">${escapeHTML(name)}</span>?</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
+            <p class="modal-copy">This permanently removes the space — its VM, workspace files, and usage history.${guests ? ` ${formatNumber(guests)} paired ${plural(guests, "guest")} lose${guests === 1 ? "s" : ""} access immediately.` : ""} There is no undo.</p>
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-danger" type="button" data-action="confirm-delete" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? "Deleting…" : "Delete Space"}</button></div>
+          </section>
+        </div>`;
+    }
+
+    function renderDetail(space) {
+      const awake = spaceIsAwake(space);
+      const powerLabel = spacePowerLabel(space);
+      const toggleBusy = state.busy === `toggle:${space.name}`;
+      const deleting = state.busy === `delete:${space.name}`;
+      return `
+        <main class="page detail-page">
+          <header class="detail-head ${animationClass(1)}">
+            <div class="detail-title"><span class="detail-name mono">${escapeHTML(space.name)}</span><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill">${statusDot(space, true)}<span class="${awake ? "awake-text" : "asleep-text"}">${powerLabel}</span></span><span class="pill mono num" style="color:#64748B">${formatNumber(space.memory_gb)} GB · ${formatNumber(space.cpus)} ${plural(space.cpus, "CPU")}</span></div></div>
+            <div class="detail-actions">
+              <button class="btn-ghost" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awake ? `Sleep ${escapeHTML(space.name)} until the Host wakes it` : `Wake ${escapeHTML(space.name)}`}" ${toggleBusy ? "disabled" : ""}>${toggleBusy ? "Working…" : awake ? "Sleep" : "Wake"}</button>
+              <button class="btn-gold" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">${icons.invite} Invite a Guest</button>
+            </div>
+          </header>
+          <div class="detail-grid">
+            <div class="detail-column">${renderGuests(space)}${renderUsageChart()}${renderBudget(space)}</div>
+            <div class="detail-column">${renderExecution(space)}${renderAccess(space)}${renderProviders(space)}</div>
+          </div>
+          <div class="detail-footer ${animationClass(5)}">
+            <button class="btn-ghost" type="button" data-action="save-template" data-space="${escapeHTML(space.name)}" ${state.busy === `template:${space.name}` ? "disabled" : ""}>${state.busy === `template:${space.name}` ? "Saving…" : state.templateSavedFor === space.name ? "Saved as template ✓" : "Save as Template"}</button>
+            <button class="text-button danger" style="opacity:.75" type="button" data-action="delete-space" data-space="${escapeHTML(space.name)}" ${deleting ? "disabled" : ""}>${deleting ? "Deleting…" : "Delete Space…"}</button>
+          </div>
+        </main>`;
+    }
+
+    function renderCreateModal() {
+      const space = state.newSpace;
+      const templates = state.templates || [];
+      const templateField = templates.length ? `
+            <div class="field-group">
+              <span class="label">Template</span>
+              <select class="field mono" id="new-space-template" name="template">
+                <option value="">Blank space</option>
+                ${templates.map(t => `<option value="${escapeHTML(t.name)}" ${space.template === t.name ? "selected" : ""}>${escapeHTML(t.name)}</option>`).join("")}
+              </select>
+              ${space.template ? `<button class="text-button danger" style="align-self:flex-start;opacity:.75;font-size:12px" type="button" data-action="delete-template" data-template="${escapeHTML(space.template)}">Delete this template</button>` : ""}
+            </div>` : "";
+      return `
+        <div class="modal-backdrop" data-action="close-modal">
+          <form class="card modal create-modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="create-title" data-form="create-space">
+            <div class="modal-head"><span class="modal-title" id="create-title">New Space</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
+            <label class="field-group"><span class="label">Name</span><input class="field mono" id="new-space-name" name="name" placeholder="e.g. acme-web" maxlength="31" autocomplete="off" spellcheck="false" value="${escapeHTML(space.name)}"></label>
+            ${templateField}
+            <div class="field-group">
+              <span class="label">Memory</span>
+              <div class="segmented" role="group" aria-label="Memory">${[1, 2, 4, 8].map(memory => `<button class="segment ${memory === space.memory_gb ? "active" : ""}" type="button" data-action="pick-memory" data-memory="${memory}" aria-pressed="${memory === space.memory_gb}">${memory} GB</button>`).join("")}</div>
+            </div>
+              ${space.template ? `<p class="modal-copy" style="font-size:12px;color:#94A3B8;margin:0">AI selection, model, Internet access, budget, and full-auto come from the template; memory above still applies.</p>` : ""}
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-gold" type="submit" ${state.busy === "create" ? "disabled" : ""}>${state.busy === "create" ? "Creating…" : "Create Space"}</button></div>
+          </form>
+        </div>`;
+    }
+
+    function highlightedInviteCommand(command, code) {
+      const safeCommand = String(command || "");
+      let sawCommand = false;
+      return safeCommand.split(/(\s+)/).map(part => {
+        if (/^\s+$/.test(part)) return escapeHTML(part);
+        if (!sawCommand) {
+          sawCommand = true;
+          return `<span class="command-name">${escapeHTML(part)}</span>`;
+        }
+        if (code && part.includes(code)) {
+          const index = part.indexOf(code);
+          return `<span class="command-value">${escapeHTML(part.slice(0, index))}</span><span class="command-accent">${escapeHTML(code)}</span><span class="command-value">${escapeHTML(part.slice(index + code.length))}</span>`;
+        }
+        const tokenClass = part.startsWith("-") ? "command-flag" : "command-value";
+        return `<span class="${tokenClass}">${escapeHTML(part)}</span>`;
+      }).join("");
+    }
+
+    function renderInviteModal() {
+      const spaceName = state.inviteSpace || "space";
+      const invite = state.invite;
+      const inviteLink = inviteLinkURL(invite);
+      const windows = state.invitePlatform === "windows";
+      const installCommand = guestInstallCommand(invite, state.invitePlatform);
+      const prompt = windows ? "PS&gt;&nbsp;" : "$&nbsp;";
+      const terminalShell = windows ? "powershell" : "bash";
+      let terminalBody;
+      if (state.inviteLoading) {
+        terminalBody = '<div class="loading-line"><span class="spinner"></span><span>Creating one-time invite…</span></div>';
+      } else if (!invite) {
+        terminalBody = '<div class="loading-line"><span>Invite unavailable.</span><button class="btn-ghost terminal-copy" type="button" data-action="retry-invite">Try again</button></div>';
+      } else {
+        const pairCmd = String(invite.command || "");
+        const steps = [
+          { label: "Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)", html: escapeHTML(installCommand) },
+          { label: "Pair with this space (one-time code) — a second computer of the same person adds  -name <another-name>", html: highlightedInviteCommand(pairCmd, String(invite.code || "")) },
+          { label: "You're in — reconnect with this anytime", html: `<span class="command-name">ssh</span><span class="command-accent"> ${escapeHTML(spaceName)}</span>` }
+        ];
+        terminalBody = steps.map((step, index) => `
+          <div class="invite-step line-in l${index + 1}">
+            <div class="terminal-comment invite-step-label"># ${index + 1} · ${step.label}</div>
+            <div class="invite-line"><span class="prompt">${prompt}</span><span class="cmd mono">${step.html}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-line" data-line="${index}">${state.copied === String(index) ? "Copied" : "Copy"}</button></div>
+          </div>`).join("") + '<div class="line-in l3"><span class="cursor-blink"></span></div>';
+      }
+      return `
+        <div class="modal-backdrop" data-action="close-modal">
+          <section class="card modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+            <div class="modal-head"><span class="modal-title" id="invite-title">Invite a guest to <span class="mono grad-text">${escapeHTML(spaceName)}</span></span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
+            <p class="modal-copy">Pick your guest's operating system, then send them the three steps — or <b>Copy all</b> and paste the lot into your chat. Nothing to sign up for.</p>
+            <div class="segmented" role="group" aria-label="Guest operating system">
+              <button class="segment ${windows ? "" : "active"}" type="button" data-action="pick-invite-platform" data-platform="posix" aria-pressed="${!windows}">macOS / Linux</button>
+              <button class="segment ${windows ? "active" : ""}" type="button" data-action="pick-invite-platform" data-platform="windows" aria-pressed="${windows}">Windows</button>
+            </div>
+            <div class="terminal">
+              <div class="terminal-head">${renderTrafficLights()}<span class="terminal-title mono">invite — ${terminalShell}</span>${invite ? `<button class="btn-ghost terminal-copy" type="button" data-action="copy-invite">${state.copied === "all" ? "Copied" : "Copy all"}</button>` : ""}</div>
+              <div class="terminal-body invite-terminal-body mono">${terminalBody}</div>
+            </div>
+            ${inviteLink ? `<div class="invite-link-row"><span class="invite-link-label">Or send one link — same steps, with visuals:</span><span class="invite-link-url mono" title="${escapeHTML(inviteLink)}">${escapeHTML(inviteLink)}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-invite-link">${state.copied === "link" ? "Copied" : "Copy"}</button></div>` : ""}
+            <p class="modal-copy" style="font-size:12.5px;color:#94A3B8;margin-top:2px">Once they pair, they appear under <b>Guests</b> here — you don't need to do anything else. Cursor / VS Code work too: Remote-SSH → <span class="mono">${escapeHTML(spaceName)}</span>.</p>
+            <div class="invite-meta"><span class="pill mono">one-time code</span>${invite ? `<span class="pill mono">${escapeHTML(expiryLabel(invite.expires_at))}</span>` : ""}<button class="btn-gold" type="button" data-action="close-modal">Done</button></div>
+          </section>
+        </div>`;
+    }
+
+    function renderToast() {
+      if (!state.toast) return "";
+      return `<div class="toast" role="alert" aria-live="assertive"><span class="toast-icon">${icons.alert}</span><span class="toast-message">${escapeHTML(state.toast.message)}</span><button class="text-button toast-close" type="button" data-action="close-toast" aria-label="Dismiss error">${icons.close}</button></div>`;
+    }
+
+    function render() {
+      const active = document.activeElement;
+      const activeId = active && active.id;
+      const selection = active && typeof active.selectionStart === "number" ? [active.selectionStart, active.selectionEnd] : null;
+      const selectedSpace = state.spaces.find(space => space.name === state.selected);
+      const main = state.loading && !state.loaded
+        ? renderLoadingPage()
+        : state.selected === "all" || !selectedSpace
+          ? renderAllSpaces()
+          : renderDetail(selectedSpace);
+      app.innerHTML = `
+        <div class="app-shell">
+          <div class="backdrop-wash"></div><div class="gold-orb orb-top"></div><div class="gold-orb orb-bottom"></div><div class="backdrop-grid"></div>
+          ${renderSidebar()}
+          <section class="content-shell">
+            ${renderImageBanner()}${renderBatteryBanner()}<div class="content-scroll">${main}</div>
+            ${state.modal === "create" ? renderCreateModal() : ""}${state.modal === "invite" ? renderInviteModal() : ""}${state.modal === "limits" ? renderLimitsModal() : ""}${state.modal === "delete" ? renderDeleteModal() : ""}${state.modal === "network-upgrade" ? renderNetworkUpgradeModal() : ""}
+          </section>
+          ${renderToast()}
+        </div>`;
+      if (activeId) {
+        const replacement = document.getElementById(activeId);
+        if (replacement) {
+          replacement.focus({ preventScroll: true });
+          if (selection && replacement.setSelectionRange) replacement.setSelectionRange(selection[0], selection[1]);
+        }
+      }
+    }
+
+    async function toggleSpace(spaceName) {
+      const space = state.spaces.find(item => item.name === spaceName);
+      if (!space) return;
+      if (spaceIsMissing(space)) {
+        showError(new Error("This space's VM no longer exists on this Mac. Delete the space, or recreate it and copy its workspace back."));
+        return;
+      }
+      const action = spaceIsAwake(space) ? "stop" : "start";
+      setState({ busy: `toggle:${spaceName}` }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/${action}`, { method: "POST" });
+        await refreshAfterMutation();
+      } catch (error) {
+        showError(error);
+      } finally {
+        if (state.busy === `toggle:${spaceName}`) setState({ busy: null }, false);
+      }
+    }
+
+    async function toggleProvider(spaceName, provider) {
+      const space = (state.spaces || []).find(r => r.name === spaceName);
+      if (!space) return;
+      const current = Array.isArray(space.providers) ? space.providers.slice() : ["anthropic", "openai", "xai"];
+      let next = current.includes(provider) ? current.filter(p => p !== provider) : current.concat(provider);
+      const busy = `providers:${spaceName}`;
+      setState({ busy }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/providers`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ providers: next })
+        });
+        await refreshAfterMutation();
+      } catch (error) {
+        showError(error);
+      } finally {
+        if (state.busy === busy) setState({ busy: null }, false);
+      }
+    }
+
+    async function toggleFullAuto(spaceName) {
+      const space = (state.spaces || []).find(r => r.name === spaceName);
+      if (!space) return;
+      const busy = `fullauto:${spaceName}`;
+      setState({ busy }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/full_auto`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: !space.full_auto })
+        });
+        await refreshAfterMutation();
+      } catch (error) {
+        showError(error);
+      } finally {
+        if (state.busy === busy) setState({ busy: null }, false);
+      }
+    }
+
+    async function saveCodexSetting(spaceName, setting, value) {
+      if (state.busy) return;
+      const space = state.spaces.find(s => s.name === spaceName);
+      if (!space) return;
+      const body = { route: setting === "codex-route" ? value : space.codex_route, model: setting === "codex-model" ? value : space.codex_model };
+      setState({busy:`codex:${spaceName}`}, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/codex`, {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+        await refreshAfterMutation();
+      } catch(error) { showError(error); }
+      finally { setState({busy:null},false); }
+    }
+
+    async function upgradeNetwork(spaceName) {
+      if (state.busy) return;
+      setState({busy: `upgrade:${spaceName}`}, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/upgrade-network`, {method: "POST"});
+        setState({modal: null}, false);
+        await refreshOverview();
+      } catch (error) { showError(error); }
+      finally { setState({busy: null}, false); }
+    }
+
+    async function toggleNetwork(spaceName) {
+      if (state.busy) return;
+      const space = state.spaces.find(s => s.name === spaceName);
+      if (!space) return;
+      setState({busy:`network:${spaceName}`}, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/network`, {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({internet_access:space.network_mode === "gateway-only"})});
+        await refreshAfterMutation();
+      } catch(error) { showError(error); }
+      finally { setState({busy:null},false); }
+    }
+
+    async function saveTemplate(spaceName) {
+      const busy = `template:${spaceName}`;
+      setState({ busy }, false);
+      try {
+        await request(`/api/templates/${encodeURIComponent(spaceName)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ from_space: spaceName })
+        });
+        setState({ busy: null, templateSavedFor: spaceName }, false);
+        setTimeout(() => { if (state.templateSavedFor === spaceName) setState({ templateSavedFor: null }, false); }, 2200);
+        await refreshAfterMutation();
+      } catch (error) {
+        setState({ busy: null }, false);
+        showError(error);
+      }
+    }
+
+    async function deleteTemplate(name) {
+      try {
+        await request(`/api/templates/${encodeURIComponent(name)}`, { method: "DELETE" });
+        setState({ newSpace: { ...state.newSpace, template: "" } }, false);
+        await refreshAfterMutation();
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    async function saveLimits() {
+      const spaceName = state.limitsSpace;
+      if (!spaceName) return;
+      const usdRaw = document.getElementById("limit-usd")?.value.trim() ?? "";
+      const concRaw = document.getElementById("limit-conc")?.value.trim() ?? "";
+      const body = {};
+      body.usd_limit = usdRaw === "" ? 0 : Number(usdRaw);
+      body.max_concurrency = concRaw === "" ? 0 : Number(concRaw);
+      if (!Number.isFinite(body.usd_limit) || body.usd_limit < 0) { showError(new Error("Spend cap must be a number ≥ 0.")); return; }
+      if (!Number.isFinite(body.max_concurrency) || body.max_concurrency < 0) { showError(new Error("Concurrency must be a whole number ≥ 0.")); return; }
+      const busy = `limits:${spaceName}`;
+      setState({ busy }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/limits`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        closeModal();
+        await refreshAfterMutation();
+      } catch (error) {
+        showError(error);
+      } finally {
+        if (state.busy === busy) setState({ busy: null }, false);
+      }
+    }
+
+    async function toggleSponsor(provider) {
+      const current = !!((state.sponsor || {})[provider] || {}).enabled;
+      const busy = `sponsor:${provider}`;
+      setState({ busy }, false);
+      try {
+        const sponsor = await request("/api/sponsor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, enabled: !current })
+        });
+        setState({ sponsor }, false);
+      } catch (error) {
+        showError(error);
+      } finally {
+        if (state.busy === busy) setState({ busy: null }, false);
+      }
+    }
+
+    async function createSpace() {
+      const name = state.newSpace.name.trim();
+      if (!name) return showError(new Error("Enter a space name."));
+      // The server normalizes the name (e.g. "My Project" -> "my-project") and
+      // returns the final name; use that so we select the space that was created.
+      setState({ busy: "create" }, false);
+      try {
+        const created = await request("/api/spaces", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, memory_gb: state.newSpace.memory_gb, cpus: state.newSpace.cpus, template: state.newSpace.template || "" })
+        });
+        const finalName = (created && created.name) || name;
+        setState({
+          modal: null,
+          busy: null,
+          selected: finalName,
+          usageSpace: finalName,
+          usage: [],
+          usageLoading: true,
+          confirmRevoke: null
+        }, true);
+        await refreshOverview(true);
+        await loadUsage(name, true);
+      } catch (error) {
+        setState({ busy: null }, false);
+        showError(error);
+      }
+    }
+
+    async function deleteSpace(spaceName) {
+      setState({ busy: `delete:${spaceName}` }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}`, { method: "DELETE" });
+        setState({ modal: null, deleteTarget: null, selected: "all", busy: null, usage: [], usageSpace: null }, true);
+        await refreshAfterMutation();
+      } catch (error) {
+        setState({ busy: null }, false);
+        showError(error);
+      }
+    }
+
+    async function revokeMember(spaceName, memberName) {
+      if (state.confirmRevoke !== memberName) {
+        setState({ confirmRevoke: memberName }, false);
+        return;
+      }
+      const busy = `revoke:${spaceName}:${memberName}`;
+      setState({ busy }, false);
+      try {
+        await request(`/api/spaces/${encodeURIComponent(spaceName)}/members/${encodeURIComponent(memberName)}`, { method: "DELETE" });
+        setState({ confirmRevoke: null, busy: null }, false);
+        await refreshAfterMutation();
+      } catch (error) {
+        setState({ busy: null }, false);
+        showError(error);
+      }
+    }
+
+    async function fetchInvite(spaceName) {
+      setState({ modal: "invite", inviteSpace: spaceName, invite: null, inviteLoading: true, invitePlatform: "posix", copied: null }, true);
+      try {
+        const invite = await request(`/api/spaces/${encodeURIComponent(spaceName)}/invites`, { method: "POST" });
+        if (state.modal === "invite" && state.inviteSpace === spaceName) setState({ invite, inviteLoading: false }, true);
+      } catch (error) {
+        if (state.modal === "invite" && state.inviteSpace === spaceName) setState({ inviteLoading: false }, false);
+        showError(error);
+      }
+    }
+
+    // The public invite page (/i/<code>) only makes sense when the console is
+    // reachable beyond this Mac, so the link row hides on localhost.
+    function inviteLinkURL(invite) {
+      if (!invite || !invite.code) return null;
+      const host = location.hostname;
+      if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]") return null;
+      return `${location.origin}/i/${invite.code}`;
+    }
+
+    async function copySSH(spaceName) {
+      try {
+        await writeClipboard(`ssh ${spaceName}`);
+        setState({ copied: "ssh" }, false);
+        setTimeout(() => { if (state.copied === "ssh") setState({ copied: null }, false); }, 1800);
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    async function copyInviteLink() {
+      const link = inviteLinkURL(state.invite);
+      if (!link) return;
+      try {
+        await writeClipboard(link);
+        setState({ copied: "link" }, false);
+        setTimeout(() => { if (state.copied === "link") setState({ copied: null }, false); }, 1800);
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    // The daemon owns the install commands (internal/dist) and sends them with
+    // each invite, so the console never hard-codes a download location.
+    function guestInstallCommand(invite, platform) {
+      const install = (invite && invite.install) || {};
+      return String((platform === "windows" ? install.windows : install.posix) || "");
+    }
+
+    function inviteCommands(invite, platform, spaceName) {
+      const pair = invite && String(invite.command || "");
+      if (!pair) return [];
+      const install = guestInstallCommand(invite, platform);
+      // Comment-free so the block pastes cleanly into any shell; the trailing
+      // ssh runs last and drops the guest straight into the space.
+      return [install, pair, `ssh ${spaceName}`];
+    }
+
+    async function writeClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) throw new Error("Copy was blocked by the browser.");
+    }
+
+    async function copyInvite(which) {
+      const commands = inviteCommands(state.invite, state.invitePlatform, state.inviteSpace || "space");
+      if (!commands.length) return;
+      const text = which === "all" ? commands.join("\n") : commands[Number(which)];
+      if (!text) return;
+      try {
+        await writeClipboard(text);
+        setState({ copied: which }, false);
+        setTimeout(() => { if (state.copied === which) setState({ copied: null }, false); }, 1800);
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    function closeModal() {
+      if (state.busy && state.busy.startsWith("upgrade:")) return;
+      setState({
+        modal: null,
+        invite: null,
+        inviteSpace: null,
+        inviteLoading: false,
+        invitePlatform: "posix",
+        copied: null,
+        deleteTarget: null,
+        busy: state.busy === "create" ? null : state.busy
+      }, false);
+    }
+
+    app.addEventListener("input", event => {
+      if (event.target.id === "new-space-name") setState({ newSpace: { ...state.newSpace, name: event.target.value } }, false);
+      if (event.target.id === "new-space-template") setState({ newSpace: { ...state.newSpace, template: event.target.value } }, false);
+    });
+
+    app.addEventListener("change", event => {
+      if (event.target.dataset.setting) saveCodexSetting(event.target.dataset.space, event.target.dataset.setting, event.target.value);
+    });
+
+    app.addEventListener("submit", event => {
+      if (event.target.matches('[data-form="create-space"]')) {
+        event.preventDefault();
+        createSpace();
+      } else if (event.target.matches('[data-form="limits"]')) {
+        event.preventDefault();
+        saveLimits();
+      }
+    });
+
+    app.addEventListener("keydown", event => {
+      const card = event.target.closest('[role="button"][data-action="select-space"]');
+      if (card && !event.target.closest("button") && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        card.click();
+      }
+    });
+
+    app.addEventListener("click", event => {
+      const control = event.target.closest("[data-action]");
+      if (!control) return;
+      const action = control.dataset.action;
+      const spaceName = control.dataset.space;
+      if (action === "select-all") {
+        setState({ selected: "all", confirmRevoke: null }, true);
+      } else if (action === "select-space") {
+        if (event.target.closest("button") && event.target.closest("button") !== control) return;
+        setState({ selected: spaceName, usageSpace: spaceName, usage: [], usageLoading: true, confirmRevoke: null }, true);
+        loadUsage(spaceName, true);
+      } else if (action === "toggle-space") {
+        event.stopPropagation();
+        toggleSpace(spaceName);
+      } else if (action === "toggle-sponsor") {
+        toggleSponsor(control.dataset.provider);
+      } else if (action === "toggle-provider") {
+        toggleProvider(spaceName, control.dataset.provider);
+      } else if (action === "toggle-fullauto") {
+        toggleFullAuto(spaceName);
+      } else if (action === "toggle-network") {
+        toggleNetwork(spaceName);
+      } else if (action === "open-network-upgrade") {
+        setState({modal: "network-upgrade", upgradeSpace: spaceName}, true);
+      } else if (action === "confirm-network-upgrade") {
+        upgradeNetwork(spaceName);
+      } else if (action === "save-template") {
+        saveTemplate(spaceName);
+      } else if (action === "delete-template") {
+        deleteTemplate(control.dataset.template);
+      } else if (action === "open-create" && imageReady()) {
+        setState({ modal: "create", newSpace: { name: "", memory_gb: 2, cpus: 4, template: "" }, confirmRevoke: null }, true);
+        requestAnimationFrame(() => document.getElementById("new-space-name")?.focus());
+      } else if (action === "pick-memory") {
+        setState({ newSpace: { ...state.newSpace, memory_gb: Number(control.dataset.memory) } }, false);
+      } else if (action === "close-modal") {
+        if (event.target !== control && control.classList.contains("modal-backdrop")) return;
+        closeModal();
+      } else if (action === "open-limits") {
+        setState({ modal: "limits", limitsSpace: spaceName }, true);
+      } else if (action === "open-invite") {
+        fetchInvite(spaceName);
+      } else if (action === "retry-invite") {
+        fetchInvite(state.inviteSpace);
+      } else if (action === "pick-invite-platform") {
+        setState({ invitePlatform: control.dataset.platform === "windows" ? "windows" : "posix", copied: null }, false);
+      } else if (action === "copy-invite-link") {
+        copyInviteLink();
+      } else if (action === "copy-invite") {
+        copyInvite("all");
+      } else if (action === "copy-line") {
+        copyInvite(control.dataset.line);
+      } else if (action === "delete-space") {
+        setState({ modal: "delete", deleteTarget: spaceName, confirmRevoke: null }, true);
+      } else if (action === "confirm-delete") {
+        deleteSpace(control.dataset.space);
+      } else if (action === "copy-ssh") {
+        copySSH(spaceName);
+      } else if (action === "revoke-member") {
+        revokeMember(spaceName, control.dataset.member);
+      } else if (action === "dismiss-battery") {
+        try { sessionStorage.setItem(batterySessionKey, "1"); } catch (_) {}
+        setState({ batteryDismissed: true }, false);
+      } else if (action === "close-toast") {
+        clearTimeout(toastTimer);
+        setState({ toast: null }, false);
+      } else if (action === "retry-overview") {
+        refreshOverview(true);
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && state.modal) closeModal();
+    });
+
+    render();
+    refreshOverview(true);
+    setInterval(() => {
+      const editing = document.activeElement?.matches("input, select, textarea");
+      if (!state.modal && !state.busy && !editing) refreshOverview();
+    }, 5000);
+  </script>
+</body>
+</html>

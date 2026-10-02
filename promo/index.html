@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>CoSpace Promo</title>
+<style>
+  :root {
+    --ink: #1F2937; --muted: #475569; --faint: #94A3B8;
+    --gold: #B45309; --amber: #F59E0B; --cream: #FDFBF6;
+    --t-cmd: #E2E8F0; --t-out: #94A3B8; --t-ok: #4ADE80; --t-hi: #FBBF24; --t-dim: #64748B; --t-claude: #E07A52;
+    --sans: "PingFang SC", -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #111; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+  .stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden; flex: none;
+    font-family: var(--sans); color: var(--ink);
+    background: linear-gradient(135deg, #FDFBF6 0%, #FDF6EA 50%, #F7F4EE 100%);
+    transform-origin: center center;
+  }
+  .grid { position: absolute; inset: -64px; background-image:
+      linear-gradient(rgba(180,83,9,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(180,83,9,.055) 1px, transparent 1px);
+    background-size: 64px 64px; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(10px); }
+  .blob.a { width: 760px; height: 760px; right: -220px; top: -300px; background: radial-gradient(#F59E0B33, #F59E0B00 70%); }
+  .blob.b { width: 640px; height: 640px; left: -220px; bottom: -280px; background: radial-gradient(#D9770626, #D9770600 70%); }
+
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  [data-in] { opacity: 0; will-change: transform, opacity; }
+
+  /* type */
+  .step { display: inline-flex; align-items: center; gap: 14px; font-family: var(--mono); font-size: 22px; letter-spacing: 3px; color: var(--gold); font-weight: 600; }
+  .step i { width: 36px; height: 2px; background: var(--gold); display: block; }
+  h1 { font-size: 76px; line-height: 1.22; font-weight: 600; letter-spacing: 1px; }
+  h1 b, .hl { color: var(--gold); font-weight: 600; }
+  .sub { font-size: 31px; line-height: 1.6; color: var(--muted); }
+  .center { position: absolute; left: 0; right: 0; text-align: center; }
+  .head { position: absolute; left: 120px; right: 120px; top: 64px; display: flex; align-items: baseline; gap: 30px; }
+  .head h1 { font-size: 56px; }
+
+  /* terminal */
+  .term { position: absolute; border-radius: 22px; background: linear-gradient(135deg, #1E293B, #0F172A);
+    box-shadow: 0 40px 80px -20px rgba(15,23,42,.45), 0 0 0 1px rgba(255,255,255,.08) inset; overflow: hidden; }
+  .term .bar { height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 22px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .term .bar span { width: 14px; height: 14px; border-radius: 50%; }
+  .term .bar span:nth-child(1) { background: #EF4444; } .term .bar span:nth-child(2) { background: #EAB308; } .term .bar span:nth-child(3) { background: #22C55E; }
+  .term .bar em { font-style: normal; margin-left: 14px; font-family: var(--mono); font-size: 19px; color: var(--t-dim); }
+  .term .body { position: absolute; top: 54px; bottom: 0; left: 0; right: 0; padding: 22px 30px; display: flex; flex-direction: column; justify-content: flex-start;
+    font-family: var(--mono); font-size: 25px; line-height: 1.62; color: var(--t-cmd); white-space: pre; overflow: hidden; }
+  .term .body > * { flex: none; }
+  .term .body.bottom { justify-content: flex-end; }
+  .ln .p { color: var(--t-ok); } .ln .c { color: var(--t-cmd); }
+  .o { color: var(--t-out); } .ok { color: var(--t-ok); } .hi { color: var(--t-hi); } .dim { color: var(--t-dim); } .cl { color: var(--t-claude); } .w { color: #fff; }
+  .cur { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.18em; background: var(--t-hi); margin-left: 2px; }
+
+  /* browser window around real UI screenshots */
+  .win { position: absolute; border-radius: 18px; overflow: hidden; background: #fff;
+    box-shadow: 0 50px 100px -30px rgba(120,53,15,.45), 0 0 0 1px rgba(180,83,9,.14); }
+  .win .bar { height: 44px; background: #F3F1EC; display: flex; align-items: center; gap: 9px; padding: 0 18px; border-bottom: 1px solid #E7E2D8; position: relative; }
+  .win .bar span { width: 13px; height: 13px; border-radius: 50%; }
+  .win .bar span:nth-child(1) { background: #FF5F57; } .win .bar span:nth-child(2) { background: #FEBC2E; } .win .bar span:nth-child(3) { background: #28C840; }
+  .win .url { position: absolute; left: 50%; transform: translateX(-50%); top: 8px; height: 28px; min-width: 340px; padding: 0 18px; border-radius: 8px;
+    background: #fff; border: 1px solid #E7E2D8; font-family: var(--mono); font-size: 15px; color: #64748B; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .win .view { position: relative; overflow: hidden; }
+  .win .view img { position: absolute; left: 0; top: 0; width: 100%; }
+  .pointer { position: absolute; width: 34px; height: 34px; pointer-events: none; z-index: 5; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+  .ripple { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; border: 4px solid #F59E0B; z-index: 4; opacity: 0; }
+
+  /* chips & cards */
+  .chip { display: inline-flex; align-items: center; gap: 12px; padding: 14px 24px; border-radius: 999px; background: #fff;
+    border: 1px solid rgba(180,83,9,.18); box-shadow: 0 10px 24px -14px rgba(180,83,9,.4); font-size: 26px; color: var(--ink); }
+  .chip .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; }
+  .chip code { font-family: var(--mono); color: var(--gold); }
+  .card { position: absolute; background: #fff; border-radius: 24px; border: 1px solid rgba(180,83,9,.12);
+    box-shadow: 0 30px 60px -30px rgba(120,53,15,.35); padding: 30px 34px; }
+  .logo { width: 168px; height: 168px; border-radius: 42px; background: linear-gradient(135deg, #F59E0B, #B45309);
+    box-shadow: 0 30px 60px -20px rgba(180,83,9,.6), 0 0 0 2px rgba(255,255,255,.35) inset; display: grid; place-items: center; }
+  .wordmark { font-family: var(--mono); font-weight: 700; letter-spacing: 4px; color: var(--ink); }
+  .wordmark span { color: var(--gold); }
+
+  /* agent app windows (S5) */
+  .app { position: absolute; width: 820px; height: 590px; border-radius: 20px; background: #FFFFFF; overflow: hidden;
+    box-shadow: 0 40px 80px -30px rgba(15,23,42,.35), 0 0 0 1px rgba(15,23,42,.08); display: flex; flex-direction: column; }
+  .app .abar { height: 50px; flex: none; display: flex; align-items: center; gap: 9px; padding: 0 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+  .app .abar span.l { width: 13px; height: 13px; border-radius: 50%; }
+  .app .abar .who { margin-left: 12px; font-size: 19px; color: #334155; font-weight: 600; }
+  .app .abar .conn { margin-left: auto; font-family: var(--mono); font-size: 15px; color: #0F766E; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 4px 12px; border-radius: 999px; }
+  .app .main { flex: 1; display: flex; min-height: 0; }
+  .app .side { width: 190px; flex: none; background: #F8FAFC; border-right: 1px solid #E2E8F0; padding: 16px 12px; font-size: 16px; color: #64748B; }
+  .app .side div { padding: 9px 10px; border-radius: 8px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app .side .on { background: #FFF7ED; color: #B45309; font-weight: 600; }
+  .app .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .app .msgs { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 18px 24px 8px; gap: 12px; font-size: 19px; line-height: 1.55; }
+  .app .msgs > * { flex: none; }
+  .app .u { align-self: flex-end; max-width: 80%; background: #FFF7ED; border: 1px solid #FED7AA; color: #7C2D12; padding: 10px 16px; border-radius: 16px 16px 4px 16px; }
+  .app .u small { display: block; font-size: 14px; color: #C2410C; margin-bottom: 2px; }
+  .app .a { color: #1F2937; }
+  .app .tool { font-family: var(--mono); font-size: 16px; color: #475569; background: #F1F5F9; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; }
+  .app .tool .spin { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #CBD5E1; border-top-color: #F59E0B; }
+  .app .tool .g { color: #16A34A; } .app .tool .r { color: #DC2626; }
+  .app .composer { margin: 8px 20px 18px; height: 54px; flex: none; border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 0 18px; display: flex; align-items: center; font-size: 18px; color: #94A3B8; }
+  .app .composer.typing { color: #1F2937; border-color: #F59E0B; }
+  .live { position: absolute; z-index: 3; font-family: var(--mono); font-size: 16px; font-weight: 700; color: #fff; background: #DC2626; padding: 4px 12px; border-radius: 6px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="grid" id="grid"></div>
+  <div class="blob a" id="blobA"></div>
+  <div class="blob b" id="blobB"></div>
+
+  <!-- S1 · 单机模式 -->
+  <section class="scene" data-from="0" data-to="6.2">
+    <div class="center" style="top:120px">
+      <h1 data-in="0.4" data-anim="up">AI 编程，一直是<b>单机模式</b>。</h1>
+      <p class="sub" data-in="1.3" data-anim="up" style="margin-top:22px">每个人的 session、memory、文件，各在各的机器上。</p>
+    </div>
+    <div id="s1cards">
+      <div class="term s1t" data-in="1.6" data-anim="pop" style="left:150px; top:470px; width:500px; height:330px"><div class="bar"><span></span><span></span><span></span><em>alice@laptop</em></div>
+        <div class="body" style="font-size:22px"><div><span class="cl">✻</span> claude</div><div class="o">› 修支付回调的偶发 500</div><div class="dim">  memory: 3 条（只在这台）</div><div class="dim">  session: 2h，没人看得到</div></div></div>
+      <div class="term s1t" data-in="1.9" data-anim="pop" style="left:710px; top:470px; width:500px; height:330px"><div class="bar"><span></span><span></span><span></span><em>bob@desktop</em></div>
+        <div class="body" style="font-size:22px"><div><span class="cl">✻</span> claude</div><div class="o">› 重构网关计量</div><div class="dim">  “alice 之前怎么改的？”</div><div class="dim">  上下文：从零开始</div></div></div>
+      <div class="term s1t" data-in="2.2" data-anim="pop" style="left:1270px; top:470px; width:500px; height:330px"><div class="bar"><span></span><span></span><span></span><em>you@macbook</em></div>
+        <div class="body" style="font-size:22px"><div><span class="cl">✻</span> claude</div><div class="o">› 给 relay 加重连测试</div><div class="dim">  再贴一遍需求文档…</div><div class="dim">  再配一遍环境…</div></div></div>
+    </div>
+    <svg id="s1x" width="1920" height="1080" style="position:absolute;left:0;top:0;pointer-events:none">
+      <g data-in="3.0" data-anim="fade" stroke="#DC2626" stroke-width="3" stroke-dasharray="10 10" fill="none" opacity=".8">
+        <path d="M650 635 H710"/><path d="M1210 635 H1270"/>
+      </g>
+      <g data-in="3.2" data-anim="pop" font-family="SF Mono, Menlo" font-size="40" font-weight="700" fill="#DC2626" text-anchor="middle">
+        <text x="680" y="610">✕</text><text x="1240" y="610">✕</text>
+      </g>
+    </svg>
+    <p class="center sub" id="s1note" data-in="3.6" data-anim="up" style="top:880px; font-size:28px; color:#94A3B8">换个人接手，就要从头讲一遍。</p>
+  </section>
+
+  <!-- S2 · Logo -->
+  <section class="scene" data-from="6.0" data-to="11.2">
+    <div class="center" style="top:250px; display:flex; flex-direction:column; align-items:center">
+      <div style="display:flex; align-items:center; gap:46px">
+        <div class="logo" data-in="5.95" data-anim="spin">
+          <svg width="96" height="96" viewBox="0 0 48 48" fill="none" stroke="#FFFBEB" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="15" cy="33" r="10.5"/><path d="M22.5 25.5 L45 3"/><path d="M37 8 L44 15"/><path d="M30 15 L35 20"/></svg>
+        </div>
+        <div class="wordmark" data-in="6.3" data-anim="left" style="font-size:150px">Co<span>Space</span></div>
+      </div>
+      <h1 data-in="7.5" data-anim="up" style="margin-top:70px; font-size:84px">AI 编程的<b>联机模式</b>。</h1>
+      <p class="sub" data-in="8.2" data-anim="up" style="margin-top:24px; font-size:34px">在你自己的 Mac 上开一个空间，信任的人一条 ssh 就能进来一起干活</p>
+      <div style="display:flex; gap:22px; margin-top:54px">
+        <span class="chip" data-in="8.9" data-anim="pop"><span class="dot" style="background:#C2410C"></span>Claude Code</span>
+        <span class="chip" data-in="9.05" data-anim="pop"><span class="dot" style="background:#0F766E"></span>Codex</span>
+        <span class="chip" data-in="9.2" data-anim="pop"><span class="dot" style="background:#334155"></span>Grok</span>
+        <span class="chip" data-in="9.35" data-anim="pop"><span class="dot" style="background:#F59E0B"></span>Apple container</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- S3 · Host：真实控制台 -->
+  <section class="scene" data-from="11.0" data-to="22.2">
+    <div class="head" id="h3">
+      <div class="step" data-in="11.2" data-anim="left"><i></i>01 · HOST</div>
+      <h1 data-in="11.4" data-anim="up">点两下：<b>开空间</b>，<b>发邀请链接</b></h1>
+    </div>
+    <div class="win" id="w3" data-in="11.5" data-anim="up" style="left:310px; top:190px; width:1300px">
+      <div class="bar"><span></span><span></span><span></span><div class="url">localhost:18931</div></div>
+      <div class="view" style="height:772px">
+        <img src="ui/overview.png" data-show="0,13.25">
+        <img src="ui/create.png" data-show="13.25,15.1">
+        <img src="ui/detail.png" data-show="15.1,16.8">
+        <img src="ui/invite.png" data-show="16.8,99">
+        <div id="typeMask" style="position:absolute; background:#fff"></div>
+        <div class="ripple" id="rip3"></div>
+        <svg class="pointer" id="ptr3" viewBox="0 0 24 24"><path d="M4 2 L4 20 L9 15.5 L12.5 22.5 L15.5 21 L12 14 L19 14 Z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="chip" data-in="18.9" data-anim="pop" style="position:absolute; left:1240px; top:930px; z-index:6; font-size:27px"><span class="dot"></span>链接已复制 —— 发给你信任的人</div>
+  </section>
+
+  <!-- S4 · Guest：邀请页 + 终端 -->
+  <section class="scene" data-from="22.0" data-to="32.2">
+    <div class="head">
+      <div class="step" data-in="22.2" data-anim="left"><i></i>02 · GUEST</div>
+      <h1 data-in="22.4" data-anim="up">打开链接，<b>60 秒</b>用上 Claude Code</h1>
+      <div data-in="22.8" data-anim="pop" style="margin-left:auto; font-family:var(--mono); font-size:52px; font-weight:700; color:var(--ink)"><span id="clock">00:00</span></div>
+    </div>
+    <div class="win" id="w4" data-in="22.5" data-anim="left" style="left:90px; top:196px; width:900px">
+      <div class="bar"><span></span><span></span><span></span><div class="url">🔒 …/i/7KQ4-M9XT</div></div>
+      <div class="view" style="height:696px">
+        <img src="ui/invite-page.png">
+        <div class="ripple" id="rip4"></div>
+        <svg class="pointer" id="ptr4" viewBox="0 0 24 24"><path d="M4 2 L4 20 L9 15.5 L12.5 22.5 L15.5 21 L12 14 L19 14 Z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="term" data-in="23.9" data-anim="right" style="left:900px; top:226px; width:930px; height:710px; z-index:2"><div class="bar"><span></span><span></span><span></span><em>guest — 任何一台电脑</em></div>
+      <div class="body bottom" id="t4" style="font-size:23px"></div></div>
+    <div class="center" style="top:962px"><div class="chip" data-in="30.0" data-anim="pop" style="font-size:24px"><span class="dot"></span>不注册账号 · 不碰 API key · 不装 VPN · Claude Code / Codex app 直接选 SSH</div></div>
+  </section>
+
+  <!-- S5 · 实时围观同一个 agent 会话 -->
+  <section class="scene" data-from="32.0" data-to="44.2">
+    <div style="position:absolute; left:120px; top:70px">
+      <div class="step" data-in="32.2" data-anim="left"><i></i>03 · TOGETHER</div>
+      <h1 data-in="32.4" data-anim="up" style="margin-top:18px; font-size:66px">alice 在提问，<b>所有人实时看到</b></h1>
+      <p class="sub" data-in="32.9" data-anim="up" style="margin-top:10px; font-size:27px">大家用 Codex app 经 SSH 连进同一个空间——对话、流式输出、运行状态，同步可见。</p>
+    </div>
+    <div class="app" data-in="33.0" data-anim="up" style="left:110px; top:350px">
+      <div class="abar"><span class="l" style="background:#FF5F57"></span><span class="l" style="background:#FEBC2E"></span><span class="l" style="background:#28C840"></span><span class="who">alice · Codex app</span><span class="conn">● SSH · shopfront</span></div>
+      <div class="main"><div class="side"><div class="on">支付回调 500</div><div>重构网关计量</div><div>relay 重连测试</div></div>
+        <div class="chat"><div class="msgs" id="chatA"></div><div class="composer" id="compA">问点什么…</div></div></div>
+    </div>
+    <div class="app" data-in="33.3" data-anim="up" style="left:990px; top:350px">
+      <div class="abar"><span class="l" style="background:#FF5F57"></span><span class="l" style="background:#FEBC2E"></span><span class="l" style="background:#28C840"></span><span class="who">bob · Codex app</span><span class="conn">● SSH · shopfront</span></div>
+      <div class="main"><div class="side"><div class="on">支付回调 500</div><div>重构网关计量</div><div>relay 重连测试</div></div>
+        <div class="chat"><div class="msgs" id="chatB"></div><div class="composer" id="compB">bob 也可以接着追问…</div></div></div>
+    </div>
+    <div class="live" id="liveTag" style="left:1720px; top:330px">● LIVE</div>
+    <div style="position:absolute; left:120px; right:120px; top:968px; display:flex; gap:18px; justify-content:center">
+      <span class="chip" data-in="41.6" data-anim="pop" style="font-size:23px; padding:12px 22px"><code>claude --resume</code> 接手任何人的 session</span>
+      <span class="chip" data-in="41.8" data-anim="pop" style="font-size:23px; padding:12px 22px"><code>tmux attach</code> 围观终端</span>
+      <span class="chip" data-in="42.0" data-anim="pop" style="font-size:23px; padding:12px 22px"><code>git commit</code> 作者按成员归属</span>
+    </div>
+  </section>
+
+  <!-- S6 · Full-auto -->
+  <section class="scene" data-from="44.0" data-to="52.2">
+    <div style="position:absolute; left:120px; top:110px">
+      <div class="step" data-in="44.3" data-anim="left"><i></i>04 · FULL-AUTO</div>
+      <h1 data-in="44.5" data-anim="up" style="margin-top:24px">放心让 agent <b>全速跑</b></h1>
+      <p class="sub" data-in="45.0" data-anim="up" style="margin-top:14px; font-size:28px">新空间默认 full-auto：没有权限弹窗——VM 本身就是沙箱。</p>
+    </div>
+    <div data-in="45.0" data-anim="pop" style="position:absolute; left:110px; top:390px; width:1060px; height:520px; border:3px dashed #F59E0B; border-radius:32px; background:rgba(255,251,235,.55)">
+      <div style="position:absolute; left:34px; top:-22px; background:#FDF6EA; padding:0 14px; font-family:var(--mono); font-size:24px; color:var(--gold); font-weight:600">shopfront · 独立 Linux VM</div>
+    </div>
+    <div class="term" data-in="45.3" data-anim="fade" style="left:150px; top:430px; width:980px; height:440px"><div class="bar"><span></span><span></span><span></span><em>claude · bypassPermissions</em></div>
+      <div class="body bottom" id="t6" style="font-size:23px"></div></div>
+    <div class="card" data-in="45.8" data-anim="right" style="left:1240px; top:390px; width:570px; height:200px">
+      <div style="display:flex; justify-content:space-between; font-size:26px"><span>预算上限</span><span style="font-family:var(--mono)"><span id="spent">$0.00</span><span style="color:var(--faint)"> / $20</span></span></div>
+      <div style="height:18px; border-radius:9px; background:#F1F5F9; margin-top:22px; overflow:hidden"><div id="meter" style="height:100%; width:0; border-radius:9px; background:linear-gradient(90deg,#F59E0B,#B45309)"></div></div>
+      <div id="cap" style="font-size:22px; color:var(--faint); margin-top:18px"></div>
+    </div>
+    <div class="card" data-in="46.2" data-anim="right" style="left:1240px; top:620px; width:570px; height:130px; display:flex; align-items:center; justify-content:space-between; font-size:26px">
+      <span>并发上限</span><span style="font-family:var(--mono); font-size:34px; color:var(--gold); font-weight:700">5</span></div>
+    <div class="card" data-in="46.6" data-anim="right" style="left:1240px; top:780px; width:570px; height:130px; display:flex; align-items:center; justify-content:space-between; font-size:26px">
+      <span>撤销成员 / 关掉 AI</span><span style="color:#16A34A; font-size:24px">点下即生效</span></div>
+    <div data-in="48.0" data-anim="up" class="center" style="top:960px">
+      <span class="chip" style="font-size:27px; padding:16px 30px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>真凭证不出 Mac——空间里只有每空间独立、可随时撤销的假 token</span>
+    </div>
+  </section>
+
+  <!-- S7 · Console -->
+  <section class="scene" data-from="52.0" data-to="56.6">
+    <div class="center" style="top:60px">
+      <h1 data-in="52.0" data-anim="up" style="font-size:60px">一切管理，都在<b>本地网页控制台</b></h1>
+      <p class="sub" data-in="52.5" data-anim="up" style="margin-top:6px; font-size:27px">成员 · 用量 · 预算 · 模型 · 联网 —— 不依赖任何云服务</p>
+    </div>
+    <div class="win" data-in="52.2" data-anim="rise" style="left:340px; top:250px; width:1240px">
+      <div class="bar"><span></span><span></span><span></span><div class="url">localhost:18931</div></div>
+      <div class="view" style="height:736px"><img src="ui/live.png"></div>
+    </div>
+  </section>
+
+  <!-- End -->
+  <section class="scene" data-from="56.4" data-to="62">
+    <div class="center" style="top:290px; display:flex; flex-direction:column; align-items:center">
+      <div style="display:flex; align-items:center; gap:36px">
+        <div class="logo" data-in="56.6" data-anim="pop" style="width:128px; height:128px; border-radius:32px">
+          <svg width="72" height="72" viewBox="0 0 48 48" fill="none" stroke="#FFFBEB" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="15" cy="33" r="10.5"/><path d="M22.5 25.5 L45 3"/><path d="M37 8 L44 15"/><path d="M30 15 L35 20"/></svg>
+        </div>
+        <div class="wordmark" data-in="56.8" data-anim="left" style="font-size:116px">Co<span>Space</span></div>
+      </div>
+      <h1 data-in="57.3" data-anim="up" style="margin-top:56px; font-size:66px">邀请你<b>信任的人</b>，一条 ssh 进来一起干活。</h1>
+      <div data-in="58.0" data-anim="pop" style="margin-top:56px; padding:26px 46px; border-radius:20px; background:linear-gradient(135deg,#1E293B,#0F172A); font-family:var(--mono); font-size:44px; box-shadow:0 30px 60px -20px rgba(15,23,42,.5)">
+        <span style="color:#4ADE80">$</span> <span style="color:#E2E8F0">ssh</span> <span style="color:#FBBF24">shopfront</span><span class="cur" id="endcur"></span></div>
+      <p class="sub" data-in="58.6" data-anim="fade" style="margin-top:48px; font-size:24px; color:var(--faint); font-family:var(--mono)">Host: Apple Silicon · macOS 26+　·　Guests: macOS · Linux · Windows</p>
+    </div>
+  </section>
+
+  <div id="fade" style="position:absolute; inset:0; background:#FDFBF6; opacity:0; pointer-events:none"></div>
+</div>
+
+<script src="ui/points.js"></script>
+<script>
+const DURATION = 62;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeBack = x => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const easeInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const $ = id => document.getElementById(id);
+
+// ---------- pointer paths: [time, x, y] in screenshot CSS px; clicks are times ----------
+const K3 = 1300 / 1280, K4 = 900 / 1100;
+const P3 = [[11.5, 640, 520], [12.4, 640, 520], [13.0, PTS.newSpace.x, PTS.newSpace.y], [13.5, PTS.newSpace.x, PTS.newSpace.y],
+  [14.3, PTS.create.x, PTS.create.y], [15.3, PTS.create.x, PTS.create.y], [16.3, PTS.invite.x, PTS.invite.y], [17.4, PTS.invite.x, PTS.invite.y],
+  [18.3, PTS.copyLink.x, PTS.copyLink.y], [30, PTS.copyLink.x, PTS.copyLink.y]];
+const C3 = [13.05, 14.95, 16.65, 18.4];
+const P4 = [[22.5, 400, 600], [22.9, 400, 600], [23.5, PTS.copyAll.x, PTS.copyAll.y], [40, PTS.copyAll.x, PTS.copyAll.y]];
+const C4 = [23.6];
+function along(path, t) {
+  if (t <= path[0][0]) return path[0].slice(1);
+  for (let i = 1; i < path.length; i++) {
+    const [t1, x1, y1] = path[i], [t0, x0, y0] = path[i - 1];
+    if (t <= t1) { const e = easeInOut((t - t0) / (t1 - t0)); return [x0 + (x1 - x0) * e, y0 + (y1 - y0) * e]; }
+  }
+  return path[path.length - 1].slice(1);
+}
+function pointer(ptr, rip, path, clicks, k, t) {
+  const [x, y] = along(path, t);
+  const pressed = clicks.some(c => t >= c && t < c + 0.12);
+  $(ptr).style.transform = `translate(${x * k - 6}px, ${y * k - 4}px) scale(${pressed ? 0.86 : 1})`;
+  const c = clicks.filter(c => t >= c).pop();
+  const r = $(rip);
+  if (c !== undefined && t - c < 0.6) {
+    const p = (t - c) / 0.6;
+    const [cx, cy] = along(path, c);
+    r.style.left = `${cx * k}px`; r.style.top = `${cy * k}px`;
+    r.style.opacity = 1 - p; r.style.transform = `scale(${0.3 + p})`;
+  } else r.style.opacity = 0;
+}
+
+// ---------- terminals ----------
+const P = '<span class="p">$</span> ';
+const SP = '<span class="ok">space@shopfront</span><span class="dim">:~/workspace</span><span class="w">$</span> ';
+const T = {
+  t4: [
+    { at: 24.3, out: '<span class="dim"># 粘贴邀请页的三行</span>' },
+    { at: 24.5, cmd: 'curl -fsSL …/install.sh | sh', cps: 90 },
+    { at: 25.0, out: '<span class="ok">  ✓ installed cospace</span><span class="o"> (alias: co)</span>' },
+    { at: 25.3, cmd: 'cospace pair tc1:9hQx…mK2a 7KQ4-M9XT', cps: 90 },
+    { at: 25.9, out: '<span class="ok">  ✓ paired with shopfront</span>' },
+    { at: 26.05, out: '<span class="o">  ✓ host key SHA256:ZIu6…th2bU pinned</span>' },
+    { at: 26.2, out: '<span class="o">  ✓ ~/.ssh/config → Host shopfront</span>' },
+    { at: 26.5, cmd: 'ssh shopfront', cps: 60 },
+    { at: 27.1, prompt: SP, cmd: 'claude', cps: 16 },
+    { at: 27.8, out: '<div style="display:inline-block; margin:10px 0 12px; padding:12px 26px; border:2px solid var(--t-claude); border-radius:12px; line-height:1.55"><span class="cl">✻</span> <span class="w">Welcome to Claude Code!</span><br><span class="dim">  cwd: /home/space/workspace · 已登录</span></div>' },
+    { at: 28.3, prompt: '<span class="w">› </span>', cmd: '把首页跑起来，端口 5173', cps: 9 },
+    { at: 30.6, out: '<span class="cl">⏺</span> <span class="o">Bash(npm run dev) → </span><span class="ok">localhost:5173</span>' },
+  ],
+};
+function renderTerm(id, t) {
+  const lines = T[id];
+  let html = '', active = -1;
+  lines.forEach((l, i) => { if (t >= l.at) active = i; });
+  for (let i = 0; i <= active; i++) {
+    const l = lines[i];
+    if (l.cmd !== undefined) {
+      const n = Math.floor((t - l.at) * l.cps);
+      const typing = n < l.cmd.length;
+      const blink = i === active && (typing || Math.floor(t * 2) % 2 === 0);
+      html += `<div class="ln">${l.prompt ?? P}<span class="c">${esc(l.cmd.slice(0, n))}</span>${blink ? '<span class="cur"></span>' : ''}</div>`;
+    } else html += `<div class="ln">${l.out}</div>`;
+  }
+  if (active >= 0 && lines[active].cmd === undefined && Math.floor(t * 2) % 2 === 0) html += '<div class="ln"><span class="cur"></span></div>';
+  return html;
+}
+
+// ---------- S5: one conversation, rendered identically in both apps ----------
+const ASK = '支付回调偶发 500，帮我查一下并修好';
+const CHAT = [
+  { at: 35.0, user: ASK },
+  { at: 35.4, say: '我先复现一下这个问题。', cps: 16 },
+  { at: 36.2, tool: 'Bash · pytest tests/test_payment.py', done: 37.4, res: '<span class="r">✗ 1 failed</span>' },
+  { at: 37.6, say: '重试时幂等键丢失了，我来修。', cps: 16 },
+  { at: 38.6, tool: 'Edit · src/payment/callback.ts', done: 38.9, res: '<span class="g">+12</span> <span class="r">−3</span>' },
+  { at: 39.1, tool: 'Bash · pytest -q', done: 40.1, res: '<span class="g">✓ 46 passed</span>' },
+  { at: 40.3, say: '修好了：重试会复用同一个幂等键，并补了回归测试。', cps: 18 },
+];
+function chatHTML(t) {
+  let h = '';
+  for (const m of CHAT) {
+    if (t < m.at) break;
+    if (m.user) h += `<div class="u"><small>alice</small>${m.user}</div>`;
+    else if (m.say) { const n = Math.floor((t - m.at) * m.cps); h += `<div class="a">${m.say.slice(0, n)}${n < m.say.length ? '<span style="color:#F59E0B">▍</span>' : ''}</div>`; }
+    else if (m.tool) {
+      const running = t < m.done;
+      const spin = `<span class="spin" style="transform:rotate(${t * 720}deg)"></span>`;
+      h += `<div class="tool">${running ? spin + '<b style="color:#B45309">Running</b>' : '<span class="g">●</span>'}<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${m.tool}${running ? '' : '　' + m.res}</span></div>`;
+    }
+  }
+  return h;
+}
+
+const STREAM = [
+  ['Bash', 'npm install', 'added 412 packages'], ['Edit', 'src/routes/login.ts', '+38 −12'], ['Bash', 'pytest -q', '✓ 128 passed'],
+  ['Write', 'tests/test_relay.py', 'new file'], ['Bash', 'rm -rf build/ && make', 'ok'], ['Edit', 'internal/usage/meter.go', '+21 −4'],
+  ['Bash', 'go test ./...', '✓ all packages'], ['Bash', 'pip install -r requirements.txt', 'ok'], ['Edit', 'web/app.js', '+9 −9'],
+  ['Bash', 'git commit -am "relay: reconnect"', 'alice <alice@…>'], ['Bash', 'curl localhost:8000/health', '200 OK'], ['Edit', 'README.md', '+3'],
+];
+function streamLines(t) {
+  const n = Math.floor(clamp((t - 45.6) * 3.4, 0, 60));
+  const out = [];
+  for (let i = Math.max(0, n - 14); i < n; i++) {
+    const [tool, arg, res] = STREAM[i % STREAM.length];
+    out.push(`<div class="ln"><span class="cl">⏺</span> <span class="w">${tool}</span><span class="o">(${esc(arg)})</span>  <span class="${res.startsWith('✓') || res === '200 OK' ? 'ok' : 'dim'}">${esc(res)}</span></div>`);
+  }
+  return out.join('');
+}
+
+// ---------- generic element animation ----------
+function animEl(el, t) {
+  const t0 = +el.dataset.in, dur = +(el.dataset.dur || 0.7), kind = el.dataset.anim || 'up';
+  const x = clamp((t - t0) / dur), e = easeOut(x);
+  let tr = '';
+  if (kind === 'up') tr = `translateY(${(1 - e) * 40}px)`;
+  else if (kind === 'left') tr = `translateX(${(1 - e) * -60}px)`;
+  else if (kind === 'right') tr = `translateX(${(1 - e) * 60}px)`;
+  else if (kind === 'pop') tr = `scale(${0.85 + 0.15 * easeBack(x)})`;
+  else if (kind === 'spin') tr = `rotate(${(1 - e) * -90}deg) scale(${0.6 + 0.4 * easeBack(x)})`;
+  else if (kind === 'rise') tr = `perspective(2400px) translateY(${(1 - e) * 220}px) rotateX(${(1 - e) * 18}deg)`;
+  el.style.opacity = e;
+  if (el instanceof SVGElement) { el.style.transformBox = 'fill-box'; el.style.transformOrigin = 'center'; }
+  el.style.transform = tr;
+}
+
+const scenes = [...document.querySelectorAll('.scene')];
+const animated = [...document.querySelectorAll('[data-in]')];
+const shows = [...document.querySelectorAll('[data-show]')];
+
+function render(t) {
+  $('grid').style.transform = `translate(${(t * 6) % 64}px, ${(t * 3) % 64}px)`;
+  $('blobA').style.transform = `translate(${Math.sin(t / 5) * 40}px, ${Math.cos(t / 6) * 30}px)`;
+  $('blobB').style.transform = `translate(${Math.cos(t / 7) * 40}px, ${Math.sin(t / 5) * 30}px)`;
+
+  for (const s of scenes) {
+    const a = +s.dataset.from, b = +s.dataset.to;
+    const o = clamp((t - a) / 0.4) * clamp((b - t) / 0.4);
+    s.style.opacity = o;
+    s.style.visibility = o > 0 ? 'visible' : 'hidden';
+    const out = clamp((t - (b - 0.4)) / 0.4);
+    s.style.transform = out > 0 ? `scale(${1 + out * 0.03})` : '';
+  }
+  for (const el of animated) animEl(el, t);
+  for (const el of shows) {
+    const [a, b] = el.dataset.show.split(',').map(Number);
+    el.style.opacity = clamp((t - a) / 0.18) * clamp((b + 0.18 - t) / 0.18);
+  }
+
+  // S1: isolated cards collapse into the logo
+  const s1k = 1 - clamp((t - 4.9) / 0.35);
+  $('s1x').style.opacity = s1k;
+  $('s1note').style.opacity *= s1k;
+  const m = easeInOut(clamp((t - 5.2) / 1.0));
+  document.querySelectorAll('.s1t').forEach((c, i) => {
+    c.style.transform = `${c.style.transform} translate(${(1 - i) * 560 * m}px, ${-120 * m}px) scale(${1 - 0.5 * m})`;
+  });
+
+  // S3: real console, pointer-driven; type the space name; zoom to the invite link
+  pointer('ptr3', 'rip3', P3, C3, K3, t);
+  const typed = Math.floor(clamp((t - 13.5) / 0.7) * 9);
+  Object.assign($('typeMask').style, { left: `${(584 + typed * 7.75) * K3}px`, top: `${336 * K3}px`, width: `${(74 - typed * 7.75) * K3}px`, height: `${27 * K3}px`, opacity: t > 13.2 && t < 15.1 ? 1 : 0 });
+  const z = easeInOut(clamp((t - 18.9) / 1.6));
+  $('w3').style.transformOrigin = `${PTS.copyLink.x * K3 - 200}px ${PTS.copyLink.y * K3 + 44}px`;
+  $('w3').style.transform += ` translateY(${-60 * z}px) scale(${1 + 0.2 * z})`;
+  $('h3').style.opacity = 1 - z;
+
+  // S4: invite page → paste into terminal
+  pointer('ptr4', 'rip4', P4, C4, K4, t);
+  $('t4').innerHTML = renderTerm('t4', t);
+  const secs = Math.floor(clamp((t - 22.8) / (30.6 - 22.8)) * 47);
+  $('clock').textContent = `00:${String(secs).padStart(2, '0')}`;
+  $('clock').style.color = t > 30.6 ? '#B45309' : '';
+
+  // S5: same session streamed to both apps
+  const html = chatHTML(t);
+  $('chatA').innerHTML = html; $('chatB').innerHTML = html;
+  const n = Math.floor(clamp((t - 33.6) / 1.2) * ASK.length);
+  const composing = t >= 33.6 && t < 35.0;
+  $('compA').textContent = composing ? ASK.slice(0, n) + (n < ASK.length || Math.floor(t * 2) % 2 ? '▍' : '') : '问点什么…';
+  $('compA').classList.toggle('typing', composing);
+  $('liveTag').style.opacity = t > 35.0 ? (0.65 + 0.35 * Math.cos(t * 5)) : 0;
+
+  // S6: budget meter climbs to cap → 429
+  $('t6').innerHTML = streamLines(t);
+  const spent = 20 * easeInOut(clamp((t - 46.0) / 4.6));
+  $('spent').textContent = `$${spent.toFixed(2)}`;
+  $('meter').style.width = `${spent / 20 * 100}%`;
+  $('cap').innerHTML = t > 50.6
+    ? '<span style="color:#DC2626; font-family:var(--mono)">429</span> <span style="color:#475569">到顶就停，不会超支</span>'
+    : '超限请求得到干净的 <span style="font-family:var(--mono)">429</span>';
+
+  $('endcur').style.opacity = Math.floor(t * 2) % 2 ? 0 : 1;
+  $('fade').style.opacity = clamp((t - 61.2) / 0.8);
+}
+
+window.__render = render;
+window.__duration = DURATION;
+
+// fit to window for preview; ?t=12.3 freezes a frame; ?render skips playback
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('stage').style.transform = `scale(${s})`;
+}
+const q = new URLSearchParams(location.search);
+if (!q.has('render')) {
+  fit(); addEventListener('resize', fit);
+  if (q.has('t')) render(+q.get('t'));
+  else { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); }
+}
+</script>
+</body>
+</html>

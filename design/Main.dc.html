@@ -1,0 +1,571 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; }
+    a { color: #B45309; text-decoration: none; }
+    a:hover { color: #92400E; text-decoration: underline; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+    .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .card { background: #FFFFFF; border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06); }
+    .lift { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+    .lift:hover { transform: translateY(-2px); border-color: rgba(245, 158, 11, 0.35); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 0 24px rgba(245, 158, 11, 0.08); }
+    .btnGold { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 18px; border: none; border-radius: 10px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #451A03; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); transition: all 0.2s ease-out; }
+    .btnGold:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45); filter: brightness(1.05); }
+    .btnGold:active { transform: scale(0.98); }
+    .btnGhost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 10px; background: #FFFFFF; color: #334155; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); transition: all 0.2s ease-out; }
+    .btnGhost:hover { background: #F8FAFC; border-color: rgba(15, 23, 42, 0.2); }
+    .btnGhost:active { transform: scale(0.98); }
+    .textbtn { background: none; border: none; padding: 6px 8px; font-size: 13px; font-family: inherit; cursor: pointer; border-radius: 8px; transition: background 0.15s ease; }
+    .textbtn:hover { background: rgba(15, 23, 42, 0.05); }
+    .navitem { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 12px; border-radius: 12px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+    .navitem:hover { background: rgba(15, 23, 42, 0.04); }
+    .gradText { background: linear-gradient(90deg, #B45309 0%, #F59E0B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8; }
+    .hairrow { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 0 20px; border-bottom: 1px solid rgba(15, 23, 42, 0.06); }
+    .hairrow:last-child { border-bottom: none; }
+    .tile { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+    .pulse { animation: pulseDot 2s ease-in-out infinite; }
+    .meter { height: 5px; border-radius: 3px; background: rgba(15, 23, 42, 0.07); overflow: hidden; }
+    .meterfill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #D97706, #FBBF24); }
+    .bar { flex: 1; border-radius: 3px 3px 0 0; position: relative; min-height: 4px; }
+    .bar .tip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 7px; background: #0F172A; color: #F8FAFC; font-size: 11px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; z-index: 2; }
+    .bar:hover .tip { display: block; }
+    .field { height: 38px; border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 10px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #0F172A; outline: none; width: 100%; box-sizing: border-box; font-family: inherit; transition: all 0.2s ease; }
+    .field:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+    .field::placeholder { color: #94A3B8; }
+    .seg { display: flex; background: rgba(15, 23, 42, 0.05); border-radius: 10px; padding: 3px; gap: 2px; }
+    .segbtn { flex: 1; height: 30px; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 5px 13px; font-size: 12px; font-weight: 500; border: 1px solid rgba(15, 23, 42, 0.08); background: rgba(255, 255, 255, 0.8); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
+    .term { background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%); border-radius: 14px; box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08); overflow: hidden; }
+    .termhead { display: flex; align-items: center; gap: 7px; padding: 11px 15px; background: rgba(30, 41, 59, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .tl { width: 11px; height: 11px; border-radius: 50%; }
+    .cursorblink { display: inline-block; width: 8px; height: 15px; background: #34D399; vertical-align: text-bottom; animation: blink 1s step-end infinite; }
+    .fadeUp { animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.12s; } .d3 { animation-delay: 0.19s; } .d4 { animation-delay: 0.26s; } .d5 { animation-delay: 0.33s; }
+    .scaleIn { animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .lineIn { opacity: 0; animation: lineIn 0.45s ease forwards; }
+    .l1 { animation-delay: 0.25s; } .l2 { animation-delay: 0.7s; } .l3 { animation-delay: 1.15s; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.94) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes lineIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; } 50% { opacity: 0.65; box-shadow: 0 0 8px 2px currentColor; } }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .fadeUp, .scaleIn, .lineIn { animation-duration: 1ms; } .pulse, .cursorblink { animation: none; } }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; overflow: hidden; position: relative; background: linear-gradient(135deg, #F9FAFB 0%, #FDF8EF 45%, #F3F4F6 100%); color: #334155; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 13px; -webkit-font-smoothing: antialiased;">
+
+  <!-- Layered background -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background: radial-gradient(at 38% 18%, rgba(245, 158, 11, 0.07) 0px, transparent 50%), radial-gradient(at 82% 2%, rgba(251, 191, 36, 0.05) 0px, transparent 45%), radial-gradient(at 0% 55%, rgba(245, 158, 11, 0.04) 0px, transparent 50%);"></div>
+  <div style="position: absolute; top: -160px; right: -120px; width: 380px; height: 380px; border-radius: 50%; background: rgba(245, 158, 11, 0.14); filter: blur(90px); pointer-events: none;"></div>
+  <div style="position: absolute; bottom: -180px; left: 180px; width: 420px; height: 420px; border-radius: 50%; background: rgba(217, 119, 6, 0.08); filter: blur(100px); pointer-events: none;"></div>
+  <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; background-image: linear-gradient(rgba(180, 83, 9, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(180, 83, 9, 0.035) 1px, transparent 1px); background-size: 64px 64px;"></div>
+
+  <!-- Sidebar -->
+  <div style="width: 248px; flex: none; display: flex; flex-direction: column; padding: 22px 14px 18px 14px; background: rgba(255, 255, 255, 0.72); border-right: 1px solid rgba(15, 23, 42, 0.07); backdrop-filter: blur(20px); position: relative; z-index: 1;">
+    <div style="display: flex; align-items: center; gap: 11px; padding: 0 8px 24px 8px;">
+      <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFBEB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="14" r="4"></circle><path d="M11 11 L20 2"></path><path d="M17 5 L20 8"></path><path d="M14.5 7.5 L16.5 9.5"></path></svg>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <span class="gradText" style="font-size: 17px; font-weight: 700; letter-spacing: -0.01em;">CoSpace</span>
+        <span style="font-size: 10.5px; color: #94A3B8; letter-spacing: 0.06em;">HOST CONSOLE</span>
+      </div>
+    </div>
+
+    <div class="navitem" style="{{ allNavStyle }}" onClick="{{ selectAll }}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"></rect><rect x="14" y="3" width="7" height="7" rx="2"></rect><rect x="3" y="14" width="7" height="7" rx="2"></rect><rect x="14" y="14" width="7" height="7" rx="2"></rect></svg>
+      <span>All Rooms</span>
+    </div>
+
+    <div class="label" style="padding: 20px 12px 8px 12px;">Rooms</div>
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <sc-for list="{{ rooms }}" as="r" hint-placeholder-count="3">
+        <div class="navitem" style="{{ r.navStyle }}" onClick="{{ r.select }}">
+          <span class="{{ r.dotClass }}" style="{{ r.dotStyle }}"></span>
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.id }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex: 1;"></div>
+    <button class="btnGold" style="width: 100%;" onClick="{{ openCreate }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5 L12 19"></path><path d="M5 12 L19 12"></path></svg>
+      New Room
+    </button>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 14px 10px 0 10px;">
+      <span class="dot pulse" style="width: 7px; height: 7px; background: #10B981; color: #10B981;"></span>
+      <span style="font-size: 11.5px; color: #64748B;">Mac Studio &middot; relay connected</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 1;">
+
+    <sc-if value="{{ showBattery }}" hint-placeholder-val="{{ true }}">
+      <div style="flex: none; display: flex; align-items: center; gap: 10px; padding: 9px 32px; background: rgba(245, 158, 11, 0.1); border-bottom: 1px solid rgba(217, 119, 6, 0.18); color: #92400E; font-size: 12.5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 L4 14 L11 14 L10 22 L20 9 L13 9 Z"></path></svg>
+        <span>Running on battery &mdash; rooms go offline if the lid closes. Plug in, or host on a Mac that stays awake.</span>
+        <div style="flex: 1;"></div>
+        <button class="textbtn" style="color: #92400E; font-size: 12px;" onClick="{{ dismissBattery }}">Dismiss</button>
+      </div>
+    </sc-if>
+
+    <div style="flex: 1; overflow: auto;">
+
+      <!-- ALL ROOMS -->
+      <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width: 1020px; margin: 0 auto; padding: 36px 40px 48px 40px;">
+
+          <div class="fadeUp d1">
+            <div style="font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: #0F172A;">All Rooms</div>
+            <div style="font-size: 13px; color: #64748B; margin-top: 5px;">Shared dev rooms running on this Mac. Guests connect with plain ssh.</div>
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-top: 26px;">
+            <div class="card fadeUp d2" style="flex: 1; padding: 18px 20px; display: flex; align-items: center; gap: 14px;">
+              <div class="tile" style="background: rgba(245, 158, 11, 0.13);">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M4 11 L20 11"></path><path d="M9 5 L9 11"></path></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 11.5px; font-weight: 500; color: #64748B;">Memory reserved</span>
+                <span class="num" style="font-size: 21px; font-weight: 700; color: #0F172A;">{{ memSum }} <span style="font-size: 12px; font-weight: 500; color: #94A3B8;">/ 32 GB</span></span>
+                <span style="font-size: 11.5px; color: #94A3B8;">{{ awakeLabel }}</span>
+              </div>
+            </div>
+            <div class="card fadeUp d3" style="flex: 1; padding: 18px 20px; display: flex; align-items: center; gap: 14px;">
+              <div class="tile" style="background: rgba(14, 165, 233, 0.1);">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6 L4 18 A8 3 0 0 0 20 18 L20 6"></path><path d="M4 12 A8 3 0 0 0 20 12"></path></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 11.5px; font-weight: 500; color: #64748B;">Disk allocated</span>
+                <span class="num" style="font-size: 21px; font-weight: 700; color: #0F172A;">{{ diskSum }} <span style="font-size: 12px; font-weight: 500; color: #94A3B8;">/ 512 GB</span></span>
+                <span style="font-size: 11.5px; color: #94A3B8;">reclaimed on delete</span>
+              </div>
+            </div>
+            <div class="card fadeUp d4" style="flex: 1; padding: 18px 20px; display: flex; align-items: center; gap: 14px;">
+              <div class="tile" style="background: rgba(139, 92, 246, 0.1);">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 L4 14 L11 14 L10 22 L20 9 L13 9 Z"></path></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 11.5px; font-weight: 500; color: #64748B;">Tokens today</span>
+                <span class="num" style="font-size: 21px; font-weight: 700; color: #0F172A;">{{ tokensSum }}</span>
+                <span style="font-size: 11.5px; color: #94A3B8;">across all rooms</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 26px;">
+            <sc-for list="{{ rooms }}" as="r" hint-placeholder-count="3">
+              <div class="card lift fadeUp d5" style="display: flex; align-items: center; gap: 18px; padding: 20px 24px; cursor: pointer;" onClick="{{ r.select }}">
+                <span class="{{ r.dotClass }}" style="{{ r.dotStyle }}"></span>
+                <div style="display: flex; flex-direction: column; gap: 3px; width: 220px;">
+                  <span class="mono" style="font-size: 15px; font-weight: 600; color: #0F172A;">{{ r.id }}</span>
+                  <span style="font-size: 12px; {{ r.statusStyle }}">{{ r.statusLabel }}</span>
+                </div>
+                <span style="font-size: 12.5px; color: #64748B; width: 90px;">{{ r.guestsLabel }}</span>
+                <span class="mono num" style="font-size: 12.5px; color: #64748B; width: 70px;">{{ r.memLabel }}</span>
+                <span class="mono num" style="font-size: 12.5px; color: #64748B; width: 110px;">{{ r.tokensLabel }} today</span>
+                <span style="font-size: 12.5px; color: #94A3B8; flex: 1;">{{ r.lastActive }}</span>
+                <button class="btnGhost" style="height: 30px; font-size: 12.5px;" onClick="{{ r.toggle }}">{{ r.toggleLabel }}</button>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"></path></svg>
+              </div>
+            </sc-for>
+            <sc-if value="{{ roomsEmpty }}" hint-placeholder-val="{{ false }}">
+              <div class="card" style="padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <div style="width: 64px; height: 64px; border-radius: 16px; background: rgba(15, 23, 42, 0.04); display: flex; align-items: center; justify-content: center;">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="14" r="4"></circle><path d="M11 11 L20 2"></path><path d="M17 5 L20 8"></path></svg>
+                </div>
+                <span style="font-size: 15px; font-weight: 600; color: #334155;">No rooms yet</span>
+                <span style="font-size: 13px; color: #94A3B8;">Create one and invite your first guest.</span>
+              </div>
+            </sc-if>
+          </div>
+
+        </div>
+      </sc-if>
+
+      <!-- ROOM DETAIL -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width: 860px; margin: 0 auto; padding: 36px 40px 48px 40px;">
+
+          <div class="fadeUp d1" style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="mono" style="font-size: 25px; font-weight: 700; letter-spacing: -0.01em; color: #0F172A;">{{ cur.id }}</span>
+              <span class="pill" style="align-self: flex-start;">
+                <span class="{{ cur.dotClass }}" style="width: 8px; height: 8px; {{ cur.dotStyle }}"></span>
+                <span style="{{ cur.statusStyle }}">{{ cur.statusLabel }}</span>
+              </span>
+            </div>
+            <div style="flex: 1;"></div>
+            <button class="btnGhost" onClick="{{ toggleCur }}">{{ cur.toggleLabel }}</button>
+            <button class="btnGold" onClick="{{ inviteCur }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20 C3 16 6 14.5 9 14.5 C12 14.5 15 16 15 20"></path><path d="M18 8 L18 14"></path><path d="M15 11 L21 11"></path></svg>
+              Invite a Guest
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 18px; margin-top: 26px; align-items: flex-start;">
+
+            <div style="flex: 1.45; display: flex; flex-direction: column; gap: 18px;">
+              <div class="card fadeUp d2">
+                <div class="hairrow" style="min-height: 52px;">
+                  <span style="font-size: 13.5px; font-weight: 600; color: #0F172A;">Guests</span>
+                  <div style="flex: 1;"></div>
+                  <span style="font-size: 12px; color: #94A3B8;">{{ cur.guestsLabel }}</span>
+                </div>
+                <sc-for list="{{ guests }}" as="g" hint-placeholder-count="3">
+                  <div class="hairrow">
+                    <span style="width: 96px; font-weight: 600; color: #1E293B;">{{ g.name }}</span>
+                    <span class="mono" style="font-size: 11px; color: #94A3B8; flex: 1;">{{ g.fp }}</span>
+                    <span style="font-size: 12px; color: #64748B; width: 90px;">{{ g.last }}</span>
+                    <button class="textbtn" style="{{ g.revokeStyle }}" onClick="{{ g.revoke }}">{{ g.revokeLabel }}</button>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ noGuests }}" hint-placeholder-val="{{ false }}">
+                  <div class="hairrow" style="color: #94A3B8;">No guests yet.</div>
+                </sc-if>
+                <div class="hairrow">
+                  <button class="textbtn" style="color: #B45309; margin-left: -8px; font-weight: 500;" onClick="{{ inviteCur }}">+ Invite a Guest&hellip;</button>
+                </div>
+              </div>
+
+              <div class="card fadeUp d3" style="padding: 20px 24px;">
+                <div style="display: flex; align-items: baseline;">
+                  <span style="font-size: 13.5px; font-weight: 600; color: #0F172A;">Tokens &middot; last 14 days</span>
+                  <div style="flex: 1;"></div>
+                  <span class="mono num" style="font-size: 12px; color: #64748B;">{{ usageTotal }} total</span>
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 4px; height: 104px; margin-top: 18px;">
+                  <sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+                    <div class="bar" style="{{ b.hStyle }}"><span class="tip mono">{{ b.tip }}</span></div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 9px; font-size: 11px; color: #CBD5E1;">
+                  <span>14 days ago</span><span>today</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 18px;">
+              <div class="card fadeUp d3" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #0F172A;">Access</span>
+                <div class="term">
+                  <div class="termhead">
+                    <span class="tl" style="background: #EF4444;"></span><span class="tl" style="background: #EAB308;"></span><span class="tl" style="background: #22C55E;"></span>
+                    <span class="mono" style="font-size: 11px; color: #64748B; margin-left: 6px;">{{ cur.id }} — ssh</span>
+                  </div>
+                  <div class="mono" style="padding: 14px 16px; font-size: 12px; line-height: 1.9;">
+                    <span style="color: #22C55E; font-weight: 700;">$</span>
+                    <span style="color: #38BDF8;"> ssh</span>
+                    <span style="color: #A78BFA;"> -p</span>
+                    <span style="color: #E2E8F0;"> 24317</span>
+                    <span style="color: #FBBF24;"> room@relay.example.net</span>
+                  </div>
+                </div>
+                <span style="font-size: 12px; color: #64748B;">Cursor &rarr; Remote SSH, same address.</span>
+                <div style="border-top: 1px solid rgba(15, 23, 42, 0.06); padding-top: 13px; display: flex; flex-direction: column; gap: 5px;">
+                  <span class="label">Deploy key</span>
+                  <span class="mono" style="font-size: 11px; color: #94A3B8;">SHA256:mE4q&hellip;7xTx</span>
+                  <span style="font-size: 12px; {{ cur.repoStyle }}">{{ cur.repoLine }}</span>
+                </div>
+              </div>
+
+              <div class="card fadeUp d4" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 16px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #0F172A;">Resources</span>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12.5px;">
+                    <span style="color: #64748B;">Memory</span>
+                    <span class="mono num" style="color: #334155;">{{ cur.memLabel }} reserved</span>
+                  </div>
+                  <div class="meter"><div class="meterfill" style="width: {{ cur.memPct }};"></div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12.5px;">
+                    <span style="color: #64748B;">Disk</span>
+                    <span class="mono num" style="color: #334155;">{{ cur.diskLabel }}</span>
+                  </div>
+                  <div class="meter"><div class="meterfill" style="width: {{ cur.diskPct }};"></div></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid rgba(15, 23, 42, 0.06); padding-top: 14px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 12.5px; color: #1E293B;">Sleep when idle</span>
+                    <span style="font-size: 11.5px; color: #94A3B8;">30 min without connections. Wakes on ssh.</span>
+                  </div>
+                  <div style="flex: 1;"></div>
+                  <div style="width: 40px; height: 23px; border-radius: 12px; padding: 2px; box-sizing: border-box; cursor: pointer; transition: background 0.25s ease; {{ cur.switchStyle }}" onClick="{{ toggleAutoSleep }}">
+                    <div style="width: 19px; height: 19px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3); transition: margin 0.25s ease; {{ cur.knobStyle }}"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fadeUp d5" style="display: flex;">
+                <button class="textbtn" style="{{ deleteStyle }}" onClick="{{ deleteRoom }}">{{ deleteLabel }}</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- INVITE MODAL -->
+    <sc-if value="{{ inviteOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 5;">
+        <div class="card scaleIn" style="width: 520px; padding: 26px 28px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; gap: 15px;">
+          <div style="display: flex; align-items: center;">
+            <span style="font-size: 17px; font-weight: 700; color: #0F172A;">Invite a guest to <span class="mono gradText">{{ inviteRoom.id }}</span></span>
+            <div style="flex: 1;"></div>
+            <button class="textbtn" style="color: #94A3B8;" onClick="{{ closeInvite }}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>
+            </button>
+          </div>
+          <span style="font-size: 13px; color: #64748B;">Send them this one command. Nothing to install, nothing to sign up for.</span>
+          <div class="term">
+            <div class="termhead">
+              <span class="tl" style="background: #EF4444;"></span><span class="tl" style="background: #EAB308;"></span><span class="tl" style="background: #22C55E;"></span>
+              <span class="mono" style="font-size: 11px; color: #64748B; margin-left: 6px;">invite — bash</span>
+              <div style="flex: 1;"></div>
+              <button class="btnGhost" style="height: 24px; padding: 0 10px; font-size: 11.5px; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #E2E8F0; box-shadow: none;" onClick="{{ copyCmd }}">{{ copyLabel }}</button>
+            </div>
+            <div class="mono" style="padding: 15px 16px; font-size: 12.5px; line-height: 2;">
+              <div class="lineIn l1" style="color: #64748B; font-style: italic;"># paste this in your terminal</div>
+              <div class="lineIn l2">
+                <span style="color: #22C55E; font-weight: 700;">$</span>
+                <span style="color: #38BDF8;"> ssh</span>
+                <span style="color: #A78BFA;"> -p</span>
+                <span style="color: #E2E8F0;"> 24317</span>
+                <span style="color: #FBBF24; font-weight: 600;"> K7M4-Q2PX</span><span style="color: #E2E8F0;">@relay.example.net</span>
+              </div>
+              <div class="lineIn l3"><span class="cursorblink"></span></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="pill mono" style="font-size: 11px; color: #64748B;">one-time code</span>
+            <span class="pill mono" style="font-size: 11px; color: #64748B;">expires in 10 min</span>
+            <span class="pill mono" style="font-size: 11px; color: #64748B;">5 attempts</span>
+            <div style="flex: 1;"></div>
+            <button class="btnGold" onClick="{{ closeInvite }}">Done</button>
+          </div>
+          <span style="font-size: 12px; color: #94A3B8;">Prefer a page? <a class="mono" style="font-size: 11.5px;" href="#">relay.example.net/i/K7M4Q2PX</a></span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- NEW ROOM MODAL -->
+    <sc-if value="{{ createOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 5;">
+        <div class="card scaleIn" style="width: 440px; padding: 26px 28px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center;">
+            <span style="font-size: 17px; font-weight: 700; color: #0F172A;">New Room</span>
+            <div style="flex: 1;"></div>
+            <button class="textbtn" style="color: #94A3B8;" onClick="{{ closeCreate }}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 L18 18"></path><path d="M18 6 L6 18"></path></svg>
+            </button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span class="label">Name</span>
+            <input class="field mono" placeholder="e.g. acme-web" value="{{ newName }}" onChange="{{ onNameInput }}">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span class="label">Memory</span>
+            <div class="seg">
+              <sc-for list="{{ memOptions }}" as="opt" hint-placeholder-count="3">
+                <button class="segbtn" style="{{ opt.style }}" onClick="{{ opt.pick }}">{{ opt.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span class="label">Repository <span style="text-transform: none; letter-spacing: 0; font-weight: 400;">(optional)</span></span>
+            <input class="field mono" placeholder="git@github.com:you/repo.git" value="{{ newRepo }}" onChange="{{ onRepoInput }}">
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;">
+            <button class="btnGhost" onClick="{{ closeCreate }}">Cancel</button>
+            <button class="btnGold" onClick="{{ createRoom }}">Create Room</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview": {"width": 1440, "height": 900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sel: 'all', inviteFor: null, copied: false,
+      createOpen: false, newName: '', newMem: 4, newRepo: '',
+      batteryDismissed: false, confirmRevoke: null, confirmDelete: false,
+      rooms: [
+        { id: 'acme-web', status: 'awake', mem: 4, diskUsed: 38, diskCap: 64, tokensK: 1800,
+          lastActive: 'active now', repo: 'acme/web', autoSleep: true,
+          guests: [
+            { name: 'Alice', fp: 'SHA256:kR3m9dQxw2Lv…pT7a', last: 'active now' },
+            { name: 'Ben', fp: 'SHA256:t7Lp2mVe8sKq…jH4c', last: '1 h ago' },
+            { name: 'Mira', fp: 'SHA256:q9Zw8aBn4rXd…mF2e', last: 'yesterday' }
+          ],
+          usage: [420, 610, 380, 890, 1240, 760, 310, 540, 980, 1410, 690, 820, 1130, 960] },
+        { id: 'thesis', status: 'awake', mem: 4, diskUsed: 21, diskCap: 64, tokensK: 620,
+          lastActive: '12 min ago', repo: 'mira/thesis', autoSleep: true,
+          guests: [ { name: 'Mira', fp: 'SHA256:q9Zw8aBn4rXd…mF2e', last: '12 min ago' } ],
+          usage: [120, 90, 240, 310, 180, 0, 60, 420, 380, 290, 510, 330, 460, 620] },
+        { id: 'playground', status: 'asleep', mem: 2, diskUsed: 9, diskCap: 32, tokensK: 0,
+          lastActive: '2 days ago', repo: 'no repository', autoSleep: false,
+          guests: [
+            { name: 'Ben', fp: 'SHA256:t7Lp2mVe8sKq…jH4c', last: '2 days ago' },
+            { name: 'Noa', fp: 'SHA256:x2Cf5nWs7dRk…bV9g', last: '5 days ago' }
+          ],
+          usage: [340, 220, 0, 0, 510, 380, 120, 0, 0, 90, 0, 0, 0, 0] }
+      ]
+    };
+  }
+
+  patchRoom(id, patch) {
+    this.setState({ rooms: this.state.rooms.map(function (r) {
+      return r.id === id ? Object.assign({}, r, patch) : r;
+    }) });
+  }
+
+  removeGuest(id, name) {
+    this.setState({
+      confirmRevoke: null,
+      rooms: this.state.rooms.map(function (r) {
+        return r.id === id ? Object.assign({}, r, { guests: r.guests.filter(function (g) { return g.name !== name; }) }) : r;
+      })
+    });
+  }
+
+  renderVals() {
+    const self = this;
+    const st = this.state;
+    const stop = function (fn) { return function (e) { if (e && e.stopPropagation) e.stopPropagation(); fn(); }; };
+    const fmtK = function (k) { if (!k) { return '0'; } return k >= 1000 ? (k / 1000).toFixed(1) + 'M' : k + 'K'; };
+
+    const rooms = st.rooms.map(function (r) {
+      const awake = r.status === 'awake';
+      const selected = st.sel === r.id;
+      return Object.assign({}, r, {
+        dotClass: awake ? 'dot pulse' : 'dot',
+        dotStyle: awake ? 'background: #10B981; color: #10B981;' : 'background: #CBD5E1; color: #CBD5E1;',
+        statusLabel: awake ? 'awake' : 'asleep',
+        statusStyle: awake ? 'color: #059669;' : 'color: #94A3B8;',
+        toggleLabel: awake ? 'Sleep' : 'Wake',
+        navStyle: selected ? 'background: rgba(245, 158, 11, 0.13); color: #B45309;' : 'color: #475569;',
+        guestsLabel: r.guests.length === 1 ? '1 guest' : r.guests.length + ' guests',
+        memLabel: r.mem + ' GB',
+        memPct: Math.round(r.mem / 32 * 100) + '%',
+        diskLabel: r.diskUsed + ' / ' + r.diskCap + ' GB',
+        diskPct: Math.round(r.diskUsed / r.diskCap * 100) + '%',
+        tokensLabel: fmtK(r.tokensK),
+        repoLine: r.repo === 'no repository' ? 'No repository linked' : 'Added to ' + r.repo,
+        repoStyle: r.repo === 'no repository' ? 'color: #94A3B8;' : 'color: #059669;',
+        switchStyle: r.autoSleep ? 'background: linear-gradient(135deg, #F59E0B, #D97706);' : 'background: rgba(15, 23, 42, 0.15);',
+        knobStyle: r.autoSleep ? 'margin-left: 17px;' : 'margin-left: 0;',
+        select: function () { self.setState({ sel: r.id, confirmDelete: false, confirmRevoke: null }); },
+        toggle: stop(function () { self.patchRoom(r.id, { status: awake ? 'asleep' : 'awake' }); })
+      });
+    });
+
+    const cur = rooms.find(function (r) { return r.id === st.sel; }) || {
+      id: '', usage: [], guests: [], repo: 'no repository', dotClass: 'dot', dotStyle: '', statusStyle: '', statusLabel: '',
+      toggleLabel: '', memLabel: '', memPct: '0%', diskLabel: '', diskPct: '0%', guestsLabel: '0 guests',
+      repoLine: 'No repository linked', repoStyle: 'color: #94A3B8;', tokensLabel: '0',
+      switchStyle: 'background: rgba(15, 23, 42, 0.15);', knobStyle: 'margin-left: 0;', autoSleep: false, status: 'asleep'
+    };
+    const max = Math.max.apply(null, cur.usage.concat([1]));
+    const bars = cur.usage.map(function (v) {
+      const h = Math.max(4, Math.round(v / max * 100));
+      const bg = v === 0 ? 'background: #E2E8F0;' : 'background: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);';
+      return { hStyle: 'height: ' + h + '%; ' + bg, tip: v >= 1000 ? (v / 1000).toFixed(1) + 'M tokens' : v + 'K tokens' };
+    });
+    const usageTotal = fmtK(cur.usage.reduce(function (a, b) { return a + b; }, 0));
+
+    const guests = cur.guests.map(function (g) {
+      const confirming = st.confirmRevoke === g.name;
+      return Object.assign({}, g, {
+        revokeLabel: confirming ? 'Confirm removal' : 'Revoke',
+        revokeStyle: confirming ? 'color: #DC2626; font-weight: 600;' : 'color: #94A3B8;',
+        revoke: function () {
+          if (confirming) { self.removeGuest(cur.id, g.name); }
+          else { self.setState({ confirmRevoke: g.name }); }
+        }
+      });
+    });
+
+    const inviteRoom = rooms.find(function (r) { return r.id === st.inviteFor; }) || cur;
+    const memOptions = [2, 4, 8].map(function (m) {
+      return {
+        label: m + ' GB',
+        style: m === st.newMem
+          ? 'background: #FFFFFF; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); color: #B45309; font-weight: 600;'
+          : 'background: none; color: #64748B;',
+        pick: function () { self.setState({ newMem: m }); }
+      };
+    });
+
+    const awakeCount = st.rooms.filter(function (r) { return r.status === 'awake'; }).length;
+    const memSumN = st.rooms.reduce(function (a, r) { return a + (r.status === 'awake' ? r.mem : 0); }, 0);
+    const diskSumN = st.rooms.reduce(function (a, r) { return a + r.diskCap; }, 0);
+    const tokensSumK = st.rooms.reduce(function (a, r) { return a + r.tokensK; }, 0);
+
+    return {
+      isAll: st.sel === 'all',
+      isDetail: st.sel !== 'all',
+      allNavStyle: st.sel === 'all' ? 'background: rgba(245, 158, 11, 0.13); color: #B45309;' : 'color: #475569;',
+      showBattery: !st.batteryDismissed,
+      roomsEmpty: rooms.length === 0,
+      memSum: memSumN + ' GB',
+      awakeLabel: awakeCount === 1 ? '1 room awake' : awakeCount + ' rooms awake',
+      diskSum: diskSumN + ' GB',
+      tokensSum: fmtK(tokensSumK),
+      rooms: rooms, cur: cur, guests: guests, bars: bars, usageTotal: usageTotal,
+      noGuests: guests.length === 0,
+      inviteOpen: !!st.inviteFor, inviteRoom: inviteRoom,
+      copyLabel: st.copied ? 'Copied' : 'Copy',
+      createOpen: st.createOpen, newName: st.newName, newRepo: st.newRepo, memOptions: memOptions,
+      deleteLabel: st.confirmDelete ? 'Click again to delete this room' : 'Delete Room…',
+      deleteStyle: st.confirmDelete ? 'color: #DC2626; font-weight: 600;' : 'color: #DC2626; opacity: 0.7;',
+      selectAll: function () { self.setState({ sel: 'all', confirmDelete: false, confirmRevoke: null }); },
+      dismissBattery: function () { self.setState({ batteryDismissed: true }); },
+      toggleCur: function () { self.patchRoom(cur.id, { status: cur.status === 'awake' ? 'asleep' : 'awake' }); },
+      toggleAutoSleep: function () { self.patchRoom(cur.id, { autoSleep: !cur.autoSleep }); },
+      inviteCur: function () { self.setState({ inviteFor: cur.id, copied: false }); },
+      closeInvite: function () { self.setState({ inviteFor: null, copied: false }); },
+      copyCmd: function () { self.setState({ copied: true }); },
+      openCreate: function () { self.setState({ createOpen: true, newName: '', newMem: 4, newRepo: '' }); },
+      closeCreate: function () { self.setState({ createOpen: false }); },
+      onNameInput: function (e) { self.setState({ newName: e.target.value }); },
+      onRepoInput: function (e) { self.setState({ newRepo: e.target.value }); },
+      createRoom: function () {
+        const base = (st.newName || '').trim() || 'new-room';
+        let name = base;
+        let n = 2;
+        while (st.rooms.some(function (r) { return r.id === name; })) { name = base + '-' + n; n++; }
+        const room = { id: name, status: 'awake', mem: st.newMem, diskUsed: 0, diskCap: 64,
+          tokensK: 0, lastActive: 'just created', repo: (st.newRepo || '').trim() || 'no repository',
+          autoSleep: true, guests: [],
+          usage: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+        self.setState({ rooms: st.rooms.concat([room]), createOpen: false, sel: name });
+      },
+      deleteRoom: function () {
+        if (st.confirmDelete) {
+          self.setState({ rooms: st.rooms.filter(function (r) { return r.id !== cur.id; }), sel: 'all', confirmDelete: false });
+        } else { self.setState({ confirmDelete: true }); }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

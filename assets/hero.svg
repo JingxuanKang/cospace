@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-label="CoSpace: co-op mode for AI coding">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDFBF6"/>
+      <stop offset="0.5" stop-color="#FDF6EA"/>
+      <stop offset="1" stop-color="#F7F4EE"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="term" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E293B"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#B45309" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="280" fill="url(#bg)"/>
+  <rect width="1200" height="280" fill="url(#grid)"/>
+  <circle cx="1080" cy="20" r="150" fill="#F59E0B" opacity="0.10"/>
+  <circle cx="120" cy="270" r="130" fill="#D97706" opacity="0.07"/>
+
+  <!-- key tile -->
+  <g transform="translate(84,92)">
+    <rect x="0" y="0" width="96" height="96" rx="24" fill="url(#gold)"/>
+    <rect x="0" y="0" width="96" height="96" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"/>
+    <g transform="translate(24,24)" fill="none" stroke="#FFFBEB" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="15" cy="33" r="10.5"/>
+      <path d="M22.5 25.5 L45 3"/>
+      <path d="M37 8 L44 15"/>
+      <path d="M30 15 L35 20"/>
+    </g>
+  </g>
+
+  <!-- wordmark block -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="228" y="128" font-size="64" font-weight="700" letter-spacing="2" fill="#1F2937">Co<tspan fill="#B45309">Space</tspan></text>
+    <text x="232" y="166" font-size="21" fill="#475569">Co-op mode for AI coding, on your own Mac</text>
+    <text x="232" y="204" font-size="15" letter-spacing="1">
+      <tspan fill="#00ADD8">Go</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#B45309">Apple container</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#059669">ssh</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#C2410C">Claude Code</tspan><tspan fill="#94A3B8"> / </tspan><tspan fill="#0F766E">Codex</tspan><tspan fill="#94A3B8"> / </tspan><tspan fill="#334155">Grok</tspan>
+    </text>
+    <text x="232" y="236" font-size="13" fill="#94A3B8" font-style="italic">Your subscriptions, one ssh away for people you trust.</text>
+  </g>
+
+  <!-- terminal card -->
+  <g transform="translate(872,72)">
+    <rect x="0" y="0" width="248" height="136" rx="14" fill="url(#term)"/>
+    <rect x="0" y="0" width="248" height="136" rx="14" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1"/>
+    <circle cx="20" cy="19" r="4.5" fill="#EF4444"/>
+    <circle cx="36" cy="19" r="4.5" fill="#EAB308"/>
+    <circle cx="52" cy="19" r="4.5" fill="#22C55E"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14">
+      <text x="18" y="56"><tspan fill="#22C55E">$</tspan><tspan fill="#38BDF8"> ssh</tspan><tspan fill="#FBBF24"> acme</tspan></text>
+      <text x="18" y="82"><tspan fill="#22C55E">$</tspan><tspan fill="#38BDF8"> claude</tspan></text>
+      <text x="18" y="108"><tspan fill="#94A3B8">ready — no login needed</tspan></text>
+    </g>
+  </g>
+</svg>

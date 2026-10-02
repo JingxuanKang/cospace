@@ -1,0 +1,83 @@
+# GoReleaser config for CoSpace — publishes everything to GitHub Releases:
+# cospace (guest, all platforms), cospaced (host, Apple Silicon), the relay,
+# VERSION (read by the installers), and the guest cask in JingxuanKang/homebrew-tap.
+# Run through scripts/release.sh. Dry run without publishing anything:
+#   goreleaser release --snapshot --clean --skip=publish
+version: 2
+
+project_name: cospace
+
+builds:
+  - id: cospace
+    main: ./cmd/cospace
+    binary: cospace
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X main.version={{.Version}}"]
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+
+  - id: cospaced
+    main: ./cmd/cospaced
+    binary: cospaced
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X main.version={{.Version}}"]
+    goos: [darwin]           # host daemon: Apple container needs Apple Silicon
+    goarch: [arm64]
+
+  - id: cospace-relay
+    main: ./cmd/cospace-relay
+    binary: cospace-relay
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags: ["-s -w"]
+    goos: [linux]            # relay runs on the host's VPS
+    goarch: [amd64, arm64]
+
+archives:
+  - id: cospace
+    ids: [cospace]
+    name_template: "cospace_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+  - id: cospaced
+    ids: [cospaced]
+    name_template: "cospaced_{{ .Os }}_{{ .Arch }}"
+  - id: relay
+    ids: [cospace-relay]
+    name_template: "cospace-relay_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+homebrew_casks:
+  # Guest-facing cask: `brew install jingxuankang/tap/cospace` gives a guest
+  # the `cospace` tool to pair with and connect to a space. Hosts install
+  # cospaced with docs/host.sh.
+  - name: cospace
+    ids: [cospace]
+    repository:
+      owner: JingxuanKang
+      name: homebrew-tap
+    homepage: https://github.com/JingxuanKang/cospace
+    description: "Join a shared AI dev space over plain ssh — the CoSpace guest tool."
+    binaries: [cospace]
+    # The binary is not notarized yet, so strip the quarantine flag on install
+    # or macOS Gatekeeper blocks it. Replace with real notarization before a
+    # wide release (needs an Apple Developer ID).
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system "xattr", "-dr", "com.apple.quarantine", "#{staged_path}/cospace"
+          end
+
+release:
+  github:
+    owner: JingxuanKang
+    name: cospace
+  # The installers read releases/latest/download/VERSION to skip up-to-date installs.
+  extra_files:
+    - glob: ./VERSION

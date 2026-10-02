@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CoSpace · You're invited</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 28px 16px; background: #FAF7F2; color: #334155;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-image: radial-gradient(ellipse 620px 420px at 85% -10%, rgba(245, 158, 11, 0.14), transparent),
+                      radial-gradient(ellipse 560px 400px at 0% 110%, rgba(217, 119, 6, 0.10), transparent);
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .card {
+    width: 100%; max-width: 620px; background: rgba(255, 255, 255, 0.88); border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px; padding: 26px 26px 22px; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.10);
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; }
+  .wordmark {
+    font-size: 15px; font-weight: 800; letter-spacing: 0.2px;
+    background: linear-gradient(135deg, #F59E0B, #B45309); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .brand-sub { color: #94A3B8; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; }
+  h1 { margin: 0 0 6px; font-size: 22px; color: #0F172A; letter-spacing: -0.3px; }
+  h1 .space-name {
+    background: linear-gradient(135deg, #F59E0B, #B45309); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lede { margin: 0 0 16px; font-size: 13.5px; color: #64748B; line-height: 1.55; }
+  .segmented { display: inline-flex; gap: 2px; padding: 3px; background: rgba(15, 23, 42, 0.06); border-radius: 9px; margin-bottom: 12px; }
+  .segment {
+    border: 0; background: transparent; color: #64748B; font: inherit; font-size: 12.5px; font-weight: 600;
+    padding: 5px 12px; border-radius: 7px; cursor: pointer;
+  }
+  .segment.active { background: #fff; color: #0F172A; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.14); }
+  .terminal { background: #0B1220; border-radius: 12px; overflow: hidden; border: 1px solid rgba(15, 23, 42, 0.35); }
+  .terminal-head { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+  .light { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-title { margin-left: 6px; color: #64748B; font-size: 11px; }
+  .copy-all { margin-left: auto; }
+  .terminal-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 13px; }
+  .step-label { color: #64748B; font-size: 11px; margin-bottom: 5px; }
+  .line { display: flex; align-items: flex-start; gap: 8px; }
+  .prompt { color: #F59E0B; flex: none; font-size: 12.5px; padding-top: 1px; }
+  .cmd { flex: 1; min-width: 0; color: #E2E8F0; font-size: 12.5px; line-height: 1.5; overflow-wrap: anywhere; }
+  .cmd .accent { color: #FBBF24; font-weight: 700; }
+  .copy-btn {
+    flex: none; border: 1px solid rgba(255, 255, 255, 0.14); background: transparent; color: #94A3B8;
+    font: inherit; font-size: 11px; padding: 3px 9px; border-radius: 7px; cursor: pointer;
+  }
+  .copy-btn:hover { color: #E2E8F0; border-color: rgba(255, 255, 255, 0.3); }
+  .copy-btn.done { color: #34D399; border-color: rgba(52, 211, 153, 0.4); }
+  .meta { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .pill { font-size: 11px; color: #92400E; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.28); padding: 3px 9px; border-radius: 999px; }
+  .apps-heading { margin: 20px 0 10px; font-size: 12px; font-weight: 700; color: #475569; letter-spacing: 0.3px; }
+  .apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .apps-grid { grid-template-columns: 1fr; } }
+  .app-card { border: 1px solid rgba(15, 23, 42, 0.08); background: #FDFCFA; border-radius: 12px; padding: 10px 10px 9px; }
+  .app-card svg { width: 100%; height: auto; display: block; }
+  .app-caption { margin-top: 8px; font-size: 11.5px; color: #64748B; line-height: 1.5; }
+  .app-caption b { color: #334155; }
+  .foot { margin: 12px 0 0; font-size: 12px; color: #94A3B8; line-height: 1.55; }
+  .dead-title { margin: 0 0 8px; font-size: 21px; color: #0F172A; }
+  .dead-copy { margin: 0; font-size: 13.5px; color: #64748B; line-height: 1.6; }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand"><span class="wordmark">CoSpace</span><span class="brand-sub">one-time invite</span></div>
+{{if .Dead}}
+  <h1 class="dead-title">This invite has expired</h1>
+  <p class="dead-copy">Invite links are one-time and short-lived, so this one is no longer valid — it may have been used already, or its code timed out. Ask the person who invited you to send a fresh link; it takes them one click.</p>
+{{else}}
+  <h1>You're invited to <span class="space-name mono">{{.Space}}</span></h1>
+  <p class="lede">A shared dev space running on your host's Mac, with Claude Code, Codex, and Grok ready inside. Three steps in your terminal — nothing to sign up for.</p>
+  <div class="segmented" role="group" aria-label="Your operating system">
+    <button class="segment active" type="button" data-os="posix">macOS / Linux</button>
+    <button class="segment" type="button" data-os="windows">Windows</button>
+  </div>
+  <div class="terminal">
+    <div class="terminal-head">
+      <span class="light" style="background:#FF5F57"></span><span class="light" style="background:#FEBC2E"></span><span class="light" style="background:#28C840"></span>
+      <span class="terminal-title mono" id="shell-title">invite — bash</span>
+      <button class="copy-btn copy-all" type="button" id="copy-all">Copy all</button>
+    </div>
+    <div class="terminal-body mono">
+      <div>
+        <div class="step-label"># 1 · Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="install-cmd">{{.InstallPOSIX}}</span><button class="copy-btn" type="button" data-copy="install">Copy</button></div>
+      </div>
+      <div>
+        <div class="step-label"># 2 · Pair with this space (one-time code)</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="pair-cmd">{{.PairCommand}}</span><button class="copy-btn" type="button" data-copy="pair">Copy</button></div>
+      </div>
+      <div>
+        <div class="step-label"># 3 · You're in — reconnect with this anytime</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd">ssh <span class="accent">{{.Space}}</span></span><button class="copy-btn" type="button" data-copy="ssh">Copy</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="meta"><span class="pill mono">one-time code</span><span class="pill mono">link expires in ~{{.MinutesLeft}} min</span></div>
+  <div class="apps-heading">Once you're in, your apps see a plain SSH host</div>
+  <div class="apps-grid">
+    <div class="app-card">
+      <svg viewBox="0 0 280 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Claude Code environment picker with SSH highlighted and the space in the submenu" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+        <defs><filter id="soft-a" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.10"/></filter></defs>
+        <rect x="0" y="0" width="280" height="170" rx="8" fill="#FFFFFF"/>
+        <rect x="16" y="14" width="126" height="98" rx="10" fill="#FFFFFF" stroke="#E8ECF2" filter="url(#soft-a)"/>
+        <g font-size="10.5" fill="#334155">
+          <rect x="26" y="23" width="10" height="7" rx="1.5" fill="none" stroke="#64748B" stroke-width="1.2"/>
+          <text x="43" y="31.5">Local</text>
+          <path d="M126 25.5 l3.4 3.6 5.6 -6.4" fill="none" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M27 49 a4 4 0 0 1 2 -7.5 a5 5 0 0 1 9.5 1.5 a3.5 3.5 0 0 1 -1 6.9 z" fill="none" stroke="#64748B" stroke-width="1.2"/>
+          <text x="43" y="52.5">Cloud</text>
+          <path d="M128 44.5 l4 4 -4 4" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M28 62.5 l7 10 -4.2 0.4 2 5 -2.6 1 -2 -5 -3.2 2.6 z" fill="none" stroke="#64748B" stroke-width="1.1" stroke-linejoin="round"/>
+          <text x="43" y="73.5">Remote Control</text>
+          <path d="M128 65.5 l4 4 -4 4" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="21" y="84" width="116" height="22" rx="6" fill="#F1F5F9"/>
+          <rect x="25" y="88" width="12" height="9" rx="2" fill="none" stroke="#475569" stroke-width="1.2"/>
+          <path d="M28 91 l2 1.5 -2 1.5" fill="none" stroke="#475569" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="43" y="98.5" font-weight="600" fill="#0F172A">SSH</text>
+          <path d="M128 91 l4 4 -4 4" fill="none" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <rect x="150" y="72" width="114" height="56" rx="10" fill="#FFFFFF" stroke="#E8ECF2" filter="url(#soft-a)"/>
+        <text x="161" y="90" font-size="10.5" font-weight="650" fill="#B45309" font-family="ui-monospace, Menlo, monospace">{{.Space}}</text>
+        <line x1="158" y1="97" x2="256" y2="97" stroke="#EEF2F7"/>
+        <rect x="156" y="103" width="102" height="19" rx="5" fill="#F6F8FB"/>
+        <text x="163" y="116" font-size="10" fill="#64748B">+ Add SSH host…</text>
+        <rect x="16" y="136" width="248" height="22" rx="8" fill="#FFFFFF" stroke="#E8ECF2"/>
+        <text x="26" y="150.5" font-size="9.5" fill="#B6C0CD">Describe a task or ask a question</text>
+      </svg>
+      <div class="app-caption"><b>Claude Code app</b> — open the environment picker in the composer → <b>SSH</b> → pick <span class="mono">{{.Space}}</span>.</div>
+    </div>
+    <div class="app-card">
+      <svg viewBox="0 0 280 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Codex settings: Connections section, SSH tab, with the space listed under SSH connections from this Mac" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+        <defs><filter id="soft-b" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.10"/></filter></defs>
+        <rect x="0" y="0" width="280" height="170" rx="8" fill="#FFFFFF"/>
+        <rect x="16" y="12" width="248" height="146" rx="10" fill="#FFFFFF" stroke="#E8ECF2" filter="url(#soft-b)"/>
+        <path d="M26 12 h70 v146 h-70 a10 10 0 0 1 -10 -10 v-126 a10 10 0 0 1 10 -10 z" fill="#F7F8FA"/>
+        <circle cx="30" cy="24" r="3.2" fill="#FF5F57"/><circle cx="40" cy="24" r="3.2" fill="#FEBC2E"/><circle cx="50" cy="24" r="3.2" fill="#28C840"/>
+        <rect x="24" y="34" width="64" height="12" rx="6" fill="#EEF0F3"/>
+        <text x="30" y="42.5" font-size="7.5" fill="#B6C0CD">Search settings…</text>
+        <g font-size="8.5" fill="#64748B">
+          <text x="26" y="62" font-size="7" fill="#B6C0CD" letter-spacing="0.6">CODING</text>
+          <text x="26" y="77">Hooks</text>
+          <rect x="21" y="84" width="70" height="15" rx="5" fill="#E9ECF0"/>
+          <text x="26" y="94.5" font-weight="650" fill="#0F172A">Connections</text>
+          <text x="26" y="112">Git</text>
+          <text x="26" y="128">Environments</text>
+          <text x="26" y="144">Worktrees</text>
+        </g>
+        <text x="108" y="38" font-size="12" font-weight="700" fill="#0F172A">Connections</text>
+        <text x="108" y="58" font-size="8" fill="#94A3B8">Control this Mac</text>
+        <rect x="172" y="48" width="26" height="14" rx="7" fill="#EEF1F5"/>
+        <text x="185" y="57.5" font-size="8" font-weight="650" fill="#0F172A" text-anchor="middle">SSH</text>
+        <text x="108" y="82" font-size="8.5" font-weight="650" fill="#334155">SSH connections from this Mac</text>
+        <rect x="232" y="72.5" width="26" height="13" rx="6.5" fill="#111827"/>
+        <text x="245" y="81.5" font-size="7.5" font-weight="600" fill="#FFFFFF" text-anchor="middle">Add</text>
+        <rect x="106" y="90" width="152" height="32" rx="8" fill="#FFFFFF" stroke="#E8ECF2"/>
+        <rect x="114" y="100.5" width="20" height="11" rx="5.5" fill="#3B82F6"/>
+        <circle cx="129" cy="106" r="4.3" fill="#FFFFFF"/>
+        <circle cx="146" cy="103" r="4.5" fill="none" stroke="#64748B" stroke-width="1.1"/>
+        <ellipse cx="146" cy="103" rx="2" ry="4.5" fill="none" stroke="#64748B" stroke-width="0.9"/>
+        <line x1="141.5" y1="103" x2="150.5" y2="103" stroke="#64748B" stroke-width="0.9"/>
+        <text x="155" y="105.5" font-size="9.5" font-weight="650" fill="#B45309" font-family="ui-monospace, Menlo, monospace">{{.Space}}</text>
+        <circle cx="158" cy="113.5" r="2" fill="#28C840"/>
+        <text x="163" y="116" font-size="7.5" fill="#94A3B8">Connected</text>
+        <text x="243" y="109" font-size="10" fill="#94A3B8">…</text>
+      </svg>
+      <div class="app-caption"><b>Codex app</b> — <b>Settings → Connections → SSH</b>: <span class="mono">{{.Space}}</span> is already listed.</div>
+    </div>
+  </div>
+  <p class="foot">Cursor and VS Code work the same way — Remote-SSH → <span class="mono">{{.Space}}</span>. Your host sees you under Guests; you never handle any AI credentials.</p>
+{{end}}
+</main>
+{{if not .Dead}}
+<script>
+(function () {
+  var installs = {
+    posix: {{.InstallPOSIX}},
+    windows: {{.InstallWindows}}
+  };
+  var os = "posix";
+  var installEl = document.getElementById("install-cmd");
+  var pairCmd = document.getElementById("pair-cmd").textContent;
+  var sshCmd = "ssh " + {{printf "%q" .Space}};
+  function apply() {
+    installEl.textContent = installs[os];
+    document.getElementById("shell-title").textContent = os === "windows" ? "invite — powershell" : "invite — bash";
+    document.querySelectorAll("[data-prompt]").forEach(function (el) { el.textContent = os === "windows" ? "PS>" : "$"; });
+    document.querySelectorAll(".segment").forEach(function (el) { el.classList.toggle("active", el.dataset.os === os); });
+  }
+  document.querySelectorAll(".segment").forEach(function (el) {
+    el.addEventListener("click", function () { os = el.dataset.os; apply(); });
+  });
+  function copyText(text, btn) {
+    var done = function () {
+      btn.classList.add("done"); var prev = btn.textContent; btn.textContent = "Copied";
+      setTimeout(function () { btn.classList.remove("done"); btn.textContent = prev; }, 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(text); done(); });
+    } else { fallback(text); done(); }
+  }
+  function fallback(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = btn.dataset.copy === "install" ? installs[os] : btn.dataset.copy === "pair" ? pairCmd : sshCmd;
+      copyText(text, btn);
+    });
+  });
+  document.getElementById("copy-all").addEventListener("click", function () {
+    copyText(installs[os] + "\n" + pairCmd + "\n" + sshCmd, this);
+  });
+  apply();
+})();
+</script>
+{{end}}
+</body>
+</html>

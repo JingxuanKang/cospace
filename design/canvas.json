@@ -1,0 +1,9 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Console — Daylight Gold", "is_interactive": true }
+  ],
+  "annotations": [
+    { "id": "direction-note", "x": 0, "y": -190, "w": 560, "text": "「Daylight Gold」（亮色）：借 Sub2API 的体系（分层背景 = 渐变底 + 模糊光球 + 3% 网格、玻璃卡、彩色投影、渐变按钮、交错入场动画），换成 CoSpace 自己的身份：暖白亮底 + 金色钥匙，终端窗保持深色作对比。\n可操作：侧边栏/房间卡切换，Sleep/Wake、Invite（终端窗逐行打入 + 光标闪烁）、New Room、两步撤销/删除、空闲休眠开关、用量柱悬停。\n所有数据均为示例。" }
+  ],
+  "launch": { "view": "canvas" }
+}
