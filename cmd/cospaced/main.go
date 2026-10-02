@@ -75,6 +75,9 @@ func runWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	}
 	args = root.Args()
 	adoptLegacyDataDir(cfg.data)
+	if err := validateRuntime(cfg); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("missing command")
 	}
@@ -145,13 +148,15 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 	if err := os.MkdirAll(cfg.data, 0o700); err != nil {
 		return fmt.Errorf("create data dir: %w", err)
 	}
-	if err := validateRuntime(cfg); err != nil {
-		return err
-	}
 	if err := ensureContainerSystem(cfg, stderr); err != nil {
 		fmt.Fprintln(stderr, err)
 	}
 	cfg.gatewayURL = resolveGatewayURL(cfg, stderr)
+	if cfg.runtime == "docker" {
+		if u, err := url.Parse(cfg.gatewayURL); err == nil {
+			fmt.Fprintf(stderr, "docker runtime: spaces reach the gateway at %s via docker0; a host firewall with a whitelist INPUT chain needs  iptables -I INPUT -i docker0 -p tcp --dport %s -j ACCEPT\n", cfg.gatewayURL, u.Port())
+		}
+	}
 	m := newManager(cfg)
 	logger := log.New(stderr, "", 0)
 	// One pairing store per process: the console's Invite and the transport's

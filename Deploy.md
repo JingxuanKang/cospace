@@ -99,7 +99,15 @@ journalctl --user -u cospaced -f                   # 日志
 cospaced uninstall                                 # 只删服务，保留空间与数据
 ```
 
-控制台仍只监听 loopback，用 SSH 隧道或 Tailscale 访问。Mac 上不提供 docker 后端（`-runtime docker` 会被拒绝）。信任模型差异：真凭证会放在这台服务器上（`~/.claude`、`~/.codex`、`~/.grok` 的登录文件），而不是你自己的 Mac；headless 机器上 claude / codex 的 device-code 登录与 Linux 真机端到端验证见 DESIGN.md §14。
+控制台仍只监听 loopback，用 SSH 隧道或 Tailscale 访问。Mac 上不提供 docker 后端（`-runtime docker` 会被拒绝）。
+
+**主机防火墙**：空间通过 docker0 访问宿主的 `18930`。宿主 INPUT 链若是白名单加末尾 REJECT（常见的加固做法），容器内会得到连接失败、空间里的 claude/codex 报网关不可达。放行只限 docker0 的一条规则即可，不要对公网开 18930：
+
+```bash
+sudo iptables -I INPUT -i docker0 -p tcp --dport 18930 -j ACCEPT   # 持久化按发行版（iptables-persistent / nftables.conf）
+```
+
+`cospaced serve` 在 docker 运行时启动时会打印这条提醒。真机验证（2026-10-02，OCI ARM64 Ubuntu 24.04 + Docker 29）：建空间、成员身份、撤销轮换、停启、控制台、邀请全部通过；网关连通性正是被 INPUT 白名单挡住，加上述规则后通。信任模型差异：真凭证会放在这台服务器上（`~/.claude`、`~/.codex`、`~/.grok` 的登录文件），而不是你自己的 Mac；headless 机器上 claude / codex 的 device-code 登录与 Linux 真机端到端验证见 DESIGN.md §14。
 
 ## 控制台与网关的来源限制
 
