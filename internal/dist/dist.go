@@ -11,7 +11,9 @@ const (
 	Pages = "https://jingxuankang.github.io/cospace"
 
 	GuestInstallPOSIX   = "curl -fsSL " + Pages + "/install.sh | sh"
-	GuestInstallWindows = "irm " + Pages + "/install.ps1 | iex"
+	// Pages serves .ps1 as application/octet-stream; raw.githubusercontent
+	// serves it as text, which `irm | iex` handles on every PowerShell.
+	GuestInstallWindows = "irm https://raw.githubusercontent.com/" + Repo + "/master/docs/install.ps1 | iex"
 	HostInstall         = "curl -fsSL " + Pages + "/host.sh | sh"
 
 	// BaseImage is the prebuilt space image this daemon release creates

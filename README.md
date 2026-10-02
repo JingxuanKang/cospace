@@ -36,7 +36,7 @@ It installs Apple `container` (through Homebrew when present, otherwise Apple's 
 
 ```bash
 curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh     # macOS / Linux
-irm https://jingxuankang.github.io/cospace/install.ps1 | iex          # Windows PowerShell (needs OpenSSH Client; cross-compiled, not yet verified on a real Windows machine)
+irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex          # Windows PowerShell (needs OpenSSH Client; cross-compiled, not yet verified on a real Windows machine)
 ```
 
 The same command is the updater: on a machine that already has `cospace` it exits immediately when the installed build matches the published version and replaces it in place otherwise (a Homebrew install — `brew install jingxuankang/tap/cospace` — is left to `brew upgrade`). Guests who already have the tool go straight to `cospace pair`; if their build is too old for your daemon, pairing says so and points them at the installer. `cospace version` prints the build.

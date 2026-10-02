@@ -36,7 +36,7 @@ curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
 
 ```bash
 curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh     # macOS / Linux
-irm https://jingxuankang.github.io/cospace/install.ps1 | iex          # Windows PowerShell（需系统 OpenSSH Client；已交叉编译，尚未在真机验证）
+irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex          # Windows PowerShell（需系统 OpenSSH Client；已交叉编译，尚未在真机验证）
 ```
 
 同一条命令也是更新命令：已装 `cospace` 的机器上，版本与发布版一致就直接退出，否则原地替换（Homebrew 安装的——`brew install jingxuankang/tap/cospace`——交给 `brew upgrade`）。已有工具的 guest 直接 `cospace pair`；如果版本太旧，配对会提示并指向安装命令。`cospace version` 查看版本。

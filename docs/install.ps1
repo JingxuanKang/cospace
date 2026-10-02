@@ -1,5 +1,5 @@
 # CoSpace guest tool installer for Windows PowerShell 5.1+.
-#   irm https://jingxuankang.github.io/cospace/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex
 # Safe to re-run: an existing install is left alone when it is already the
 # published version and updated in place otherwise.
 $ErrorActionPreference = "Stop"

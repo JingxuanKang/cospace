@@ -21,4 +21,4 @@ fi
 # push hook); the hook would only re-flag the shipped HTML sources.
 git push --no-verify origin "v$version"
 GITHUB_TOKEN=$(gh auth token) goreleaser release --clean
-echo "Released v$version — guests: $(grep -o 'curl[^"]*install.sh | sh' internal/dist/dist.go | head -1 || true)"
+echo "Released v$version: https://github.com/JingxuanKang/cospace/releases/tag/v$version"
