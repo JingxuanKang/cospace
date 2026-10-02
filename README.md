@@ -4,7 +4,7 @@
 
 # CoSpace — Co-op mode for AI coding.
 
-![host](https://img.shields.io/badge/host-macOS%2026%2B%20·%20Apple%20Silicon-1F2937?style=flat-square)
+![host](https://img.shields.io/badge/host-macOS%2026%2B%20%28Apple%20Silicon%29%20·%20Linux-1F2937?style=flat-square)
 ![guests](https://img.shields.io/badge/guests-macOS%20·%20Linux%20·%20Windows-2563EB?style=flat-square)
 ![go](https://img.shields.io/badge/Go-1.26-00ADD8?style=flat-square)
 ![runtime](https://img.shields.io/badge/runtime-Apple%20container-F59E0B?style=flat-square)
@@ -24,13 +24,15 @@ Each space is a Linux VM (Apple container) on the host's Mac. Guests join over p
 
 ## Install
 
-**Host** — an Apple Silicon Mac on macOS 26 or later. One command:
+**Mac host** — an Apple Silicon Mac on macOS 26 or later. One command:
 
 ```bash
 curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
 ```
 
 It installs Apple `container` (through Homebrew when present, otherwise Apple's signed package), downloads the prebuilt `cospaced` daemon, registers it as a login item, and opens the console at `http://127.0.0.1:18931`. On first run the daemon downloads the space image once in the background (about 600 MB) and the console shows the progress; after that every new space starts in seconds. Re-running the command upgrades in place; `cospaced uninstall` removes the service and keeps your spaces. Sign in to `claude`, `codex`, or `grok` on the Mac for whichever AI tools you want spaces to use.
+
+**Linux host** — x86_64 or arm64 with Docker Engine usable without `sudo` and systemd. The same command installs `cospaced` as a systemd user service with Docker as the space runtime. The console stays on the server's loopback: reach it with `ssh -L 18931:127.0.0.1:18931 <server>` or over Tailscale, and sign in to the AI CLIs on the server (device-code login works headless).
 
 **Guest** — one command, no account (installs `cospace`, alias `co`):
 
