@@ -2,6 +2,7 @@ package spaces
 
 import (
 	"errors"
+	"github.com/JingxuanKang/cospace/internal/container"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,7 +59,7 @@ func TestFailedNetworkChangeDoesNotClaimOffline(t *testing.T) {
 	m, f := newTestManager(t)
 	m.Create("experiment", 1, 2)
 	f.out["list"] = `[{"configuration":{"id":"experiment"},"status":{"state":"running"}}]`
-	m.C.R = failNetworkRunner{f}
+	m.C = container.Client{R: failNetworkRunner{f}}
 	if err := m.SetNetwork("experiment", "gateway-only"); err == nil {
 		t.Fatal("failure hidden")
 	}
@@ -116,7 +117,7 @@ func TestFailedLiveSettingsRetainStateAndStop(t *testing.T) {
 	m, f := newTestManager(t)
 	m.Create("experiment", 1, 2)
 	f.out["list"] = `[{"configuration":{"id":"experiment"},"status":{"state":"running"}}]`
-	m.C.R = failConfigRunner{f}
+	m.C = container.Client{R: failConfigRunner{f}}
 	if err := m.SetFullAuto("experiment", false); err == nil {
 		t.Fatal("failure hidden")
 	}
@@ -150,7 +151,7 @@ func TestFailedLegacySnapshotKeepsOriginal(t *testing.T) {
 
 func TestFailedOfflineCreationStopsVM(t *testing.T) {
 	m, f := newTestManager(t)
-	m.C.R = failNetworkRunner{f}
+	m.C = container.Client{R: failNetworkRunner{f}}
 	if _, err := m.CreateWithOptions("experiment", CreateOptions{NetworkMode: "gateway-only"}); err == nil {
 		t.Fatal("failure hidden")
 	}

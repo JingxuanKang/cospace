@@ -62,7 +62,7 @@ Claude Code keeps sessions and memory as plain files in the home directory, so o
 | See a teammate's agent runs | `claude --resume` lists everyone's sessions |
 | Take over while they sleep | Resume their session with full context |
 | Watch or pair live | `tmux attach` |
-| Keep commits attributed | Set `git config user.name` once per guest (automatic per-key attribution is planned, not built) |
+| Keep commits attributed | Each guest's key tags their login with `SPACE_MEMBER`; git author/committer default to that name unless the guest sets their own |
 
 ## A minute to a working Claude Code
 

@@ -2,6 +2,7 @@ package spaces
 
 import (
 	"errors"
+	"github.com/JingxuanKang/cospace/internal/container"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,7 +83,9 @@ func TestPublicKeyCanonicalization(t *testing.T) {
 	if mem.PubKey != vecPubKey || mem.Fingerprint != vecFP {
 		t.Fatalf("canonical key = %q fp = %q", mem.PubKey, mem.Fingerprint)
 	}
-	if got := authorizedKeys(t, f.callsNamed("exec")); got != vecPubKey+"\n" {
+	// The line sshd sees carries the member identity as an environment
+	// option generated from the validated name, never from guest input.
+	if got := authorizedKeys(t, f.callsNamed("exec")); got != `environment="SPACE_MEMBER=alice" `+vecPubKey+"\n" {
 		t.Fatalf("authorized_keys = %q", got)
 	}
 	for _, name := range []string{"", "bad name", "../x", "a/b", strings.Repeat("n", 33), "\n"} {
@@ -126,7 +129,7 @@ func TestFailClosedBlocksWakeOnConnect(t *testing.T) {
 	r.NetworkMode = "gateway-only"
 	m.save(r)
 	m.StopIdle("experiment")
-	m.C.R = failNetworkRunner{f}
+	m.C = container.Client{R: failNetworkRunner{f}}
 	if err := m.StartOnConnect("experiment"); err == nil {
 		t.Fatal("failed start reported success")
 	}
@@ -138,7 +141,7 @@ func TestFailClosedBlocksWakeOnConnect(t *testing.T) {
 	if err := m.StartOnConnect("experiment"); !errors.Is(err, ErrConflict) || len(f.callsNamed("start")) != 0 {
 		t.Fatalf("wake-on-connect retried a blocked space: err=%v calls=%v", err, f.calls)
 	}
-	m.C.R = f
+	m.C = container.Client{R: f}
 	if err := m.Start("experiment"); err != nil {
 		t.Fatal(err)
 	}
@@ -159,5 +162,42 @@ func TestDeleteRunsHook(t *testing.T) {
 	}
 	if dropped != "acme" {
 		t.Fatalf("hook got %q", dropped)
+	}
+}
+
+// Agents leave read-only directories behind; Delete must still purge them,
+// and a directory whose record already vanished must still be deletable.
+func TestDeletePurgesReadOnlyTreesAndOrphans(t *testing.T) {
+	m, _ := newTestManager(t)
+	m.Create("acme", 2, 4)
+	ro := filepath.Join(m.Dir, "spaces", "acme", "workspace", "inputs")
+	if err := os.MkdirAll(ro, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ro, "a.png"), []byte("x"), 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(ro, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Delete("acme"); err != nil {
+		t.Fatalf("delete with read-only tree: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(m.Dir, "spaces", "acme")); !os.IsNotExist(err) {
+		t.Fatal("space dir not purged")
+	}
+	// Orphan: directory without a record.
+	orphan := filepath.Join(m.Dir, "spaces", "ghost", "workspace")
+	if err := os.MkdirAll(orphan, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Delete("ghost"); err != nil {
+		t.Fatalf("delete orphan dir: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(m.Dir, "spaces", "ghost")); !os.IsNotExist(err) {
+		t.Fatal("orphan dir not purged")
+	}
+	if err := m.Delete("nothing"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("delete of unknown space = %v, want not-exist", err)
 	}
 }

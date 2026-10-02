@@ -50,15 +50,17 @@ guest 的标准 ssh / Cursor Remote SSH
   └─ BYO VPS 哑中转（稳定通道，紧随实现）：host 自备任意廉价 VPS，产品一键部署；只转发加密 TCP，
        看不到内容。guest 真正零安装（纯系统 ssh，全平台），顺带托管邀请网页。有 VPS 的 host 的升级路线。
         ↑ Mac 主动出站隧道（yamux 多路复用）
-Mac 上的 daemon（单二进制，含 go:embed 控制台前端）
+host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Linux）
   ├─ 容器生命周期 reconcile（Apple container 无自愈能力，daemon 扶）
   ├─ 凭证代理（真 token 只在此进程；换头转发 + 计量）
   ├─ 空闲休眠 / ssh 到来自动唤醒 / Host 人工休眠锁
   ├─ 公钥同步、caffeinate、资源记账
   └─ 本地 Web 控制台
         ↓
-Apple container：每空间一个 Linux 轻量 VM + 持久 volume
-  （OpenSSH + git + tmux + Node + Python + claude + codex）
+容器运行时（`internal/container.Runtime`）：每空间一个 Linux 容器 + 持久 workspace
+  ├─ macOS：Apple container，每空间一个轻量 VM（唯一的 Mac 后端）
+  └─ Linux：Docker（`-runtime docker`），每空间一个 `--cap-add NET_ADMIN` 容器
+  （同一份镜像：OpenSSH + git + tmux + Node + Python + claude + codex + grok）
 ```
 
 **产品方不运营任何服务。** VPS 是 host 自己的（最低配即可，内存占用几十 MB），邀请页由 VPS 上的中转顺带托管。
@@ -99,7 +101,9 @@ Apple container：每空间一个 Linux 轻量 VM + 持久 volume
 
 ### 成员身份
 
-所有 guest 共用一个 Linux 用户（避免文件权限问题，符合"同一份文件"语义）。身份靠 authorized_keys 的 per-key 选项 `environment="SPACE_MEMBER=<name>"`（设计项，尚未实现）：登录 shell 据此自动设置 `GIT_AUTHOR_NAME/EMAIL`（保证 commit 归属），控制台据此显示"谁最后连过"。
+所有 guest 共用一个 Linux 用户（避免文件权限问题，符合"同一份文件"语义）。身份靠 authorized_keys 的 per-key 选项 `environment="SPACE_MEMBER=<name>"`（已实现：`syncRuntime` 从校验过的成员名生成该选项，并托管 `/etc/ssh/sshd_config.d/cospace.conf` 写 `PermitUserEnvironment SPACE_MEMBER`，改动时 `kill -HUP 1` 重载 sshd）：`/etc/profile.d/cospace.sh` 据此在登录 shell 里把未设置的 `GIT_AUTHOR_*` / `GIT_COMMITTER_*` 设为 `<name>` / `<name>@<space>.cospace`，guest 自己设过的不动；非登录 ssh 命令不经过 profile.d。"谁最后连过"的展示仍未做。
+
+**撤销即轮换 token**：空间假 token 对所有 guest 可读，所以 `RevokeMember` 会换一个新 token 并立即同步进空间（借自 Raft 的 per-launch token 思路，取其最小形式）。额度账本键是 `quota_id`（创建时生成，旧空间首次轮换时取旧 token 作为 ID），轮换不重置预算。代价是被撤销时空间里已在跑的 agent 会话（例如 detached tmux 里的）会拿旧 token 得到 401，需要重开。
 
 ### git push 身份
 
@@ -145,13 +149,13 @@ Apple container：每空间一个 Linux 轻量 VM + 持久 volume
 
 已知限制：空间内不能再跑 Docker（VM 内嵌套，v1 不支持）。
 
-**分发**：镜像预构建后推到 `ghcr.io/jingxuankang/cospace-base:<tag>`（`scripts/publish-image.sh`），host 不在本机构建。daemon 固定使用 `internal/dist` 的 `BaseImage` tag：启动时若本地没有就在后台 `container image pull --platform linux/arm64`，`/api/host` 的 `image` 字段带进度，控制台显示横幅并在就绪前禁用 New Space（API 返回 409）；CLI `space create` 同步拉取。Dockerfile 一改就提 tag，已发布的 daemon 继续拉它验证过的那一版。npm 下载缓存在同一层清掉，避免每个 host 白下约 230 MB。开发时可用 `-image cospace-base` 指向本地构建。
+**分发**：镜像由 GitHub Actions 预构建 linux/arm64 + linux/amd64 两种架构并推到 `ghcr.io/jingxuankang/cospace-base:<tag>`（`scripts/publish-image.sh` 触发，已发布的 tag 不覆盖），host 不在本机构建。daemon 固定使用 `internal/dist` 的 `BaseImage` tag：启动时若本地没有就在后台 `container image pull --platform linux/arm64`，`/api/host` 的 `image` 字段带进度，控制台显示横幅并在就绪前禁用 New Space（API 返回 409）；CLI `space create` 同步拉取。Dockerfile 一改就提 tag，已发布的 daemon 继续拉它验证过的那一版。npm 下载缓存在同一层清掉，避免每个 host 白下约 230 MB。开发时可用 `-image cospace-base` 指向本地构建。
 
 ## 9. 技术栈
 
 - **Go**：daemon、relay、空间内 pair 小件。单静态二进制 brew 分发；relay 交叉编译 Linux；凭证代理基于标准库 `httputil.ReverseProxy`；隧道多路复用 hashicorp/yamux；容器与系统操作 shell out（`container`、`caffeinate`）。
 - **TypeScript**：仅 Web 控制台前端，构建产物 `go:embed` 进 daemon 二进制——**一个文件就是整个产品**。
-- **Runtime = Apple container，唯一后端**：官方、免费、可随产品分发、VM 级隔离。OrbStack（第三方付费 license）不可作为产品地基。要求 Apple Silicon + macOS 26+。
+- **Runtime 按 host 平台二选一**（`internal/container.Runtime` 接口）：macOS 上只有 Apple container——官方、免费、可随产品分发、VM 级隔离；OrbStack / Docker 在 Mac 上不作为后端，`-runtime docker` 在 macOS 上被拒绝。Linux 服务器上是 Docker（`internal/container.Docker`，容器级隔离 + `CAP_NET_ADMIN`），同一份镜像、同一套 sync / 网关 / 配对。Mac 要求 Apple Silicon + macOS 26+；Linux 要求 Docker Engine 且 daemon 用户在 docker 组。
 
 ## 10. 明确不做（v1）
 
@@ -208,7 +212,7 @@ Apple container：每空间一个 Linux 轻量 VM + 持久 volume
 
 - cospace 域名（cospace.dev / cospace.sh 等）可用性实查；对外物料统一写法 CamelCase "CoSpace"，README 首句带定义句压 SEO（存在 CoSpaces Edu 与联合办公品牌同名碰撞）
 - 邀请网页的最终形态细节（VPS 托管的实现面）
-- **分发全部在 GitHub，项目不运营下载服务器**：安装脚本在仓库 `docs/`（guest 的 `install.sh` 与 host 的 `host.sh` 经 GitHub Pages 下发；Windows 的 `install.ps1` 经 raw.githubusercontent 下发，因为 Pages 把 .ps1 当二进制、`irm | iex` 需要文本），二进制与 `VERSION` 在 GitHub Releases（`scripts/release.sh` 调 goreleaser），guest 的 Homebrew cask 在 `JingxuanKang/homebrew-tap`，空间镜像在 ghcr.io。下载地址与安装命令的单一源是 `internal/dist`：控制台邀请弹窗、邀请页和 CLI 都从它取，前端不写死。**安装命令即更新命令、可重复执行**：仓库根 `VERSION` 是版本单一源，发布时经 ldflags 注入并作为 `releases/latest/download/VERSION` 发布；guest 安装器先看 `command -v cospace`，版本一致就退出，否则原地覆盖 PATH 上那份（Homebrew 装的交给 `brew upgrade`），所以邀请永远只有一套三步命令。host 的 `host.sh` 装 Apple container（有 Homebrew 用 brew，否则用 Apple 签名 pkg）、装 `cospaced`、执行 `cospaced setup`（启动 container 服务并自动装内核、写 launchd、打开控制台），重复执行即升级；`cospaced uninstall` 只移除服务、保留空间与数据。Windows 产物已交叉编译，尚未做 Windows 真机端到端验证。零安装（纯 ssh）需要 BYO VPS 中转——`internal/relay` + `cmd/cospace-relay` + `deploy/relay-install.sh` 已实现并测试，但**尚未接进 `cospaced serve`**。
+- **分发全部在 GitHub，项目不运营下载服务器**：安装脚本在仓库 `docs/`（guest 的 `install.sh` 与 host 的 `host.sh` 经 GitHub Pages 下发；Windows 的 `install.ps1` 经 raw.githubusercontent 下发，因为 Pages 把 .ps1 当二进制、`irm | iex` 需要文本），二进制与 `VERSION` 在 GitHub Releases（`scripts/release.sh` 调 goreleaser），guest 的 Homebrew cask 在 `JingxuanKang/homebrew-tap`，空间镜像在 ghcr.io。下载地址与安装命令的单一源是 `internal/dist`：控制台邀请弹窗、邀请页和 CLI 都从它取，前端不写死。**安装命令即更新命令、可重复执行**：仓库根 `VERSION` 是版本单一源，发布时经 ldflags 注入并作为 `releases/latest/download/VERSION` 发布；guest 安装器先看 `command -v cospace`，版本一致就退出，否则原地覆盖 PATH 上那份（Homebrew 装的交给 `brew upgrade`），所以邀请永远只有一套三步命令。host 的 `host.sh` 装 Apple container（有 Homebrew 用 brew，否则用 Apple 签名 pkg）、装 `cospaced`、执行 `cospaced setup`（启动 container 服务并自动装内核、写 launchd、打开控制台），重复执行即升级；`cospaced uninstall` 只移除服务、保留空间与数据。Windows 产物已交叉编译，尚未做 Windows 真机端到端验证。**Linux/Docker 后端**（`-runtime docker`、systemd 用户服务、bridge 网关地址、`~/.config/cospace/secrets` 密钥文件）已实现并通过单测，Linux 真机端到端验证状态见本节末尾。零安装（纯 ssh）需要 BYO VPS 中转——`internal/relay` + `cmd/cospace-relay` + `deploy/relay-install.sh` 已实现并测试，但**尚未接进 `cospaced serve`**。
 - **launchd 下 guest ssh 修复（已解决）**：长期运行的 daemon 进程启动早于 Apple container 的 vmnet 网桥，对容器 IP 得 `no route to host`（新起的进程则正常）。DialSSH 改为每次连接 spawn `nc <ip> 22` 子进程桥接（`ncDial`，socketpair 包成 net.Conn），新进程有路由、且天然扛容器/vmnet 重启。真机全链路（launchd daemon + brew cospace + tailcat + 空间内 claude）已验证通过。
 - `cospace` 未签名/未公证，cask 用 postflight `xattr -dr com.apple.quarantine` 绕过 Gatekeeper；正式对外前应换 Apple Developer ID 签名+公证。大陆网络访问 GitHub / ghcr.io 可能很慢，待定镜像加速方案。
 - relay 控制通道目前明文 TCP：guest 流量本身是 SSH 加密不受影响，但 daemon↔relay 的认证 token 可被路径上的中间人截获并冒用 daemon 注册空间。待加 TLS + 证书固定

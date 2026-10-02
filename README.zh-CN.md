@@ -62,7 +62,7 @@ Claude Code 的 session 和 memory 就是家目录里的普通文件，所以共
 | 看同事的 agent 跑了什么 | `claude --resume` 列出所有人的 session |
 | 对方睡觉时接手 | 带完整上下文 resume 对方的 session |
 | 现场围观 / 结对 | `tmux attach` |
-| commit 归属不乱 | 每位 guest 进空间后 `git config user.name` 一次（按密钥自动归属在计划中，尚未实现） |
+| commit 归属不乱 | 每位 guest 的密钥登录时带上 `SPACE_MEMBER`，git author / committer 默认就是这个名字，guest 自己设过的不动 |
 
 ## 一分钟用上 Claude Code
 

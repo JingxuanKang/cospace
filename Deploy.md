@@ -88,6 +88,19 @@ API：`GET /api/codex-options`；`PUT /api/spaces/{name}/codex` 接收 `{route, 
 - 日志：launchd 模式在 `~/Library/Logs/CoSpace/cospaced.log`；网关每请求一行（space/provider/status），镜像拉取为 `image:` 行
 - 数据目录：`~/Library/Application Support/CoSpace/`（spaces/、invites.json、usage.jsonl、templates.json、transport/）；若该目录不存在而旧的 `…/Guestroom/` 存在，daemon 启动时自动整体接管改名
 
+## Linux 主机（Docker 后端）
+
+daemon 也能跑在装了 Docker 的 Linux 服务器上：`-runtime docker`（Linux 上的默认值），每个空间是一个 `--cap-add NET_ADMIN` 的容器，镜像与 Mac 相同（ghcr 多架构）。网关地址默认取 docker bridge 的网关 IP（通常 `172.17.0.1`，启动时从 `docker network inspect bridge` 读取，`-gateway-url` 可覆盖）；数据目录默认 `~/.local/share/cospace`；没有 caffeinate，电池检测读 `/sys/class/power_supply`。Sub2API 这类 host 密钥在 Linux 上读 `~/.config/cospace/secrets/<service名>`（0600 文件），对应 macOS 的 Keychain 项。
+
+```bash
+# 以能用 docker 的普通用户执行（在 docker 组里）
+cospaced setup -- -console-hosts <公网域名可选>     # 写 ~/.config/systemd/user/cospaced.service 并 enable --now，开启 linger
+journalctl --user -u cospaced -f                   # 日志
+cospaced uninstall                                 # 只删服务，保留空间与数据
+```
+
+控制台仍只监听 loopback，用 SSH 隧道或 Tailscale 访问。Mac 上不提供 docker 后端（`-runtime docker` 会被拒绝）。信任模型差异：真凭证会放在这台服务器上（`~/.claude`、`~/.codex`、`~/.grok` 的登录文件），而不是你自己的 Mac；headless 机器上 claude / codex 的 device-code 登录与 Linux 真机端到端验证见 DESIGN.md §14。
+
 ## 控制台与网关的来源限制
 
 控制台只接受来自自身 origin 的写请求（`Sec-Fetch-Site` / `Origin` 校验）并校验 `Host`，防 CSRF 与 DNS rebinding。把控制台发布到公网域名时必须加 `-console-hosts <域名>`（逗号分隔多个），否则该域名下的所有写操作会被 403。网关 `0.0.0.0:18930` 默认只答应 loopback 和 `-gateway-url` 所在的 /24（容器网段）；别的来源加 `-gateway-allow <CIDR,...>`，`-gateway-allow any` 关闭限制。
@@ -115,7 +128,7 @@ API：`GET /api/codex-options`；`PUT /api/spaces/{name}/codex` 接收 `{route, 
 | 安装脚本 `install.sh` / `install.ps1` / `host.sh` | GitHub Pages（main 分支 `docs/`） | `docs/` |
 | `cospace`（全平台）、`cospaced`（darwin/arm64）、`cospace-relay`（linux）、`VERSION` | GitHub Releases | `scripts/release.sh`（goreleaser） |
 | guest 的 Homebrew cask | `JingxuanKang/homebrew-tap` | goreleaser 生成 |
-| 空间镜像 | `ghcr.io/jingxuankang/cospace-base:<tag>` | `scripts/publish-image.sh` |
+| 空间镜像 | `ghcr.io/jingxuankang/cospace-base:<tag>`（linux/arm64 + linux/amd64） | `.github/workflows/space-image.yml`，由 `scripts/publish-image.sh` 触发 |
 
 安装命令与下载地址的单一源是 `internal/dist`；改了 Pages 或仓库位置先改它。
 
@@ -126,14 +139,14 @@ scripts/release.sh --dry-run    # 本地构建全部产物到 dist/，不发布
 scripts/release.sh              # 打 tag v$VERSION、推 tag、goreleaser 发布到 GitHub
 ```
 
-镜像有改动：先提 `internal/dist` 的 `BaseImage` tag（已发布的 daemon 继续拉它验证过的那一版），再：
+镜像有改动：先提 `internal/dist` 的 `BaseImage` tag（已发布的 daemon 继续拉它验证过的那一版），commit 并 push 到 master，再：
 
 ```bash
-gh auth refresh -s write:packages     # 首次：给 gh token 加推包权限
-scripts/publish-image.sh              # 构建并推送；--build 只构建
+scripts/publish-image.sh            # 触发 GitHub Actions 构建 arm64+amd64 并推 ghcr，等待完成
+scripts/publish-image.sh --build    # 只在本机构建 arm64 版本地测试
 ```
 
-首次推送后在 GitHub → Packages → `cospace-base` → Settings 把可见性改为 Public。
+workflow 用自身的 `GITHUB_TOKEN` 推送，不需要个人 token 的 write:packages。已存在的 tag 默认拒绝覆盖（`--force` 才覆盖）。
 
 已知限制：
 - `cospace` / `cospaced` 未签名/未公证：安装器与 cask 清除 quarantine 标记绕过 Gatekeeper；正式对外前应改为 Apple Developer ID 签名 + 公证。

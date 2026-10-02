@@ -58,7 +58,7 @@ RUN printf '%s\n' \
       'KbdInteractiveAuthentication no' \
       'PermitRootLogin no' \
       'PubkeyAuthentication yes' \
-      'PermitUserEnvironment no' \
+      'PermitUserEnvironment SPACE_MEMBER' \
       'AllowUsers space room' \
     > /etc/ssh/sshd_config.d/cospace.conf
 # Pre-generate the statusline renderer script for the space user; drop the

@@ -4,6 +4,7 @@ package power
 import (
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"sync"
 )
@@ -21,6 +22,10 @@ type Keeper struct {
 // dies without cleaning up (kill -9 in development, a panic), caffeinate
 // exits with it instead of pinning the Mac awake forever.
 func defaultStart() (func(), error) {
+	if runtime.GOOS != "darwin" {
+		// A Linux server has no idle sleep to hold off; nothing to run.
+		return func() {}, nil
+	}
 	cmd := exec.Command("caffeinate", "-ims", "-w", strconv.Itoa(os.Getpid()))
 	if err := cmd.Start(); err != nil {
 		return nil, err

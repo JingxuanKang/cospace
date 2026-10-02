@@ -110,7 +110,7 @@ func (m *Manager) upgradeNetwork(r *Space) (err error) {
 			_ = m.C.Start(name)
 		}
 	}()
-	if _, err = m.C.R.Run("export", "--output", archive, name); err != nil {
+	if err = m.C.Export(name, archive); err != nil {
 		return fmt.Errorf("snapshot space: %w", err)
 	}
 	fi, err := os.Stat(archive)
@@ -126,7 +126,7 @@ func (m *Manager) upgradeNetwork(r *Space) (err error) {
 		return err
 	}
 	image := "cospace-network-" + name + "-" + stamp
-	if _, err = m.C.R.Run("build", "--cpus", "2", "--memory", "1g", "--progress", "plain", "--tag", image, backup); err != nil {
+	if err = m.C.Build(image, backup); err != nil {
 		return fmt.Errorf("build recovery image: %w", err)
 	}
 	// Record the recovery image BEFORE the old VM goes away: from here on a

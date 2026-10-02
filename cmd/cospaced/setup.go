@@ -18,14 +18,20 @@ import (
 )
 
 const (
-	launchLabel = "dev.cospace.daemon"
-	consoleURL  = "http://127.0.0.1:18931"
+	launchLabel        = "dev.cospace.daemon"
+	consoleURL         = "http://127.0.0.1:18931"
+	waitConsoleTimeout = 30 * time.Second
 )
 
-// ensureContainerSystem starts Apple container's services when they are not
-// running — after a reboot they stay down, and on a fresh Mac the first start
-// also installs the default Linux kernel without prompting.
-func ensureContainerSystem(out io.Writer) error {
+// ensureContainerSystem makes sure the container engine answers. On macOS
+// it starts Apple container's services when they are not running — after a
+// reboot they stay down, and on a fresh Mac the first start also installs the
+// default Linux kernel without prompting. On Linux it checks that Docker is
+// installed and reachable by this user.
+func ensureContainerSystem(cfg config, out io.Writer) error {
+	if cfg.runtime == "docker" {
+		return container.Docker{}.Available()
+	}
 	if exec.Command("container", "system", "status").Run() == nil {
 		return nil
 	}
@@ -39,14 +45,14 @@ func ensureContainerSystem(out io.Writer) error {
 
 // ensureSpaceImage pulls the base image for CLI space creation when it is not
 // in the local store yet. The daemon does the same in the background.
-var ensureSpaceImage = func(c container.Client, ref string, out io.Writer) error {
+var ensureSpaceImage = func(c container.Runtime, ref string, out io.Writer) error {
 	ok, err := c.ImageExists(ref)
 	if err != nil || ok {
 		return err
 	}
 	fmt.Fprintf(out, "Downloading the space image %s (first run only)…\n", ref)
 	last := -1
-	return container.CLI{}.Pull(ref, func(p container.PullProgress) {
+	return c.Pull(ref, func(p container.PullProgress) {
 		if p.Percent < 0 || p.Percent/10 == last/10 && p.Percent != 100 {
 			return
 		}
@@ -63,8 +69,11 @@ func runSetup(args []string, stdout io.Writer) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	if runtime.GOOS == "linux" {
+		return runSetupLinux(fs.Args(), *noOpen, stdout)
+	}
 	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" {
-		return errors.New("setup: the CoSpace host runs on Apple Silicon Macs (macOS 26 or later)")
+		return errors.New("setup: the CoSpace host runs on Apple Silicon Macs (macOS 26 or later) or Linux servers with Docker")
 	}
 	containerBin, err := exec.LookPath("container")
 	if err != nil {
@@ -77,7 +86,7 @@ func runSetup(args []string, stdout io.Writer) error {
 	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
 		exe = resolved
 	}
-	if err := ensureContainerSystem(stdout); err != nil {
+	if err := ensureContainerSystem(defaultConfig(), stdout); err != nil {
 		return err
 	}
 
@@ -119,7 +128,7 @@ func runSetup(args []string, stdout io.Writer) error {
 	}
 	fmt.Fprintf(stdout, "CoSpace daemon installed (starts at login; logs in %s).\n", logDir)
 
-	if !waitForConsole(30 * time.Second) {
+	if !waitForConsole(waitConsoleTimeout) {
 		fmt.Fprintf(stdout, "The console is not answering yet — check %s, then open %s\n", filepath.Join(logDir, "cospaced.log"), consoleURL)
 		return nil
 	}
@@ -135,6 +144,9 @@ func runSetup(args []string, stdout io.Writer) error {
 func runUninstall(args []string, cfg config, stdout io.Writer) error {
 	if len(args) != 0 {
 		return fmt.Errorf("uninstall: unexpected arguments: %s", strings.Join(args, " "))
+	}
+	if runtime.GOOS == "linux" {
+		return runUninstallLinux(cfg, stdout)
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {

@@ -122,8 +122,13 @@ type Member struct {
 }
 
 type Space struct {
-	Name      string    `json:"name"`
-	Token     string    `json:"token"`
+	Name  string `json:"name"`
+	Token string `json:"token"`
+	// QuotaID identifies this space generation for spend accounting. It stays
+	// fixed while Token rotates (revoking a guest replaces the token so a
+	// copied one stops working), so a revocation never resets the budget.
+	// Spaces from before the field exists use their token as the ID.
+	QuotaID   string    `json:"quota_id,omitempty"`
 	MemoryGB  int       `json:"memory_gb"`
 	CPUs      int       `json:"cpus"`
 	CreatedAt time.Time `json:"created_at"`
@@ -199,7 +204,7 @@ type Status struct {
 
 type Manager struct {
 	Dir        string // data root; spaces live under Dir/spaces/<name>
-	C          container.Client
+	C          container.Runtime
 	Image      string
 	GatewayURL string // reachable from inside spaces, e.g. http://192.168.64.1:18930
 	CodexModel string // model name codex uses in spaces (host-specific); default gpt-5.6-sol
@@ -382,6 +387,7 @@ func (m *Manager) CreateWithOptions(name string, o CreateOptions) (*Space, error
 	r := &Space{
 		Name:           name,
 		Token:          "cs_" + hex.EncodeToString(tok),
+		QuotaID:        "q_" + hex.EncodeToString(tok),
 		MemoryGB:       o.MemoryGB,
 		CPUs:           o.CPUs,
 		CreatedAt:      time.Now().UTC(),
@@ -453,9 +459,12 @@ func (m *Manager) syncRuntime(r *Space) error {
 	// Guest-controlled bytes never go through a heredoc: the authorized_keys
 	// content travels base64-encoded inside single quotes and is decoded in
 	// the VM, so no key material can terminate the script early.
+	// Every guest logs in as the same Linux user; the per-key environment
+	// option is how sshd tells the login shell who it is. Member names are
+	// validated to a safe charset, so the option needs no quoting beyond this.
 	var keys []string
 	for _, mem := range r.Members {
-		keys = append(keys, mem.PubKey)
+		keys = append(keys, fmt.Sprintf("environment=\"SPACE_MEMBER=%s\" %s", mem.Name, mem.PubKey))
 	}
 	authorizedKeys := base64.StdEncoding.EncodeToString([]byte(strings.Join(keys, "\n") + "\n"))
 
@@ -463,6 +472,16 @@ func (m *Manager) syncRuntime(r *Space) error {
 	// it, so an openai-only space genuinely has no claude access and vice versa.
 	var env strings.Builder
 	fmt.Fprintf(&env, "export COSPACE_SPACE=%s\n", r.Name)
+	// Commits are attributed to the guest whose key opened the session, unless
+	// the guest set their own identity. Tool-specific identities (gh, codex)
+	// are untouched.
+	env.WriteString(`if [ -n "${SPACE_MEMBER:-}" ]; then
+  export COSPACE_MEMBER="$SPACE_MEMBER"
+  : "${GIT_AUTHOR_NAME:=$SPACE_MEMBER}"; : "${GIT_COMMITTER_NAME:=$SPACE_MEMBER}"
+  : "${GIT_AUTHOR_EMAIL:=$SPACE_MEMBER@$COSPACE_SPACE.cospace}"; : "${GIT_COMMITTER_EMAIL:=$SPACE_MEMBER@$COSPACE_SPACE.cospace}"
+  export GIT_AUTHOR_NAME GIT_COMMITTER_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_EMAIL
+fi
+`)
 	if hasProvider(r, "anthropic") {
 		fmt.Fprintf(&env, "export ANTHROPIC_BASE_URL=%s/anthropic\n", m.GatewayURL)
 		fmt.Fprintf(&env, "export ANTHROPIC_AUTH_TOKEN=%s\n", r.Token)
@@ -589,6 +608,21 @@ fi
 rm -f /etc/profile.d/guestroom.sh
 cat > /etc/profile.d/cospace.sh <<'GREOF'
 %sGREOF
+mkdir -p /etc/ssh/sshd_config.d
+cat > /etc/ssh/sshd_config.d/cospace.conf.next <<'GREOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+PermitUserEnvironment SPACE_MEMBER
+AllowUsers space room
+GREOF
+if ! cmp -s /etc/ssh/sshd_config.d/cospace.conf.next /etc/ssh/sshd_config.d/cospace.conf 2>/dev/null; then
+  mv /etc/ssh/sshd_config.d/cospace.conf.next /etc/ssh/sshd_config.d/cospace.conf
+  kill -HUP 1 2>/dev/null || true
+else
+  rm -f /etc/ssh/sshd_config.d/cospace.conf.next
+fi
 mkdir -p /home/space/.ssh /home/space/.codex /home/space/.grok /home/space/.claude
 %s%s%spython3 - <<'PYEOF'
 import json
@@ -756,15 +790,32 @@ func (m *Manager) Limits(space string) (usdLimit float64, maxConcurrency int) {
 	return r.UsdLimit, mc
 }
 
-// QuotaKey identifies one concrete space generation. Tokens are regenerated on
+// QuotaKey identifies one concrete space generation. It is regenerated on
 // delete + recreate, so quota state cannot leak between spaces that reuse a
-// display name. The key remains internal to the daemon and is never logged.
+// display name, and it survives token rotation. Internal to the daemon,
+// never logged.
+func (r *Space) QuotaKey() string {
+	if r.QuotaID != "" {
+		return r.QuotaID
+	}
+	return r.Token
+}
+
 func (m *Manager) QuotaKey(space string) string {
 	r, err := m.load(space)
 	if err != nil {
 		return space
 	}
-	return r.Token
+	return r.QuotaKey()
+}
+
+// newToken mints a per-space fake token.
+func newToken() (string, error) {
+	tok := make([]byte, 16)
+	if _, err := rand.Read(tok); err != nil {
+		return "", err
+	}
+	return "cs_" + hex.EncodeToString(tok), nil
 }
 
 // SetLimits updates a space's spend cap and concurrency cap. These are enforced
@@ -888,15 +939,26 @@ func (m *Manager) RevokeMember(space, memberName string) error {
 		return fmt.Errorf("no member %q in %s", memberName, space)
 	}
 	r.Members = kept
+	// Rotate the space token: every guest could read it from the space's
+	// environment, so a revoked guest who copied it must not keep spending
+	// through the gateway from elsewhere. The spend key stays the same.
+	if r.QuotaID == "" {
+		r.QuotaID = r.Token
+	}
+	tok, err := newToken()
+	if err != nil {
+		return err
+	}
+	r.Token = tok
 	if err := m.save(r); err != nil {
 		return err
 	}
 	on, err := m.running(space)
 	if err != nil || !on {
-		return err // a stopped space syncs its keys on the next Start
+		return err // a stopped space syncs its keys and token on the next Start
 	}
 	if err := m.syncRuntime(r); err != nil {
-		return fmt.Errorf("member removed from the record, but the space's authorized keys could not be updated (it is applied on the next wake): %w", err)
+		return fmt.Errorf("member removed and token rotated in the record, but the space could not be updated (it is applied on the next wake): %w", err)
 	}
 	// Revocation must take effect NOW, not just for new connections. All guests
 	// share the `space` user, so we can't target one session — drop every active
@@ -1060,22 +1122,54 @@ func (m *Manager) StopIdle(name string) error {
 }
 
 // Delete removes the container and purges the space dir (workspace included).
-// A VM that is already gone does not block the purge.
+// A VM that is already gone does not block the purge, and neither does a
+// record that is already gone: a directory left behind by an interrupted
+// delete is still a space directory the host can clean up.
 func (m *Manager) Delete(name string) error {
 	defer m.lock()()
 	if _, err := m.loadForUpdate(name); err != nil {
-		return err
+		if _, statErr := os.Stat(m.spaceDir(name)); !errors.Is(err, os.ErrNotExist) || statErr != nil {
+			return err
+		}
 	}
 	if err := m.C.Delete(name); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(m.spaceDir(name)); err != nil {
+	if err := removeAllForce(m.spaceDir(name)); err != nil {
 		return err
 	}
 	if m.OnDeleted != nil {
 		m.OnDeleted(name)
 	}
 	return nil
+}
+
+// removeAllForce deletes a tree that agents have been writing into. Tools
+// routinely leave directories without owner write permission (read-only
+// input folders, package caches), which makes os.RemoveAll stop halfway;
+// when that happens, grant ourselves write access on every directory and
+// file and try once more.
+func removeAllForce(dir string) error {
+	err := os.RemoveAll(dir)
+	if err == nil {
+		return nil
+	}
+	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		if info, err := d.Info(); err == nil {
+			mode := info.Mode().Perm()
+			if d.IsDir() {
+				mode |= 0o700
+			} else {
+				mode |= 0o600
+			}
+			_ = os.Chmod(path, mode)
+		}
+		return nil
+	})
+	return os.RemoveAll(dir)
 }
 
 // records returns every space record on disk, without consulting the

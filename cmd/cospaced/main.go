@@ -15,7 +15,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"strconv"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -36,8 +36,12 @@ import (
 )
 
 const (
-	defaultImage      = dist.BaseImage
-	defaultGatewayURL = "http://192.168.64.1:18930"
+	defaultImage = dist.BaseImage
+	// Where spaces reach the gateway: the Apple container vmnet gateway on
+	// macOS, the Docker bridge gateway on Linux (refined at serve time from
+	// the engine's actual bridge configuration).
+	appleGatewayURL  = "http://192.168.64.1:18930"
+	dockerGatewayURL = "http://172.17.0.1:18930"
 )
 
 type config struct {
@@ -46,6 +50,9 @@ type config struct {
 	gatewayURL  string
 	codexModel  string
 	claudeModel string
+	// runtime selects the container engine: "apple" (macOS) or "docker"
+	// (Linux). Apple container is the only runtime on macOS.
+	runtime string
 }
 
 func main() {
@@ -138,9 +145,13 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 	if err := os.MkdirAll(cfg.data, 0o700); err != nil {
 		return fmt.Errorf("create data dir: %w", err)
 	}
-	if err := ensureContainerSystem(stderr); err != nil {
+	if err := validateRuntime(cfg); err != nil {
+		return err
+	}
+	if err := ensureContainerSystem(cfg, stderr); err != nil {
 		fmt.Fprintln(stderr, err)
 	}
+	cfg.gatewayURL = resolveGatewayURL(cfg, stderr)
 	m := newManager(cfg)
 	logger := log.New(stderr, "", 0)
 	// One pairing store per process: the console's Invite and the transport's
@@ -155,7 +166,7 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 		// before Apple container's vmnet bridge came up gets "no route to host"
 		// to 192.168.64.x, but any newly-spawned process routes fine (and this
 		// also survives container/vmnet restarts). See DialSSH.
-		dial:  ncDial,
+		dial:  spaceDialer(cfg),
 		sleep: time.Sleep,
 		wait:  30 * time.Second,
 	}
@@ -234,7 +245,7 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 	quotaKeys := make(map[string]string, len(records))
 	for _, r := range records {
 		since[r.Name] = r.CreatedAt
-		quotaKeys[r.Name] = r.Token
+		quotaKeys[r.Name] = r.QuotaKey()
 	}
 	if seedBySpace, err := us.SpentBySpaceSince(since); err != nil || listErr != nil {
 		if err == nil {
@@ -259,7 +270,7 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 		startCredKeepalive(m, sp, *credKeepalive, cfg, logger)
 	}
 
-	image := &imagesync.Syncer{Ref: cfg.image, Exists: m.C.ImageExists, Pull: container.CLI{}.Pull, Log: logger}
+	image := &imagesync.Syncer{Ref: cfg.image, Exists: m.C.ImageExists, Pull: m.C.Pull, Log: logger}
 	image.Start()
 
 	if *consoleAddr != "" {
@@ -778,51 +789,10 @@ func ncDial(network, address string) (net.Conn, error) {
 	return conn, nil
 }
 
-// hostMemoryUsedGB approximates the Mac's memory in use (active + wired +
-// compressor pages), close to Activity Monitor's "Memory Used". 0 on failure.
-func hostMemoryUsedGB() int {
-	out, err := exec.Command("vm_stat").Output()
-	if err != nil {
-		return 0
-	}
-	pageSize := 16384
-	var pages int64
-	for _, line := range strings.Split(string(out), "\n") {
-		if _, err := fmt.Sscanf(line, "Mach Virtual Memory Statistics: (page size of %d bytes)", &pageSize); err == nil {
-			continue
-		}
-		for _, key := range []string{"Pages active:", "Pages wired down:", "Pages occupied by compressor:"} {
-			if rest, ok := strings.CutPrefix(strings.TrimSpace(line), key); ok {
-				var n int64
-				if _, err := fmt.Sscanf(strings.TrimSuffix(strings.TrimSpace(rest), "."), "%d", &n); err == nil {
-					pages += n
-				}
-			}
-		}
-	}
-	return int(pages * int64(pageSize) / (1024 * 1024 * 1024))
-}
-
-// hostMemoryGB returns the Mac's physical memory in GB (0 on failure).
-func hostMemoryGB() int {
-	out, err := exec.Command("sysctl", "-n", "hw.memsize").Output()
-	if err != nil {
-		return 0
-	}
-	bytes, err := strconv.ParseInt(strings.TrimSpace(string(out)), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return int(bytes / (1024 * 1024 * 1024))
-}
-
-// onBattery reports whether the Mac is running on battery power.
-func onBattery() bool {
-	out, err := exec.Command("pmset", "-g", "batt").Output()
-	if err != nil {
-		return false
-	}
-	return strings.Contains(string(out), "Battery Power")
+// execOutput runs a host command and returns its stdout.
+func execOutput(name string, args ...string) (string, error) {
+	out, err := exec.Command(name, args...).Output()
+	return string(out), err
 }
 
 func runInvite(args []string, cfg config, stdout io.Writer) error {
@@ -1356,7 +1326,7 @@ func readPublicKey(path string, stdin io.Reader) (string, error) {
 func newManager(cfg config) *spaces.Manager {
 	return &spaces.Manager{
 		Dir:         cfg.data,
-		C:           container.Client{R: container.CLI{}},
+		C:           newRuntime(cfg),
 		Image:       cfg.image,
 		GatewayURL:  cfg.gatewayURL,
 		CodexModel:  cfg.codexModel,
@@ -1369,13 +1339,23 @@ func defaultConfig() config {
 	if err != nil || home == "" {
 		home = os.Getenv("HOME")
 	}
-	data := filepath.Join(home, "Library", "Application Support", "CoSpace")
-	return config{
-		data:       data,
+	cfg := config{
 		image:      defaultImage,
-		gatewayURL: defaultGatewayURL,
 		codexModel: "gpt-5.6-sol",
+		runtime:    defaultRuntime(),
 	}
+	if runtime.GOOS == "darwin" {
+		cfg.data = filepath.Join(home, "Library", "Application Support", "CoSpace")
+		cfg.gatewayURL = appleGatewayURL
+	} else {
+		base := os.Getenv("XDG_DATA_HOME")
+		if base == "" {
+			base = filepath.Join(home, ".local", "share")
+		}
+		cfg.data = filepath.Join(base, "cospace")
+		cfg.gatewayURL = dockerGatewayURL
+	}
+	return cfg
 }
 
 // adoptLegacyDataDir renames a pre-rename "Guestroom" data dir into place
@@ -1398,6 +1378,7 @@ func adoptLegacyDataDir(data string) {
 func addGlobalFlags(fs *flag.FlagSet, cfg *config) {
 	fs.StringVar(&cfg.data, "data", cfg.data, "data directory")
 	fs.StringVar(&cfg.image, "image", cfg.image, "space container image")
+	fs.StringVar(&cfg.runtime, "runtime", cfg.runtime, "container engine: apple (macOS) or docker (Linux)")
 	fs.StringVar(&cfg.gatewayURL, "gateway-url", cfg.gatewayURL, "gateway URL visible inside spaces")
 	fs.StringVar(&cfg.codexModel, "codex-model", cfg.codexModel, "model name codex uses in spaces")
 	fs.StringVar(&cfg.claudeModel, "claude-model", cfg.claudeModel, "default claude model in spaces, e.g. claude-fable-5[1m] (empty = claude's own default)")
