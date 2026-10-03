@@ -22,6 +22,12 @@ CoSpace 是一个 macOS 常驻程序加一个单文件 guest 命令行工具，�
 
 <img src="assets/console.jpg" alt="控制台空间详情页：带密钥指纹的 guest 列表、14 天 token 图表、预算卡片、每空间模型与联网设置，以及带固定 host key 的 ssh 访问卡片" width="100%">
 
+## 演示视频
+
+[<img src="assets/demo.jpg" alt="CoSpace 演示视频：点击播放（66 秒）" width="100%">](https://github.com/JingxuanKang/cospace/releases/download/v0.4.0/cospace-promo.mp4)
+
+66 秒演示：一条命令装好 host、两下点击发出邀请、guest 一分钟内用上 Claude Code、两个人实时看到同一个 agent 会话。
+
 ## 安装
 
 **Mac host**——Apple Silicon 的 Mac，macOS 26 或更新。一条命令：

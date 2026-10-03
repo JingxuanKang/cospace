@@ -22,6 +22,12 @@ Each space is a Linux VM (Apple container) on the host's Mac. Guests join over p
 
 <img src="assets/console.jpg" alt="Space detail in the host console: guests with their key fingerprints, a 14-day token chart, the budget card, per-space model and network settings, and the ssh access card with the pinned host key" width="100%">
 
+## Demo
+
+[<img src="assets/demo.jpg" alt="CoSpace demo video: click to play (66 seconds)" width="100%">](https://github.com/JingxuanKang/cospace/releases/download/v0.4.0/cospace-promo.mp4)
+
+A 66-second walkthrough: one command to install the host, invite a guest in two clicks, a guest coding with Claude Code within a minute, and two people watching the same agent session live (on-screen text in Chinese).
+
 ## Install
 
 **Mac host** — an Apple Silicon Mac on macOS 26 or later. One command:
