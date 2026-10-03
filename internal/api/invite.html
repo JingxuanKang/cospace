@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{if eq .Lang "zh"}}zh-CN{{else}}en{{end}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>CoSpace · You're invited</title>
+<title>{{if eq .Lang "zh"}}CoSpace · 邀请你加入{{else}}CoSpace · You're invited{{end}}</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -63,6 +63,8 @@
   .app-card svg { width: 100%; height: auto; display: block; }
   .app-caption { margin-top: 8px; font-size: 11.5px; color: #64748B; line-height: 1.5; }
   .app-caption b { color: #334155; }
+  .lang-link { margin-left: auto; font-size: 12px; color: #B45309; text-decoration: none; }
+  .lang-link:hover { text-decoration: underline; }
   .foot { margin: 12px 0 0; font-size: 12px; color: #94A3B8; line-height: 1.55; }
   .dead-title { margin: 0 0 8px; font-size: 21px; color: #0F172A; }
   .dead-copy { margin: 0; font-size: 13.5px; color: #64748B; line-height: 1.6; }
@@ -70,14 +72,14 @@
 </head>
 <body>
 <main class="card">
-  <div class="brand"><span class="wordmark">CoSpace</span><span class="brand-sub">one-time invite</span></div>
+  <div class="brand"><span class="wordmark">CoSpace</span><span class="brand-sub">{{if eq .Lang "zh"}}一次性邀请{{else}}one-time invite{{end}}</span><a class="lang-link" href="?lang={{if eq .Lang "zh"}}en{{else}}zh{{end}}" hreflang="{{if eq .Lang "zh"}}en{{else}}zh-CN{{end}}">{{if eq .Lang "zh"}}English{{else}}中文{{end}}</a></div>
 {{if .Dead}}
-  <h1 class="dead-title">This invite has expired</h1>
-  <p class="dead-copy">Invite links are one-time and short-lived, so this one is no longer valid — it may have been used already, or its code timed out. Ask the person who invited you to send a fresh link; it takes them one click.</p>
+  <h1 class="dead-title">{{if eq .Lang "zh"}}这个邀请已失效{{else}}This invite has expired{{end}}</h1>
+  <p class="dead-copy">{{if eq .Lang "zh"}}邀请链接一次性且时效很短，这一条已经不能用了：可能已被使用，或者码已过期。请让邀请你的人重新发一个，对方只需点一下。{{else}}Invite links are one-time and short-lived, so this one is no longer valid — it may have been used already, or its code timed out. Ask the person who invited you to send a fresh link; it takes them one click.{{end}}</p>
 {{else}}
-  <h1>You're invited to <span class="space-name mono">{{.Space}}</span></h1>
-  <p class="lede">A shared dev space running on your host's Mac, with Claude Code, Codex, and Grok ready inside. Three steps in your terminal — nothing to sign up for.</p>
-  <div class="segmented" role="group" aria-label="Your operating system">
+  <h1>{{if eq .Lang "zh"}}邀请你加入 <span class="space-name mono">{{.Space}}</span>{{else}}You're invited to <span class="space-name mono">{{.Space}}</span>{{end}}</h1>
+  <p class="lede">{{if eq .Lang "zh"}}这是运行在邀请人电脑上的共享开发空间，里面的 Claude Code、Codex 和 Grok 已经登录好了。在终端里跑三步即可，不需要注册任何账号。{{else}}A shared dev space running on your host's Mac, with Claude Code, Codex, and Grok ready inside. Three steps in your terminal — nothing to sign up for.{{end}}</p>
+  <div class="segmented" role="group" aria-label="{{if eq .Lang "zh"}}你的操作系统{{else}}Your operating system{{end}}">
     <button class="segment active" type="button" data-os="posix">macOS / Linux</button>
     <button class="segment" type="button" data-os="windows">Windows</button>
   </div>
@@ -85,25 +87,25 @@
     <div class="terminal-head">
       <span class="light" style="background:#FF5F57"></span><span class="light" style="background:#FEBC2E"></span><span class="light" style="background:#28C840"></span>
       <span class="terminal-title mono" id="shell-title">invite — bash</span>
-      <button class="copy-btn copy-all" type="button" id="copy-all">Copy all</button>
+      <button class="copy-btn copy-all" type="button" id="copy-all">{{if eq .Lang "zh"}}全部复制{{else}}Copy all{{end}}</button>
     </div>
     <div class="terminal-body mono">
       <div>
-        <div class="step-label"># 1 · Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)</div>
-        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="install-cmd">{{.InstallPOSIX}}</span><button class="copy-btn" type="button" data-copy="install">Copy</button></div>
+        <div class="step-label"># 1 · {{if eq .Lang "zh"}}安装 guest 工具。已经装过 cospace？直接跳到第 2 步（需要更新时它会提示）{{else}}Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed){{end}}</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="install-cmd">{{.InstallPOSIX}}</span><button class="copy-btn" type="button" data-copy="install">{{if eq .Lang "zh"}}复制{{else}}Copy{{end}}</button></div>
       </div>
       <div>
-        <div class="step-label"># 2 · Pair with this space (one-time code)</div>
-        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="pair-cmd">{{.PairCommand}}</span><button class="copy-btn" type="button" data-copy="pair">Copy</button></div>
+        <div class="step-label"># 2 · {{if eq .Lang "zh"}}与本空间配对（一次性码）。同一个人的第二台电脑要加  -name &lt;另一个名字&gt;{{else}}Pair with this space (one-time code) — a second computer of the same person adds  -name &lt;another-name&gt;{{end}}</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd" id="pair-cmd">{{.PairCommand}}</span><button class="copy-btn" type="button" data-copy="pair">{{if eq .Lang "zh"}}复制{{else}}Copy{{end}}</button></div>
       </div>
       <div>
-        <div class="step-label"># 3 · You're in — reconnect with this anytime</div>
-        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd">ssh <span class="accent">{{.Space}}</span></span><button class="copy-btn" type="button" data-copy="ssh">Copy</button></div>
+        <div class="step-label"># 3 · {{if eq .Lang "zh"}}进来了。之后随时用这条重新连接{{else}}You're in — reconnect with this anytime{{end}}</div>
+        <div class="line"><span class="prompt" data-prompt>$</span><span class="cmd">ssh <span class="accent">{{.Space}}</span></span><button class="copy-btn" type="button" data-copy="ssh">{{if eq .Lang "zh"}}复制{{else}}Copy{{end}}</button></div>
       </div>
     </div>
   </div>
-  <div class="meta"><span class="pill mono">one-time code</span><span class="pill mono">link expires in ~{{.MinutesLeft}} min</span></div>
-  <div class="apps-heading">Once you're in, your apps see a plain SSH host</div>
+  <div class="meta"><span class="pill mono">{{if eq .Lang "zh"}}一次性码{{else}}one-time code{{end}}</span><span class="pill mono">{{if eq .Lang "zh"}}链接约 {{.MinutesLeft}} 分钟后过期{{else}}link expires in ~{{.MinutesLeft}} min{{end}}</span></div>
+  <div class="apps-heading">{{if eq .Lang "zh"}}进来之后，你的各种工具看到的就是一台普通的 SSH 主机{{else}}Once you're in, your apps see a plain SSH host{{end}}</div>
   <div class="apps-grid">
     <div class="app-card">
       <svg viewBox="0 0 280 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Claude Code environment picker with SSH highlighted and the space in the submenu" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
@@ -134,7 +136,7 @@
         <rect x="16" y="136" width="248" height="22" rx="8" fill="#FFFFFF" stroke="#E8ECF2"/>
         <text x="26" y="150.5" font-size="9.5" fill="#B6C0CD">Describe a task or ask a question</text>
       </svg>
-      <div class="app-caption"><b>Claude Code app</b> — open the environment picker in the composer → <b>SSH</b> → pick <span class="mono">{{.Space}}</span>.</div>
+      <div class="app-caption">{{if eq .Lang "zh"}}<b>Claude Code 桌面端</b>：在输入框打开环境选择器 → <b>SSH</b> → 选 <span class="mono">{{.Space}}</span>。{{else}}<b>Claude Code app</b> — open the environment picker in the composer → <b>SSH</b> → pick <span class="mono">{{.Space}}</span>.{{end}}</div>
     </div>
     <div class="app-card">
       <svg viewBox="0 0 280 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Codex settings: Connections section, SSH tab, with the space listed under SSH connections from this Mac" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
@@ -172,10 +174,10 @@
         <text x="163" y="116" font-size="7.5" fill="#94A3B8">Connected</text>
         <text x="243" y="109" font-size="10" fill="#94A3B8">…</text>
       </svg>
-      <div class="app-caption"><b>Codex app</b> — <b>Settings → Connections → SSH</b>: <span class="mono">{{.Space}}</span> is already listed.</div>
+      <div class="app-caption">{{if eq .Lang "zh"}}<b>Codex 桌面端</b>：<b>Settings → Connections → SSH</b>，<span class="mono">{{.Space}}</span> 已经在列表里。{{else}}<b>Codex app</b> — <b>Settings → Connections → SSH</b>: <span class="mono">{{.Space}}</span> is already listed.{{end}}</div>
     </div>
   </div>
-  <p class="foot">Cursor and VS Code work the same way — Remote-SSH → <span class="mono">{{.Space}}</span>. Your host sees you under Guests; you never handle any AI credentials.</p>
+  <p class="foot">{{if eq .Lang "zh"}}Cursor 和 VS Code 同理：Remote-SSH → <span class="mono">{{.Space}}</span>。邀请人会在 Guest 列表里看到你；你从头到尾不经手任何 AI 凭证。{{else}}Cursor and VS Code work the same way — Remote-SSH → <span class="mono">{{.Space}}</span>. Your host sees you under Guests; you never handle any AI credentials.{{end}}</p>
 {{end}}
 </main>
 {{if not .Dead}}
@@ -200,7 +202,7 @@
   });
   function copyText(text, btn) {
     var done = function () {
-      btn.classList.add("done"); var prev = btn.textContent; btn.textContent = "Copied";
+      btn.classList.add("done"); var prev = btn.textContent; btn.textContent = {{if eq .Lang "zh"}}"已复制"{{else}}"Copied"{{end}};
       setTimeout(function () { btn.classList.remove("done"); btn.textContent = prev; }, 1400);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {

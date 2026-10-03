@@ -694,6 +694,29 @@ type invitePageData struct {
 	MinutesLeft    int
 	InstallPOSIX   string
 	InstallWindows string
+	// Lang is "en" or "zh": an explicit ?lang= wins, then Accept-Language.
+	Lang string
+}
+
+// pageLang picks the invite page language. The guest tool and the console
+// carry the same two languages; anything that is not Chinese reads English.
+func pageLang(r *http.Request) string {
+	switch strings.ToLower(r.URL.Query().Get("lang")) {
+	case "zh", "zh-cn", "zh-hans":
+		return "zh"
+	case "en":
+		return "en"
+	}
+	for _, part := range strings.Split(strings.ToLower(r.Header.Get("Accept-Language")), ",") {
+		tag := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
+		if strings.HasPrefix(tag, "zh") {
+			return "zh"
+		}
+		if strings.HasPrefix(tag, "en") {
+			return "en"
+		}
+	}
+	return "en"
 }
 
 // hitWindow is a fixed-window counter for the public invite page.
@@ -741,7 +764,9 @@ func (s *Server) invitePage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Robots-Tag", "noindex")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
-	data := invitePageData{Dead: true}
+	w.Header().Add("Vary", "Accept-Language")
+	lang := pageLang(r)
+	data := invitePageData{Dead: true, Lang: lang}
 	status := http.StatusNotFound
 	if !s.inviteAllowed(r) {
 		status = http.StatusTooManyRequests
@@ -752,7 +777,7 @@ func (s *Server) invitePage(w http.ResponseWriter, r *http.Request) {
 				left = 1
 			}
 			data = invitePageData{Space: space, PairCommand: command, MinutesLeft: left,
-				InstallPOSIX: dist.GuestInstallPOSIX, InstallWindows: dist.GuestInstallWindows}
+				InstallPOSIX: dist.GuestInstallPOSIX, InstallWindows: dist.GuestInstallWindows, Lang: lang}
 			status = http.StatusOK
 		}
 	}

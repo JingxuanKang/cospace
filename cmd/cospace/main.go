@@ -142,7 +142,7 @@ func runPair(args []string, stdout, stderr io.Writer) error {
 		// ssh-keygen step. Only the default ed25519 key is auto-created.
 		privatePath := strings.TrimSuffix(*keyPath, ".pub")
 		if err := generateSSHKey(privatePath, stderr); err != nil {
-			fmt.Fprintf(stderr, "Could not create an SSH key automatically. Create one with:\nssh-keygen -t ed25519 -f %s\n", privatePath)
+			fmt.Fprintf(stderr, say("Could not create an SSH key automatically. Create one with:\nssh-keygen -t ed25519 -f %s\n", "无法自动创建 SSH 密钥。请手动创建：\nssh-keygen -t ed25519 -f %s\n"), privatePath)
 			return errKeyMissing
 		}
 		pubKey, err = os.ReadFile(*keyPath)
@@ -189,8 +189,23 @@ func runPair(args []string, stdout, stderr io.Writer) error {
 	if err := updateSSHConfig(configPath, *alias, pos[0], identityFile, knownHostsPath, hostKeyAlias); err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(stdout, "paired: %s (%s)\nssh %s\n", resp.Space, resp.Fingerprint, *alias)
+	_, err = fmt.Fprintf(stdout, say("paired: %s (%s)\nssh %s\n", "已配对：%s（%s）\n进入空间：ssh %s\n"), resp.Space, resp.Fingerprint, *alias)
 	return err
+}
+
+// say picks the English or Chinese form of a user-facing message from the
+// guest's locale (LC_ALL / LC_MESSAGES / LANG). Reasons that come from the
+// host daemon (pair rejections) are passed through as written.
+func say(en, zh string) string {
+	for _, k := range []string{"LC_ALL", "LC_MESSAGES", "LANG"} {
+		if v := strings.ToLower(os.Getenv(k)); v != "" {
+			if strings.HasPrefix(v, "zh") {
+				return zh
+			}
+			return en
+		}
+	}
+	return en
 }
 
 func postPair(ctx context.Context, client *http.Client, endpoint string, req pairRequest) (pairResponse, error) {
@@ -221,12 +236,12 @@ func postPair(ctx context.Context, client *http.Client, endpoint string, req pai
 		var rej pairRejection
 		_ = json.NewDecoder(io.LimitReader(resp.Body, 64<<10)).Decode(&rej)
 		if (resp.StatusCode == http.StatusConflict || resp.StatusCode == http.StatusBadRequest) && rej.Error != "" {
-			return zero, fmt.Errorf("pairing rejected: %s", rej.Error)
+			return zero, fmt.Errorf(say("pairing rejected: %s", "配对被拒绝：%s"), rej.Error)
 		}
 		if resp.StatusCode == http.StatusTooManyRequests {
-			return zero, errors.New("pairing rejected: too many attempts, wait a minute and try again")
+			return zero, errors.New(say("pairing rejected: too many attempts, wait a minute and try again", "配对被拒绝：尝试太频繁，等一分钟再试"))
 		}
-		return zero, errors.New("pairing rejected (the code may be wrong, used, or expired — ask the host for a fresh one)")
+		return zero, errors.New(say("pairing rejected (the code may be wrong, used, or expired — ask the host for a fresh one)", "配对被拒绝（码可能输错、已用过或已过期，请让邀请人重新发一个）"))
 	}
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 64<<10)).Decode(&zero); err != nil {
 		return zero, fmt.Errorf("decode pair response: %w", err)
@@ -250,12 +265,12 @@ func postPair(ctx context.Context, client *http.Client, endpoint string, req pai
 // than the host's daemon is told the host has to update.
 func protocolError(have int, rej pairRejection) error {
 	if rej.MinProtocol > 0 && have < rej.MinProtocol {
-		return fmt.Errorf("this cospace build (%s) is too old for the host — update it by running the installer again:\n  %s", version, installCommand())
+		return fmt.Errorf(say("this cospace build (%s) is too old for the host — update it by running the installer again:\n  %s", "这个 cospace 版本（%s）对这台主机来说太旧了，重新运行安装命令即可更新：\n  %s"), version, installCommand())
 	}
 	if rej.MaxProtocol > 0 && have > rej.MaxProtocol {
-		return fmt.Errorf("this cospace build (%s) is newer than the host's CoSpace daemon — ask the host to update cospaced", version)
+		return fmt.Errorf(say("this cospace build (%s) is newer than the host's CoSpace daemon — ask the host to update cospaced", "这个 cospace 版本（%s）比主机的 CoSpace daemon 更新，请让主机升级 cospaced"), version)
 	}
-	return errors.New("the host's CoSpace daemon does not support this cospace build")
+	return errors.New(say("the host's CoSpace daemon does not support this cospace build", "主机的 CoSpace daemon 不支持这个 cospace 版本"))
 }
 
 // forwardedPorts are the common dev-server ports cospace auto-forwards from the

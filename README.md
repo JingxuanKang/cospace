@@ -128,7 +128,7 @@ go run ./cmd/cospaced -image ghcr.io/jingxuankang/cospace-base:1 serve
 ./scripts/smoke.sh                    # end-to-end on a real Mac (creates and deletes a space)
 ```
 
-Go 1.26; the console frontend is a single dependency-free HTML file embedded into the daemon. Releases: bump `VERSION`, then `scripts/release.sh`; image changes: bump the tag in `internal/dist`, then `scripts/publish-image.sh` (see [Deploy.md](Deploy.md)).
+Go 1.26; the console frontend is a single dependency-free HTML file embedded into the daemon. The console, the invite page and the guest tool's messages come in English and 简体中文: the console follows the browser language with a toggle in the sidebar, the invite page follows `Accept-Language` (or `?lang=zh` / `?lang=en`), and `cospace` follows `LANG`. Console copy goes through `t("English key")` with the Chinese text in the `zh` dictionary at the top of the script; add both when you add a string. Releases: bump `VERSION`, then `scripts/release.sh`; image changes: bump the tag in `internal/dist`, then `scripts/publish-image.sh` (see [Deploy.md](Deploy.md)).
 
 ## License
 

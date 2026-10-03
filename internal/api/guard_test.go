@@ -167,3 +167,35 @@ func TestInvitePageIsRateLimited(t *testing.T) {
 		t.Fatalf("other client: want 200 got %d", w.Code)
 	}
 }
+
+// The invite page follows ?lang= first, then Accept-Language, and defaults
+// to English; both renderings carry the pair command and a switch link.
+func TestInvitePageLanguage(t *testing.T) {
+	s, _ := newServer(t)
+	h := s.Handler()
+	get := func(target, acceptLanguage string) (int, string) {
+		req := httptest.NewRequest("GET", target, nil)
+		if acceptLanguage != "" {
+			req.Header.Set("Accept-Language", acceptLanguage)
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		return w.Code, w.Body.String()
+	}
+	code, body := get("/i/K7M4-Q2PX", "")
+	if code != 200 || !strings.Contains(body, `lang="en"`) || !strings.Contains(body, "You're invited") || !strings.Contains(body, "cospace pair tcABC K7M4-Q2PX") {
+		t.Fatalf("default page: %d %s", code, body[:200])
+	}
+	code, body = get("/i/K7M4-Q2PX", "zh-CN,zh;q=0.9,en;q=0.8")
+	if code != 200 || !strings.Contains(body, `lang="zh-CN"`) || !strings.Contains(body, "邀请你加入") || !strings.Contains(body, "cospace pair tcABC K7M4-Q2PX") || !strings.Contains(body, `href="?lang=en"`) {
+		t.Fatalf("zh page: %d %s", code, body[:200])
+	}
+	code, body = get("/i/K7M4-Q2PX?lang=en", "zh-CN")
+	if code != 200 || !strings.Contains(body, `lang="en"`) || strings.Contains(body, "邀请你加入") {
+		t.Fatalf("?lang=en must win over Accept-Language: %d", code)
+	}
+	code, body = get("/i/NOPE-NOPE?lang=zh", "")
+	if code != 404 || !strings.Contains(body, "这个邀请已失效") {
+		t.Fatalf("dead page zh: %d", code)
+	}
+}

@@ -128,7 +128,7 @@ go run ./cmd/cospaced -image ghcr.io/jingxuankang/cospace-base:1 serve
 ./scripts/smoke.sh                    # 真机端到端（会建一个空间再删掉）
 ```
 
-Go 1.26；控制台前端是单个零依赖 HTML，`go:embed` 进 daemon 二进制。发版：提 `VERSION` 后运行 `scripts/release.sh`；镜像有改动：提 `internal/dist` 里的 tag 后运行 `scripts/publish-image.sh`（见 [Deploy.md](Deploy.md)）。
+Go 1.26；控制台前端是单个零依赖 HTML，`go:embed` 进 daemon 二进制。控制台、邀请页和 guest 工具的提示都有英文和简体中文：控制台跟随浏览器语言，侧栏底部可切换；邀请页按 `Accept-Language`（或 `?lang=zh` / `?lang=en`）；`cospace` 按 `LANG`。控制台文案一律写成 `t("英文原文")`，中文放在脚本顶部的 `zh` 字典里，新增文案两边都要加。发版：提 `VERSION` 后运行 `scripts/release.sh`；镜像有改动：提 `internal/dist` 里的 tag 后运行 `scripts/publish-image.sh`（见 [Deploy.md](Deploy.md)）。
 
 ## 许可证
 

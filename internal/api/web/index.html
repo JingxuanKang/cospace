@@ -438,6 +438,8 @@
     }
     .skeleton-line { width: 58%; height: 13px; border-radius: 7px; }
     .skeleton-title { width: 150px; height: 31px; border-radius: 9px; }
+    .lang-toggle { margin-left: auto; font-size: 11px; color: #94A3B8; padding: 0 4px; }
+    .lang-toggle:hover { color: #B45309; }
     .toast {
       position: fixed; right: 22px; bottom: 22px; z-index: 30; max-width: min(390px, calc(100vw - 44px));
       display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
@@ -583,6 +585,186 @@
       xai: '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAMKADAAQAAAABAAAAMAAAAADbN2wMAAAGvElEQVRoBe1aa2yMTRQ+u6roV3eCHwhp6u6XW4NIEERF3RLSlJakEbc/UhFEohUiiEtCQvCjIkFCpIkGCYKIS11DJG01cb/f9aItejzPfOb9dvfdbXf5ortfvklmZ3beMzPPM3PmnDPvrkeQvnz5InV1dZKQkCA1NTW94+LiMjweTypyEvJfEPFQrhGSIlUilyEXfvv27UCzZs2Kq6qqxOv1SosWLcRD8Ewo41u2bJnZpEmTHIBObgSwDU4JEqXfv3/fXF5eng/wtaZDZWWlvH//Ph7s8iBQjRztqZpYiZnYBWjl69ev2ShjAbxd3OqfmMVTXV3dOz4+viBa1SaUXoFJaW1tbZr354GNSp0PBZ7tXHBi96KSWp9gND8jdg/MZzkqidEMNBQ2qFGFBx91EGgsOx8KW7jt6o018HC0Al9gCXribC1aS2iIvHr1Su7evSsXL16UGzduyPLly2XkyJEGclQSgKOSR48eyeXLl+Xs2bNy5coVKSsro7+SNm3ayMuXL531jhoCVIuHDx/KhQsX5MSJE3L16lV5/PixAYr4RwYNGiSTJk2SCRMmSN++fR0C9MSNmrCaeuTIEZ09e7Z2795dYREV6Ezu1q2bZmdn68mTJ/XDhw9BcTYKARxELSoq0pUrV+rAgQO1adOmDmg4Jx08eLBu2rRJS0pKFGY+KHDb6FIhhtU3b940OojIlB7PbBc6SJcuXQSDm1D2nz0Mv4ZVNDp98OBBOXfunLx7987pzFCeB3POnDkybtw46dChg/Os3opl4lteu3ZNMYiCgMlcFdYxqObl5enHjx99xRusP336VHfu3KkpKSmKuMtZbQDTxMREnTJlih4/flwrKioaHCtQIKQKvX79WnNycswEnMhm6ujkyZP1zp07gWO5vj948EA3bNig/fv399NtjoV4XtPS0hQHVnEXcfUNtyEkAQ4Ac6aHDx/WXr16OQQskaSkJN2/f78imnXNBeuh69evD9qPuzl69Gg9duyY4mbl6htpQ70E7GD37t3TadOmKa5xfkTGjx+vBGsTd2379u3ar18/PzlLesCAAbpnz56IVdCOH6wMiwA7fv782axq+/btFYdZ161bp/CQZkyu5KFDh4yO+5pBC7xjx466YsUKP7LBwPxKW9gEODhN2vnz540JtJPBS+qMGTO0efPmrlXnwU9NTVWEAFZc4VHNLsDTOm2/U4mIgO9EXP01a9Zo586dXcC58l27dtVt27bpp0+fTDc6ol27dmmfPn2M/LBhwxRhgu+Qv1SPmAB34dSpUzp8+PCgwHlO4PL1+vXrDiAag9zcXGOKrVqxpGrRYeEtgyMbaSUiAm/evNFVq1Zp27Ztg4Jv166drl271jmkXHW7AzzsixcvNubTlwTVbObMmVpcXBwpdiMfNgEEVzpmzJigwAmIIUFhYaEDgno/duxYsxu3bt0y7YgmNT8/X3v06OEaBwGaHj16VBHUOWOEU2mQAG7+um/fPqPTvitn67Q6U6dO1dLSUjMfLdKWLVv8zkbPnj2NzyABJhKaOHGiy7m1atXKWKu3b98auXA+6iWAWEWXLl3q2nYLnpZn2bJlfpEiJ581a5Zrhel5lyxZos+fPze48GJKV69era1bt3bJMoxhOBNOCkmA5o6u3oINLKnvO3bsULuqvpNR7+mJGTsF9hsxYoQi5nfECwoKlA4uUI6h9d69e5WRa30pKAGGukOGDHENaiehiWQMz0SdRXSpc+fOdfK8efM0KytLk5OTg45B00uPbUOJ+/fva3p6ujLMsHOwxEVG58+fr0+ePAnJwUXg9OnTISfmoAR15swZMyABcKUZUfpOHE6dYDMyMoxj42B4z6lbt27VTp06ucYaOnSoM2cgE75WYQcSEWynLFy4UF68eMEmV0JUKYhlBE7IPINZFRDmK3nn3uDqhAbeKbCKsnv3blP6yiBuEoQlAo8tICXw9IKLjly6dMlXTGC6BedNFixYYO7F9qFDAKGvwNmYeyhss31uSpLDYRPEM+Zu6vcwgi+8nEN1hMRJiol3YV5eFi1aJKNGjTJtz549E+yG3L5925HjRQs3N5k+fbpkZmYK7hVG1iHANwG89fOHg5+bYgTsB0lxgN9NnIfZJhIhOJawarbZYODOBibKUo44mRwCgYKx8v1vGrGCNgjO/wkEWZQ/2vSf2AHjB/7osv17k6kXJhM/9cVmInYSKItN+CZ6KCOBwhgmUOiFVzwAEqWxRoKYid3L/x4gHtkMAm6/Hb2saoiZ2L0IiYX/PUDDxhghQfAbiZnYY/7PHiamjeW/2/wAz2ywXXT1froAAAAASUVORK5CYII=" alt="xAI">'
     };
 
+    // ---- i18n: English strings are the keys; Chinese is a plain lookup. A
+    // missing entry falls back to the English text, so adding copy never
+    // breaks the other language. {name} placeholders are substituted raw —
+    // callers pass already-escaped values.
+    const langKey = "cospace:lang";
+    const zh = {
+      "HOST CONSOLE": "主机控制台",
+      "All Spaces": "全部空间",
+      "Spaces": "空间",
+      "Space navigation": "空间导航",
+      "New Space": "新建空间",
+      "Available once the space image finishes downloading": "空间镜像下载完成后可用",
+      "{n} space · host online": "{n} 个空间 · 主机在线",
+      "{n} spaces · host online": "{n} 个空间 · 主机在线",
+      "Host unavailable": "主机不可用",
+      "Couldn’t download the space image yet — retrying automatically.": "空间镜像还没下载下来，正在自动重试。",
+      "Unpacking": "正在解包", "Checking": "正在检查", "Downloading": "正在下载",
+      "{phase} the space image — first run only, then every new space starts in seconds.": "{phase}空间镜像，只在首次运行时需要，之后每个新空间几秒就能启动。",
+      "Running on battery — spaces go offline if the lid closes. Plug in, or host on a Mac that stays awake.": "正在用电池供电，合盖后空间会掉线。请接上电源，或用一台不睡眠的 Mac 做主机。",
+      "Dismiss": "知道了",
+      "Couldn’t load spaces": "无法加载空间",
+      "No spaces yet": "还没有空间",
+      "Check that the CoSpace daemon is running, then try again.": "请确认 CoSpace daemon 正在运行，然后重试。",
+      "Create one and invite your first guest.": "创建一个，然后邀请第一位 guest。",
+      "Try again": "重试",
+      "Not logged in on this Mac": "本机未登录",
+      "Ready for enabled spaces": "已开启的空间可用",
+      "Paused for every space": "已对所有空间暂停",
+      "Enable {product} in every space": "在所有空间启用 {product}",
+      "Sponsorship credentials": "赞助凭证",
+      "AI for all spaces": "所有空间的 AI",
+      "Let enabled spaces use the Claude Code, Codex, and Grok accounts connected on this Mac": "让已开启的空间使用本机登录的 Claude Code、Codex 和 Grok 账号",
+      "Open {name}": "打开 {name}",
+      "{n} guest": "{n} 位 guest", "{n} guests": "{n} 位 guest",
+      "{tokens} today": "今日 {tokens}",
+      "Sleep {name} until the Host wakes it": "休眠 {name}，直到主机唤醒",
+      "Wake {name}": "唤醒 {name}",
+      "Working…": "处理中…", "Sleep": "休眠", "Wake": "唤醒",
+      "Shared dev spaces running on this Mac. Guests connect with plain ssh.": "运行在本机上的共享开发空间。Guest 用普通 ssh 连接。",
+      "Host summary": "主机概览",
+      "Memory used": "内存占用",
+      "{reserved} GB reserved for {n} awake space": "{reserved} GB 分配给 {n} 个唤醒中的空间",
+      "{reserved} GB reserved for {n} awake spaces": "{reserved} GB 分配给 {n} 个唤醒中的空间",
+      "Spaces hosted": "托管空间",
+      "{n} asleep": "{n} 个休眠",
+      "Tokens today": "今日 token",
+      "{n} request across all spaces": "所有空间共 {n} 次请求",
+      "{n} requests across all spaces": "所有空间共 {n} 次请求",
+      "{date}: {n} tokens in and out": "{date}：输入 + 输出 {n} token",
+      "{n} tokens in + out": "{n} token（输入 + 输出）",
+      "Tokens · last 14 days": "Token · 最近 14 天",
+      "loading…": "加载中…",
+      "{n} total": "合计 {n}",
+      "Token usage for the last 14 days": "最近 14 天的 token 用量",
+      "14 days ago": "14 天前", "today": "今天",
+      "Fingerprint unavailable": "指纹不可用",
+      "Added {date}": "加入于 {date}",
+      "Removing…": "移除中…", "Confirm removal": "确认移除", "Revoke": "撤销",
+      "Guests": "Guest",
+      "No guests yet.": "还没有 guest。",
+      "+ Invite a Guest…": "+ 邀请 guest…",
+      "Access": "接入", "Copied": "已复制", "Copy": "复制",
+      "The whole login for a paired guest — Cursor and VS Code Remote-SSH use the same name.": "配对过的 guest 只需这一条命令；Cursor 和 VS Code 的 Remote-SSH 用同一个名字。",
+      "Ports 3000 · 5173 · 8000 · 8080 · 8888 auto-forward to the guest’s localhost; any other port:": "端口 3000 · 5173 · 8000 · 8080 · 8888 自动转发到 guest 本机；其他端口：",
+      "Not available": "不可用",
+      "Off for this space": "本空间已关闭",
+      "Host is not logged in": "主机未登录",
+      "Paused by the host for every space": "主机已对所有空间暂停",
+      "Available in this space": "本空间可用",
+      "Enable {label} in {name}": "在 {name} 启用 {label}",
+      "AI in this space": "本空间的 AI",
+      "Full-auto agents": "全自动 agent",
+      "No permission prompts — the space is the sandbox": "不弹权限确认，空间本身就是沙箱",
+      "Agents ask before each action": "agent 每步操作前都会询问",
+      "Run agents in {name} without permission prompts": "在 {name} 中让 agent 免确认运行",
+      "This space's switches are saved independently. A provider also has to be on under AI for all spaces on the overview.": "本空间的开关单独保存。总览页「所有空间的 AI」里对应的 provider 也要开着。",
+      "Model and network settings": "模型与网络设置",
+      "Model &amp; network": "模型与网络",
+      "Codex account": "Codex 账号",
+      " · not configured": " · 未配置",
+      "Default Codex model": "默认 Codex 模型",
+      "Account changes apply to new requests. Start a new Codex session to use the selected default model.": "账号切换对新请求生效。重新开一个 Codex 会话才会用上所选默认模型。",
+      "Internet access": "联网",
+      "Browsing, downloads and package installs allowed": "允许浏览、下载和安装软件包",
+      "AI gateway only · external browsing and downloads blocked": "仅 AI 网关 · 外部浏览和下载被阻止",
+      "Internet access in {name}": "{name} 的联网",
+      "Enable network controls…": "启用网络控制…",
+      "Saving snapshot and upgrading… You can leave this page and return.": "正在保存快照并升级… 可以离开此页稍后再回来。",
+      "Wake this space to change Internet access.": "先唤醒空间才能切换联网。",
+      "Applying network policy…": "正在应用网络策略…",
+      "AI calls and SSH remain available when Internet access is off. Restart agents after changing network access.": "关闭联网后 AI 调用和 SSH 仍可用。改动联网设置后请重启 agent。",
+      "Spent": "已花费",
+      "Spend limit reached — new requests are refused.": "已达花费上限，新请求将被拒绝。",
+      "· no cap": "· 无上限",
+      "Budget": "预算",
+      "Max concurrent": "最大并发",
+      "Edit limits…": "编辑限额…",
+      "Estimated token cost for this space, saved across restarts. Your account’s actual billing may differ.": "按 token 估算的本空间费用，重启后保留。你账号的实际账单可能不同。",
+      "Limits · {name}": "限额 · {name}",
+      "Close": "关闭",
+      "Spend cap (USD, 0 = no cap)": "花费上限（美元，0 = 不限）",
+      "Max concurrent requests": "最大并发请求数",
+      "Cancel": "取消", "Saving…": "保存中…", "Save": "保存",
+      "Enable network controls · {name}": "启用网络控制 · {name}",
+      "This older space needs a one-time upgrade. CoSpace saves a full filesystem snapshot and keeps your workspace, installed tools and SSH identity.": "这个较早创建的空间需要一次性升级。CoSpace 会保存完整的文件系统快照，并保留 workspace、已装工具和 SSH 身份。",
+      "The space restarts during the upgrade. Save your work first: running programs stop and SSH sessions disconnect. Internet stays on until you switch it off.": "升级过程中空间会重启。请先保存工作：运行中的程序会停止，SSH 会话会断开。联网保持开启，直到你手动关闭。",
+      "Saving snapshot and upgrading…": "正在保存快照并升级…",
+      "Save snapshot & upgrade": "保存快照并升级",
+      "Delete {name}?": "删除 {name}？",
+      "This permanently removes the space — its VM, workspace files, and usage history.": "这会永久删除该空间：VM、workspace 文件和用量历史。",
+      " {n} paired guest loses access immediately.": " {n} 位已配对的 guest 会立即失去访问。",
+      " {n} paired guests lose access immediately.": " {n} 位已配对的 guest 会立即失去访问。",
+      " There is no undo.": " 无法撤销。",
+      "Deleting…": "删除中…", "Delete Space": "删除空间", "Delete Space…": "删除空间…",
+      "{n} CPU": "{n} CPU", "{n} CPUs": "{n} CPU",
+      "Invite a Guest": "邀请 guest",
+      "Saved as template ✓": "已存为模板 ✓", "Save as Template": "存为模板",
+      "Template": "模板", "Blank space": "空白空间", "Delete this template": "删除此模板",
+      "Name": "名称", "e.g. acme-web": "例如 acme-web", "Memory": "内存",
+      "AI selection, model, Internet access, budget, and full-auto come from the template; memory above still applies.": "AI 选项、模型、联网、预算和全自动来自模板；上面的内存设置仍然生效。",
+      "Creating…": "创建中…", "Create Space": "创建空间",
+      "Creating one-time invite…": "正在生成一次性邀请…",
+      "Invite unavailable.": "邀请不可用。",
+      "Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)": "安装 guest 工具。已经装过 cospace？直接跳到第 2 步（需要更新时它会提示）",
+      "Pair with this space (one-time code) — a second computer of the same person adds  -name <another-name>": "与本空间配对（一次性码）。同一个人的第二台电脑要加  -name <另一个名字>",
+      "You're in — reconnect with this anytime": "进来了。之后随时用这条重新连接",
+      "Invite a guest to {name}": "邀请 guest 加入 {name}",
+      "Pick your guest's operating system, then send them the three steps — or <b>Copy all</b> and paste the lot into your chat. Nothing to sign up for.": "选择 guest 的操作系统，把这三步发给对方；或者点<b>全部复制</b>整段贴进聊天。不需要注册任何账号。",
+      "Guest operating system": "Guest 的操作系统",
+      "Copy all": "全部复制",
+      "Or send one link — same steps, with visuals:": "或者只发一个链接，同样的三步，带图示：",
+      "Once they pair, they appear under <b>Guests</b> here — you don't need to do anything else. Cursor / VS Code work too: Remote-SSH → {name}.": "对方配对后会出现在这里的 <b>Guest</b> 列表，你不用再做别的。Cursor / VS Code 也可以：Remote-SSH → {name}。",
+      "one-time code": "一次性码", "Done": "完成",
+      "expiry unavailable": "有效期未知", "expires in {n} min": "{n} 分钟后过期", "expired": "已过期",
+      "Dismiss error": "关闭错误提示",
+      "Creation date unavailable": "创建时间未知", "Created today": "今天创建", "Created yesterday": "昨天创建",
+      "Created {n} days ago": "{n} 天前创建", "Created {date}": "创建于 {date}", "unknown": "未知",
+      "awake": "唤醒中",
+      "VM missing · delete or recreate": "VM 已丢失 · 删除或重建",
+      "stopped · needs Host attention": "已停止 · 需要主机处理",
+      "sleeping · Host wake required": "休眠 · 需主机唤醒",
+      "asleep · wakes on connect": "休眠 · 连接即唤醒",
+      "Something went wrong": "出错了",
+      "Could not reach the CoSpace daemon.": "连不上 CoSpace daemon。",
+      "Request failed ({status})": "请求失败（{status}）",
+      "Copy was blocked by the browser.": "浏览器阻止了复制。",
+      "Spend cap must be a number ≥ 0.": "花费上限必须是 ≥ 0 的数字。",
+      "Concurrency must be a whole number ≥ 0.": "并发数必须是 ≥ 0 的整数。",
+      "Enter a space name.": "请输入空间名称。",
+      "This space's VM no longer exists on this Mac. Delete the space, or recreate it and copy its workspace back.": "这个空间的 VM 已不在本机上。删除该空间，或重建后把 workspace 拷回去。",
+      "This space's VM no longer exists on this Mac (it was removed outside CoSpace). Delete the space, or recreate it and copy its workspace back.": "这个空间的 VM 已不在本机上（在 CoSpace 之外被删除了）。删除该空间，或重建后把 workspace 拷回去。",
+      "This space is upgrading its network controls. Try again when the upgrade finishes.": "这个空间正在升级网络控制，升级完成后再试。",
+      "Request refused: open the console from its own address (localhost or the published hostname).": "请求被拒绝：请从控制台自己的地址打开（localhost 或已发布的域名）。",
+      "Language": "语言"
+    };
+    function detectLang() {
+      try {
+        const saved = localStorage.getItem(langKey);
+        if (saved === "zh" || saved === "en") return saved;
+      } catch (_) {}
+      return String(navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    }
+    let lang = detectLang();
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    function t(key, vars) {
+      let out = lang === "zh" && Object.prototype.hasOwnProperty.call(zh, key) ? zh[key] : key;
+      if (vars) for (const k of Object.keys(vars)) out = out.split("{" + k + "}").join(String(vars[k]));
+      return out;
+    }
+    // tp picks the English singular/plural key by count; both keys share one
+    // Chinese rendering, since Chinese nouns do not inflect.
+    function tp(n, one, many, vars) { return t(Number(n) === 1 ? one : many, Object.assign({ n: formatNumber(n) }, vars || {})); }
+    function locale() { return lang === "zh" ? "zh-CN" : undefined; }
+    function setLang(next) {
+      lang = next === "zh" ? "zh" : "en";
+      try { localStorage.setItem(langKey, lang); } catch (_) {}
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      render();
+    }
+
     function escapeHTML(value) {
       return String(value == null ? "" : value)
         .replaceAll("&", "&amp;")
@@ -598,7 +780,7 @@
     }
 
     function showError(error) {
-      const message = friendlyError(error instanceof Error ? error.message : String(error || "Something went wrong"));
+      const message = friendlyError(error instanceof Error ? error.message : String(error || t("Something went wrong")));
       const id = Date.now() + Math.random();
       clearTimeout(toastTimer);
       setState({ toast: { id, message } }, false);
@@ -613,7 +795,7 @@
       try {
         response = await fetch(path, { ...options, headers });
       } catch (error) {
-        throw new Error(error && error.message ? error.message : "Could not reach the CoSpace daemon.");
+        throw new Error(error && error.message ? error.message : t("Could not reach the CoSpace daemon."));
       }
       const text = response.status === 204 ? "" : await response.text();
       let payload = null;
@@ -624,7 +806,7 @@
       if (!response.ok) {
         const detail = payload && typeof payload === "object" && payload.error
           ? payload.error
-          : `Request failed (${response.status})`;
+          : t("Request failed ({status})", { status: response.status });
         throw new Error(detail);
       }
       return payload;
@@ -682,21 +864,21 @@
     function spaceIsAwake(space) { return space.state === "running"; }
     function spaceIsMissing(space) { return space.state === "missing"; }
     function spacePowerLabel(space) {
-      if (spaceIsAwake(space)) return "awake";
-      if (spaceIsMissing(space)) return "VM missing · delete or recreate";
-      if (space.wake_blocked) return "stopped · needs Host attention";
-      return space.manual_sleep ? "sleeping · Host wake required" : "asleep · wakes on connect";
+      if (spaceIsAwake(space)) return t("awake");
+      if (spaceIsMissing(space)) return t("VM missing · delete or recreate");
+      if (space.wake_blocked) return t("stopped · needs Host attention");
+      return space.manual_sleep ? t("sleeping · Host wake required") : t("asleep · wakes on connect");
     }
     // Backend errors are precise but written for logs; give the host the
     // plain-language version for the cases they can act on.
     function friendlyError(message) {
       const m = String(message || "");
       if (/no VM|VM no longer exists|container not found|not found: container/i.test(m)) {
-        return "This space's VM no longer exists on this Mac (it was removed outside CoSpace). Delete the space, or recreate it and copy its workspace back.";
+        return t("This space's VM no longer exists on this Mac (it was removed outside CoSpace). Delete the space, or recreate it and copy its workspace back.");
       }
       if (/needs the Host's attention/i.test(m)) return m.replace(/^conflict: /, "");
-      if (/is upgrading network controls/i.test(m)) return "This space is upgrading its network controls. Try again when the upgrade finishes.";
-      if (/cross-site|cross-origin|unexpected Host header/i.test(m)) return "Request refused: open the console from its own address (localhost or the published hostname).";
+      if (/is upgrading network controls/i.test(m)) return t("This space is upgrading its network controls. Try again when the upgrade finishes.");
+      if (/cross-site|cross-origin|unexpected Host header/i.test(m)) return t("Request refused: open the console from its own address (localhost or the published hostname).");
       return m.replace(/^(conflict|invalid request): /, "");
     }
     function spaceTokensToday(space) {
@@ -716,23 +898,23 @@
     function plural(value, one, many = `${one}s`) { return Number(value) === 1 ? one : many; }
     function dateOnly(value) {
       const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "unknown";
-      return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(date);
+      if (Number.isNaN(date.getTime())) return t("unknown");
+      return new Intl.DateTimeFormat(locale(), { day: "numeric", month: "short", year: "numeric" }).format(date);
     }
     function createdLabel(value) {
       const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "Creation date unavailable";
+      if (Number.isNaN(date.getTime())) return t("Creation date unavailable");
       const days = Math.floor((Date.now() - date.getTime()) / 86400000);
-      if (days <= 0) return "Created today";
-      if (days === 1) return "Created yesterday";
-      if (days < 14) return `Created ${days} days ago`;
-      return `Created ${dateOnly(value)}`;
+      if (days <= 0) return t("Created today");
+      if (days === 1) return t("Created yesterday");
+      if (days < 14) return t("Created {n} days ago", { n: days });
+      return t("Created {date}", { date: dateOnly(value) });
     }
     function expiryLabel(value) {
       const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "expiry unavailable";
+      if (Number.isNaN(date.getTime())) return t("expiry unavailable");
       const minutes = Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60000));
-      return minutes > 0 ? `expires in ${minutes} min` : "expired";
+      return minutes > 0 ? t("expires in {n} min", { n: minutes }) : t("expired");
     }
     function animationClass(delay) { return state.animate ? `fade-up d${delay}` : ""; }
     function statusDot(space, small = false) {
@@ -750,24 +932,24 @@
         </button>`).join("");
       const hostReady = !!state.host;
       const hostCopy = hostReady
-        ? `${formatNumber(state.host.spaces)} ${plural(state.host.spaces, "space")} · host online`
-        : "Host unavailable";
+        ? tp(state.host.spaces, "{n} space · host online", "{n} spaces · host online")
+        : t("Host unavailable");
       return `
         <aside class="sidebar">
           <div class="brand">
             <div class="logo-tile">${icons.key}</div>
-            <div class="brand-copy"><span class="wordmark grad-text">CoSpace</span><span class="brand-kicker">HOST CONSOLE</span></div>
+            <div class="brand-copy"><span class="wordmark grad-text">CoSpace</span><span class="brand-kicker">${t("HOST CONSOLE")}</span></div>
           </div>
-          <div class="nav-scroll" aria-label="Space navigation">
+          <div class="nav-scroll" aria-label="${t("Space navigation")}">
             <button class="nav-item ${state.selected === "all" ? "active" : ""}" type="button" data-action="select-all" aria-current="${state.selected === "all" ? "page" : "false"}">
-              ${icons.grid}<span>All Spaces</span>
+              ${icons.grid}<span>${t("All Spaces")}</span>
             </button>
-            <div class="label nav-label">Spaces</div>
+            <div class="label nav-label">${t("Spaces")}</div>
             <div class="nav-spaces">${navSpaces}</div>
           </div>
           <div class="sidebar-spacer"></div>
-          <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${imageReady() ? "" : 'disabled title="Available once the space image finishes downloading"'}>${icons.plus} New Space</button>
-          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span></div>
+          <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${imageReady() ? "" : `disabled title="${t("Available once the space image finishes downloading")}"`}>${icons.plus} ${t("New Space")}</button>
+          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span><button class="text-button lang-toggle" type="button" data-action="toggle-lang" aria-label="${t("Language")}">${lang === "zh" ? "English" : "中文"}</button></div>
         </aside>`;
     }
 
@@ -784,16 +966,16 @@
       if (image.state === "error") {
         return `
         <div class="image-banner error" role="status">
-          <span class="banner-copy">Couldn’t download the space image yet — retrying automatically. ${escapeHTML(image.error || "")}</span>
+          <span class="banner-copy">${t("Couldn’t download the space image yet — retrying automatically.")} ${escapeHTML(image.error || "")}</span>
         </div>`;
       }
       const pct = Math.max(0, Math.min(100, Number(image.percent || 0)));
       const size = image.total_mb > 0 ? ` · ${formatNumber(image.done_mb)} / ${formatNumber(image.total_mb)} MB` : "";
-      const phase = image.phase === "unpacking" ? "Unpacking" : image.state === "checking" ? "Checking" : "Downloading";
+      const phase = t(image.phase === "unpacking" ? "Unpacking" : image.state === "checking" ? "Checking" : "Downloading");
       return `
         <div class="image-banner" role="status">
           <span class="spinner"></span>
-          <span class="banner-copy">${phase} the space image — first run only, then every new space starts in seconds.<span class="mono">${image.state === "pulling" ? ` ${pct}%${size}` : ""}</span></span>
+          <span class="banner-copy">${t("{phase} the space image — first run only, then every new space starts in seconds.", { phase })}<span class="mono">${image.state === "pulling" ? ` ${pct}%${size}` : ""}</span></span>
           <span class="image-progress" aria-hidden="true"><span style="width:${pct}%"></span></span>
         </div>`;
     }
@@ -803,8 +985,8 @@
       return `
         <div class="battery-banner" role="status">
           ${icons.bolt}
-          <span class="banner-copy">Running on battery — spaces go offline if the lid closes. Plug in, or host on a Mac that stays awake.</span>
-          <button class="text-button" style="color:#92400E;font-size:12px" type="button" data-action="dismiss-battery">Dismiss</button>
+          <span class="banner-copy">${t("Running on battery — spaces go offline if the lid closes. Plug in, or host on a Mac that stays awake.")}</span>
+          <button class="text-button" style="color:#92400E;font-size:12px" type="button" data-action="dismiss-battery">${t("Dismiss")}</button>
         </div>`;
     }
 
@@ -820,9 +1002,9 @@
       return `
         <div class="card empty-card">
           <div class="empty-icon">${icons.key}</div>
-          <span class="empty-title">${loadError ? "Couldn’t load spaces" : "No spaces yet"}</span>
-          <span class="empty-copy">${loadError ? "Check that the CoSpace daemon is running, then try again." : "Create one and invite your first guest."}</span>
-          ${loadError ? '<button class="btn-ghost" type="button" data-action="retry-overview">Try again</button>' : ""}
+          <span class="empty-title">${loadError ? t("Couldn’t load spaces") : t("No spaces yet")}</span>
+          <span class="empty-copy">${loadError ? t("Check that the CoSpace daemon is running, then try again.") : t("Create one and invite your first guest.")}</span>
+          ${loadError ? `<button class="btn-ghost" type="button" data-action="retry-overview">${t("Try again")}</button>` : ""}
         </div>`;
     }
 
@@ -838,16 +1020,16 @@
         const on = !!details.enabled;
         const busy = state.busy === `sponsor:${provider.key}`;
         const status = !credPresent
-          ? "Not logged in on this Mac"
+          ? t("Not logged in on this Mac")
           : on
-            ? "Ready for enabled spaces"
-            : "Paused for every space";
+            ? t("Ready for enabled spaces")
+            : t("Paused for every space");
         const statusClass = credPresent && on ? "active" : "unavailable";
         return `
           <article class="provider-card ${provider.key} ${credPresent && on ? "active" : ""}">
             <div class="provider-top">
               <div class="provider-logo ${provider.key}">${providerLogos[provider.key]}</div>
-              <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="Enable ${provider.product} in every space" data-action="toggle-sponsor" data-provider="${provider.key}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+              <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="${t("Enable {product} in every space", { product: provider.product })}" data-action="toggle-sponsor" data-provider="${provider.key}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
             </div>
             <div class="provider-copy">
               <span class="provider-name">${provider.name}</span>
@@ -857,11 +1039,11 @@
           </article>`;
       }).join("");
       return `
-        <section class="sponsor-section ${animationClass(5)}" aria-label="Sponsorship credentials">
+        <section class="sponsor-section ${animationClass(5)}" aria-label="${t("Sponsorship credentials")}">
           <div class="sponsor-heading">
             <div class="sponsor-heading-copy">
-              <span class="card-heading">AI for all spaces</span>
-              <span class="sponsor-caption">Let enabled spaces use the Claude Code, Codex, and Grok accounts connected on this Mac</span>
+              <span class="card-heading">${t("AI for all spaces")}</span>
+              <span class="sponsor-caption">${t("Let enabled spaces use the Claude Code, Codex, and Grok accounts connected on this Mac")}</span>
             </div>
           </div>
           <div class="sponsor-grid">${cards}</div>
@@ -883,36 +1065,36 @@
         const guests = Array.isArray(space.members) ? space.members.length : 0;
         const busy = state.busy === `toggle:${space.name}`;
         return `
-          <article class="card lift space-card ${animationClass(5)}" tabindex="0" role="button" data-action="select-space" data-space="${escapeHTML(space.name)}" aria-label="Open ${escapeHTML(space.name)}">
+          <article class="card lift space-card ${animationClass(5)}" tabindex="0" role="button" data-action="select-space" data-space="${escapeHTML(space.name)}" aria-label="${t("Open {name}", { name: escapeHTML(space.name) })}">
             ${statusDot(space)}
             <div class="space-identity"><strong class="mono">${escapeHTML(space.name)}</strong><span class="${awakeSpace ? "awake-text" : "asleep-text"}">${powerLabel}</span></div>
-            <span class="space-meta space-guests">${formatNumber(guests)} ${plural(guests, "guest")}</span>
+            <span class="space-meta space-guests">${tp(guests, "{n} guest", "{n} guests")}</span>
             <span class="space-meta space-memory mono num">${formatNumber(space.memory_gb)} GB</span>
-            <span class="space-meta space-tokens mono num">${formatTokens(spaceTokensToday(space))} today</span>
+            <span class="space-meta space-tokens mono num">${t("{tokens} today", { tokens: formatTokens(spaceTokensToday(space)) })}</span>
             <span class="created-meta">${escapeHTML(createdLabel(space.created_at))}</span>
-            <button class="btn-ghost space-toggle" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awakeSpace ? `Sleep ${escapeHTML(space.name)} until the Host wakes it` : `Wake ${escapeHTML(space.name)}`}" ${busy ? "disabled" : ""}>${busy ? "Working…" : awakeSpace ? "Sleep" : "Wake"}</button>
+            <button class="btn-ghost space-toggle" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awakeSpace ? t("Sleep {name} until the Host wakes it", { name: escapeHTML(space.name) }) : t("Wake {name}", { name: escapeHTML(space.name) })}" ${busy ? "disabled" : ""}>${busy ? t("Working…") : awakeSpace ? t("Sleep") : t("Wake")}</button>
             ${icons.chevron}
           </article>`;
       }).join("");
       return `
         <main class="page">
-          <header class="${animationClass(1)}"><h1 class="page-title">All Spaces</h1><p class="page-subtitle">Shared dev spaces running on this Mac. Guests connect with plain ssh.</p></header>
-          <section class="summary-grid" aria-label="Host summary">
+          <header class="${animationClass(1)}"><h1 class="page-title">${t("All Spaces")}</h1><p class="page-subtitle">${t("Shared dev spaces running on this Mac. Guests connect with plain ssh.")}</p></header>
+          <section class="summary-grid" aria-label="${t("Host summary")}">
             <div class="card summary-card ${animationClass(2)}">
               <div class="tile" style="color:#D97706;background:rgba(245,158,11,.13)">${icons.space}</div>
-              <div class="summary-copy"><span class="summary-label">Memory used</span><span class="summary-value num">${formatNumber(memoryUsed)} GB <span class="summary-unit">/ ${formatNumber(memoryTotal)} GB</span></span><span class="summary-note">${formatNumber(memoryReserved)} GB reserved for ${formatNumber(awake)} awake ${plural(awake, "space")}</span></div>
+              <div class="summary-copy"><span class="summary-label">${t("Memory used")}</span><span class="summary-value num">${formatNumber(memoryUsed)} GB <span class="summary-unit">/ ${formatNumber(memoryTotal)} GB</span></span><span class="summary-note">${tp(awake, "{reserved} GB reserved for {n} awake space", "{reserved} GB reserved for {n} awake spaces", { reserved: formatNumber(memoryReserved) })}</span></div>
             </div>
             <div class="card summary-card ${animationClass(3)}">
               <div class="tile" style="color:#0284C7;background:rgba(14,165,233,.1)">${icons.users}</div>
-              <div class="summary-copy"><span class="summary-label">Spaces hosted</span><span class="summary-value num">${formatNumber(totalSpaces)}</span><span class="summary-note">${formatNumber(Math.max(0, totalSpaces - awake))} asleep</span></div>
+              <div class="summary-copy"><span class="summary-label">${t("Spaces hosted")}</span><span class="summary-value num">${formatNumber(totalSpaces)}</span><span class="summary-note">${t("{n} asleep", { n: formatNumber(Math.max(0, totalSpaces - awake)) })}</span></div>
             </div>
             <div class="card summary-card ${animationClass(4)}">
               <div class="tile" style="color:#7C3AED;background:rgba(139,92,246,.1)">${icons.token}</div>
-              <div class="summary-copy"><span class="summary-label">Tokens today</span><span class="summary-value num">${formatTokens(tokensToday)}</span><span class="summary-note">${formatNumber(requestsToday)} ${plural(requestsToday, "request")} across all spaces</span></div>
+              <div class="summary-copy"><span class="summary-label">${t("Tokens today")}</span><span class="summary-value num">${formatTokens(tokensToday)}</span><span class="summary-note">${tp(requestsToday, "{n} request across all spaces", "{n} requests across all spaces")}</span></div>
             </div>
           </section>
           ${renderSponsorship()}
-          <section class="space-list" aria-label="Spaces">${state.spaces.length ? rows : renderEmptyState(!state.loaded)}</section>
+          <section class="space-list" aria-label="${t("Spaces")}">${state.spaces.length ? rows : renderEmptyState(!state.loaded)}</section>
         </main>`;
     }
 
@@ -937,14 +1119,14 @@
       const bars = days.map((day, index) => {
         const value = values[index];
         const height = Math.max(4, Math.round(value / max * 100));
-        return `<div class="bar ${value === 0 ? "zero" : ""}" style="height:${height}%" tabindex="0" aria-label="${escapeHTML(day.date)}: ${formatNumber(value)} tokens in and out"><span class="tip mono">${formatNumber(value)} tokens in + out</span></div>`;
+        return `<div class="bar ${value === 0 ? "zero" : ""}" style="height:${height}%" tabindex="0" aria-label="${t("{date}: {n} tokens in and out", { date: escapeHTML(day.date), n: formatNumber(value) })}"><span class="tip mono">${t("{n} tokens in + out", { n: formatNumber(value) })}</span></div>`;
       }).join("");
       const total = values.reduce((sum, value) => sum + value, 0);
       return `
         <div class="card chart-card ${animationClass(3)}">
-          <div class="chart-head"><span class="card-heading">Tokens · last 14 days</span><span class="chart-total mono num">${state.usageLoading ? "loading…" : `${formatTokens(total)} total`}</span></div>
-          <div class="chart" aria-label="Token usage for the last 14 days">${bars}</div>
-          <div class="chart-axis"><span>14 days ago</span><span>today</span></div>
+          <div class="chart-head"><span class="card-heading">${t("Tokens · last 14 days")}</span><span class="chart-total mono num">${state.usageLoading ? t("loading…") : t("{n} total", { n: formatTokens(total) })}</span></div>
+          <div class="chart" aria-label="${t("Token usage for the last 14 days")}">${bars}</div>
+          <div class="chart-axis"><span>${t("14 days ago")}</span><span>${t("today")}</span></div>
         </div>`;
     }
 
@@ -956,16 +1138,16 @@
         return `
           <div class="hair-row guest-row">
             <span class="guest-name">${escapeHTML(member.name)}</span>
-            <span class="guest-fingerprint mono" title="${escapeHTML(member.fingerprint || "")}">${escapeHTML(member.fingerprint || "Fingerprint unavailable")}</span>
-            <span class="guest-added">Added ${escapeHTML(dateOnly(member.added_at))}</span>
-            <button class="text-button guest-revoke ${confirming ? "danger" : ""}" style="${confirming ? "font-weight:600" : ""}" type="button" data-action="revoke-member" data-space="${escapeHTML(space.name)}" data-member="${escapeHTML(member.name)}" ${busy ? "disabled" : ""}>${busy ? "Removing…" : confirming ? "Confirm removal" : "Revoke"}</button>
+            <span class="guest-fingerprint mono" title="${escapeHTML(member.fingerprint || "")}">${escapeHTML(member.fingerprint || t("Fingerprint unavailable"))}</span>
+            <span class="guest-added">${t("Added {date}", { date: escapeHTML(dateOnly(member.added_at)) })}</span>
+            <button class="text-button guest-revoke ${confirming ? "danger" : ""}" style="${confirming ? "font-weight:600" : ""}" type="button" data-action="revoke-member" data-space="${escapeHTML(space.name)}" data-member="${escapeHTML(member.name)}" ${busy ? "disabled" : ""}>${busy ? t("Removing…") : confirming ? t("Confirm removal") : t("Revoke")}</button>
           </div>`;
       }).join("");
       return `
         <div class="card ${animationClass(2)}">
-          <div class="hair-row" style="min-height:52px"><span class="card-heading">Guests</span><span class="guest-count">${formatNumber(members.length)} ${plural(members.length, "guest")}</span></div>
-          ${rows || '<div class="hair-row" style="color:#94A3B8">No guests yet.</div>'}
-          <div class="hair-row"><button class="text-button" style="color:#B45309;margin-left:-8px;font-weight:500" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">+ Invite a Guest…</button></div>
+          <div class="hair-row" style="min-height:52px"><span class="card-heading">${t("Guests")}</span><span class="guest-count">${tp(members.length, "{n} guest", "{n} guests")}</span></div>
+          ${rows || `<div class="hair-row" style="color:#94A3B8">${t("No guests yet.")}</div>`}
+          <div class="hair-row"><button class="text-button" style="color:#B45309;margin-left:-8px;font-weight:500" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">${t("+ Invite a Guest…")}</button></div>
         </div>`;
     }
 
@@ -973,11 +1155,11 @@
       const name = escapeHTML(space.name);
       return `
         <div class="card access-card ${animationClass(3)}">
-          <span class="card-heading">Access</span>
-          <div class="access-cmd-row mono"><span class="prompt">$</span><span class="command-name"> ssh</span><span class="command-accent"> ${name}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-ssh" data-space="${name}">${state.copied === "ssh" ? "Copied" : "Copy"}</button></div>
-          <span class="access-note">The whole login for a paired guest — Cursor and VS Code Remote-SSH use the same name.</span>
-          <span class="access-note" style="color:#94A3B8">Ports 3000 · 5173 · 8000 · 8080 · 8888 auto-forward to the guest’s localhost; any other port: <span class="mono">ssh -L 4000:localhost:4000 ${name}</span>.</span>
-          <div class="host-key"><span class="label">Host key</span><span class="host-key-value mono">${escapeHTML(space.host_key_fp || "Not available")}</span></div>
+          <span class="card-heading">${t("Access")}</span>
+          <div class="access-cmd-row mono"><span class="prompt">$</span><span class="command-name"> ssh</span><span class="command-accent"> ${name}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-ssh" data-space="${name}">${state.copied === "ssh" ? t("Copied") : t("Copy")}</button></div>
+          <span class="access-note">${t("The whole login for a paired guest — Cursor and VS Code Remote-SSH use the same name.")}</span>
+          <span class="access-note" style="color:#94A3B8">${t("Ports 3000 · 5173 · 8000 · 8080 · 8888 auto-forward to the guest’s localhost; any other port:")} <span class="mono">ssh -L 4000:localhost:4000 ${name}</span>.</span>
+          <div class="host-key"><span class="label">Host key</span><span class="host-key-value mono">${escapeHTML(space.host_key_fp || t("Not available"))}</span></div>
         </div>`;
     }
 
@@ -990,25 +1172,25 @@
         const details = (state.sponsor || {})[d.id] || {};
         const hostOn = !!details.enabled;
         const effective = on && hostOn && !!details.cred_present;
-        const status = !on ? "Off for this space" : !details.cred_present ? "Host is not logged in" : !hostOn ? "Paused by the host for every space" : "Available in this space";
+        const status = !on ? t("Off for this space") : !details.cred_present ? t("Host is not logged in") : !hostOn ? t("Paused by the host for every space") : t("Available in this space");
         return `<div class="space-provider-row">
           <div class="provider-logo space-provider-logo ${d.id}">${providerLogos[d.id]}</div>
           <div class="space-provider-copy"><span class="space-provider-name">${d.label}</span><span class="space-provider-state ${effective ? "active" : ""}">${status}</span></div>
-          <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="Enable ${d.label} in ${escapeHTML(space.name)}" data-action="toggle-provider" data-space="${escapeHTML(space.name)}" data-provider="${d.id}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+          <button class="sponsor-switch ${on ? "on" : ""}" type="button" role="switch" aria-checked="${on}" aria-label="${t("Enable {label} in {name}", { label: d.label, name: escapeHTML(space.name) })}" data-action="toggle-provider" data-space="${escapeHTML(space.name)}" data-provider="${d.id}" ${busy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
         </div>`;
       }).join("");
       const fullAuto = !!space.full_auto;
       const fullAutoBusy = state.busy === `fullauto:${space.name}`;
       return `
         <div class="card resources-card ${animationClass(4)}">
-          <span class="card-heading">AI in this space</span>
+          <span class="card-heading">${t("AI in this space")}</span>
           <div class="space-provider-list">${rows}
           <div class="space-provider-row">
             <div class="provider-logo space-provider-logo" style="color:#B45309;background:rgba(245,158,11,.13)">${icons.bolt}</div>
-            <div class="space-provider-copy"><span class="space-provider-name">Full-auto agents</span><span class="space-provider-state ${fullAuto ? "active" : ""}">${fullAuto ? "No permission prompts — the space is the sandbox" : "Agents ask before each action"}</span></div>
-            <button class="sponsor-switch ${fullAuto ? "on" : ""}" type="button" role="switch" aria-checked="${fullAuto}" aria-label="Run agents in ${escapeHTML(space.name)} without permission prompts" data-action="toggle-fullauto" data-space="${escapeHTML(space.name)}" ${fullAutoBusy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+            <div class="space-provider-copy"><span class="space-provider-name">${t("Full-auto agents")}</span><span class="space-provider-state ${fullAuto ? "active" : ""}">${fullAuto ? t("No permission prompts — the space is the sandbox") : t("Agents ask before each action")}</span></div>
+            <button class="sponsor-switch ${fullAuto ? "on" : ""}" type="button" role="switch" aria-checked="${fullAuto}" aria-label="${t("Run agents in {name} without permission prompts", { name: escapeHTML(space.name) })}" data-action="toggle-fullauto" data-space="${escapeHTML(space.name)}" ${fullAutoBusy ? "disabled" : ""}><span class="sponsor-knob"></span></button>
           </div></div>
-          <span class="hint" style="font-size:11.5px;color:#94A3B8">This space's switches are saved independently. A provider also has to be on under AI for all spaces on the overview.</span>
+          <span class="hint" style="font-size:11.5px;color:#94A3B8">${t("This space's switches are saved independently. A provider also has to be on under AI for all spaces on the overview.")}</span>
         </div>`;
     }
 
@@ -1022,27 +1204,27 @@
       const busy = !!state.busy || !!space.network_upgrading;
       const models = options.models.includes(model) ? options.models : options.models.concat(model);
       const modelLabel = m => ({"gpt-6-astra":"GPT-6 Astra", "gpt-5.6-sol":"GPT-5.6 Sol", "gpt-5.6-terra":"GPT-5.6 Terra", "gpt-5.6-luna":"GPT-5.6 Luna"})[m] || m;
-      return `<section class="card resources-card ${animationClass(4)}" aria-label="Model and network settings">
-        <span class="card-heading">Model &amp; network</span>
-        <label class="field-group"><span class="label">Codex account</span>
-          <select class="field" aria-label="Codex account" data-setting="codex-route" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
-            ${options.routes.map(r => `<option value="${escapeHTML(r.id)}" ${r.id === route ? "selected" : ""} ${!r.configured ? "disabled" : ""}>${escapeHTML(r.label)}${r.configured ? "" : " · not configured"}</option>`).join("")}
+      return `<section class="card resources-card ${animationClass(4)}" aria-label="${t("Model and network settings")}">
+        <span class="card-heading">${t("Model &amp; network")}</span>
+        <label class="field-group"><span class="label">${t("Codex account")}</span>
+          <select class="field" aria-label="${t("Codex account")}" data-setting="codex-route" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
+            ${options.routes.map(r => `<option value="${escapeHTML(r.id)}" ${r.id === route ? "selected" : ""} ${!r.configured ? "disabled" : ""}>${escapeHTML(r.label)}${r.configured ? "" : t(" · not configured")}</option>`).join("")}
           </select>
         </label>
-        <label class="field-group"><span class="label">Default Codex model</span>
-          <select class="field" aria-label="Default Codex model" data-setting="codex-model" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
+        <label class="field-group"><span class="label">${t("Default Codex model")}</span>
+          <select class="field" aria-label="${t("Default Codex model")}" data-setting="codex-model" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
             ${models.map(m => `<option value="${escapeHTML(m)}" ${m === model ? "selected" : ""}>${escapeHTML(modelLabel(m))}</option>`).join("")}
           </select>
         </label>
-        <span class="hint" style="font-size:11.5px;color:#64748B">Account changes apply to new requests. Start a new Codex session to use the selected default model.</span>
+        <span class="hint" style="font-size:11.5px;color:#64748B">${t("Account changes apply to new requests. Start a new Codex session to use the selected default model.")}</span>
         <div class="space-provider-row" style="border-top:1px solid #F1F5F9;padding-top:16px">
-          <div class="space-provider-copy"><span class="space-provider-name">Internet access</span>
-            <span class="space-provider-state ${online ? "active" : ""}">${online ? "Browsing, downloads and package installs allowed" : "AI gateway only · external browsing and downloads blocked"}</span>
+          <div class="space-provider-copy"><span class="space-provider-name">${t("Internet access")}</span>
+            <span class="space-provider-state ${online ? "active" : ""}">${online ? t("Browsing, downloads and package installs allowed") : t("AI gateway only · external browsing and downloads blocked")}</span>
           </div>
-          <button class="sponsor-switch ${online ? "on" : ""}" type="button" role="switch" aria-checked="${online}" aria-label="Internet access in ${escapeHTML(space.name)}" data-action="toggle-network" data-space="${escapeHTML(space.name)}" ${busy || !space.network_control_ready || !spaceIsAwake(space) ? "disabled" : ""}><span class="sponsor-knob"></span></button>
+          <button class="sponsor-switch ${online ? "on" : ""}" type="button" role="switch" aria-checked="${online}" aria-label="${t("Internet access in {name}", { name: escapeHTML(space.name) })}" data-action="toggle-network" data-space="${escapeHTML(space.name)}" ${busy || !space.network_control_ready || !spaceIsAwake(space) ? "disabled" : ""}><span class="sponsor-knob"></span></button>
         </div>
-        ${!space.network_control_ready ? `<button class="btn-ghost" type="button" data-action="open-network-upgrade" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>Enable network controls…</button>` : ""}
-        <span class="hint" style="font-size:11.5px;color:#64748B">${space.network_upgrading ? "Saving snapshot and upgrading… You can leave this page and return." : !spaceIsAwake(space) ? "Wake this space to change Internet access." : state.busy === `network:${space.name}` ? "Applying network policy…" : "AI calls and SSH remain available when Internet access is off. Restart agents after changing network access."}</span>
+        ${!space.network_control_ready ? `<button class="btn-ghost" type="button" data-action="open-network-upgrade" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>${t("Enable network controls…")}</button>` : ""}
+        <span class="hint" style="font-size:11.5px;color:#64748B">${space.network_upgrading ? t("Saving snapshot and upgrading… You can leave this page and return.") : !spaceIsAwake(space) ? t("Wake this space to change Internet access.") : state.busy === `network:${space.name}` ? t("Applying network policy…") : t("AI calls and SSH remain available when Internet access is off. Restart agents after changing network access.")}</span>
         ${space.network_upgrade_error ? `<span class="hint" role="alert" style="color:#B91C1C">${escapeHTML(space.network_upgrade_error)}</span>` : ""}
       </section>`;
     }
@@ -1057,20 +1239,20 @@
         const over = spent >= limit;
         usageLine = `
           <div class="resource-block">
-            <div class="resource-line"><span>Spent</span><span class="mono num">${formatUSD(spent)} / ${formatUSD(limit)}</span></div>
+            <div class="resource-line"><span>${t("Spent")}</span><span class="mono num">${formatUSD(spent)} / ${formatUSD(limit)}</span></div>
             <div class="meter"><div class="meter-fill" style="width:${percent}%;${over ? "background:#DC2626" : ""}"></div></div>
-            ${over ? `<span class="hint" style="font-size:11.5px;color:#DC2626">Spend limit reached — new requests are refused.</span>` : ""}
+            ${over ? `<span class="hint" style="font-size:11.5px;color:#DC2626">${t("Spend limit reached — new requests are refused.")}</span>` : ""}
           </div>`;
       } else {
-        usageLine = `<div class="resource-line"><span>Spent</span><span class="mono num">${formatUSD(spent)} <span style="color:#94A3B8">· no cap</span></span></div>`;
+        usageLine = `<div class="resource-line"><span>${t("Spent")}</span><span class="mono num">${formatUSD(spent)} <span style="color:#94A3B8">${t("· no cap")}</span></span></div>`;
       }
       return `
         <div class="card resources-card ${animationClass(4)}">
-          <span class="card-heading">Budget</span>
+          <span class="card-heading">${t("Budget")}</span>
           ${usageLine}
-          <div class="resource-line"><span>Max concurrent</span><span class="mono num">${formatNumber(conc)}</span></div>
-          <div class="resource-line" style="margin-top:6px"><span></span><button class="text-button" style="opacity:.8" type="button" data-action="open-limits" data-space="${escapeHTML(space.name)}">Edit limits…</button></div>
-          <span class="hint" style="font-size:11.5px;color:#94A3B8">Estimated token cost for this space, saved across restarts. Your account’s actual billing may differ.</span>
+          <div class="resource-line"><span>${t("Max concurrent")}</span><span class="mono num">${formatNumber(conc)}</span></div>
+          <div class="resource-line" style="margin-top:6px"><span></span><button class="text-button" style="opacity:.8" type="button" data-action="open-limits" data-space="${escapeHTML(space.name)}">${t("Edit limits…")}</button></div>
+          <span class="hint" style="font-size:11.5px;color:#94A3B8">${t("Estimated token cost for this space, saved across restarts. Your account’s actual billing may differ.")}</span>
         </div>`;
     }
 
@@ -1083,10 +1265,10 @@
       return `
         <div class="modal-backdrop" data-action="close-modal">
           <form class="card modal create-modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="limits-title" data-form="limits">
-            <div class="modal-head"><span class="modal-title" id="limits-title">Limits · ${escapeHTML(space.name)}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
-            <label class="field-group"><span class="label">Spend cap (USD, 0 = no cap)</span><input class="field mono" id="limit-usd" name="usd" type="number" min="0" step="1" inputmode="decimal" value="${limit || ""}" placeholder="0"></label>
-            <label class="field-group"><span class="label">Max concurrent requests</span><input class="field mono" id="limit-conc" name="conc" type="number" min="1" step="1" inputmode="numeric" value="${conc || ""}" placeholder="5"></label>
-            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-gold" type="submit" ${busy ? "disabled" : ""}>${busy ? "Saving…" : "Save"}</button></div>
+            <div class="modal-head"><span class="modal-title" id="limits-title">${t("Limits · {name}", { name: escapeHTML(space.name) })}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="${t("Close")}">${icons.close}</button></div>
+            <label class="field-group"><span class="label">${t("Spend cap (USD, 0 = no cap)")}</span><input class="field mono" id="limit-usd" name="usd" type="number" min="0" step="1" inputmode="decimal" value="${limit || ""}" placeholder="0"></label>
+            <label class="field-group"><span class="label">${t("Max concurrent requests")}</span><input class="field mono" id="limit-conc" name="conc" type="number" min="1" step="1" inputmode="numeric" value="${conc || ""}" placeholder="5"></label>
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">${t("Cancel")}</button><button class="btn-gold" type="submit" ${busy ? "disabled" : ""}>${busy ? t("Saving…") : t("Save")}</button></div>
           </form>
         </div>`;
     }
@@ -1096,10 +1278,10 @@
       const busy = state.busy === `upgrade:${name}`;
       return `<div class="modal-backdrop" data-action="close-modal">
         <section class="card modal create-modal" role="dialog" aria-modal="true" aria-labelledby="network-upgrade-title">
-          <div class="modal-head"><span class="modal-title" id="network-upgrade-title">Enable network controls · ${escapeHTML(name)}</span></div>
-          <p class="modal-copy">This older space needs a one-time upgrade. CoSpace saves a full filesystem snapshot and keeps your workspace, installed tools and SSH identity.</p>
-          <p class="modal-copy">The space restarts during the upgrade. Save your work first: running programs stop and SSH sessions disconnect. Internet stays on until you switch it off.</p>
-          <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal" ${busy ? "disabled" : ""}>Cancel</button><button class="btn-gold" type="button" data-action="confirm-network-upgrade" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? "Saving snapshot and upgrading…" : "Save snapshot & upgrade"}</button></div>
+          <div class="modal-head"><span class="modal-title" id="network-upgrade-title">${t("Enable network controls · {name}", { name: escapeHTML(name) })}</span></div>
+          <p class="modal-copy">${t("This older space needs a one-time upgrade. CoSpace saves a full filesystem snapshot and keeps your workspace, installed tools and SSH identity.")}</p>
+          <p class="modal-copy">${t("The space restarts during the upgrade. Save your work first: running programs stop and SSH sessions disconnect. Internet stays on until you switch it off.")}</p>
+          <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal" ${busy ? "disabled" : ""}>${t("Cancel")}</button><button class="btn-gold" type="button" data-action="confirm-network-upgrade" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? t("Saving snapshot and upgrading…") : t("Save snapshot & upgrade")}</button></div>
         </section></div>`;
     }
 
@@ -1112,9 +1294,9 @@
       return `
         <div class="modal-backdrop" data-action="close-modal">
           <section class="card modal delete-modal ${state.animate ? "scale-in" : ""}" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
-            <div class="modal-head"><span class="modal-title" id="delete-title">Delete <span class="mono">${escapeHTML(name)}</span>?</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
-            <p class="modal-copy">This permanently removes the space — its VM, workspace files, and usage history.${guests ? ` ${formatNumber(guests)} paired ${plural(guests, "guest")} lose${guests === 1 ? "s" : ""} access immediately.` : ""} There is no undo.</p>
-            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-danger" type="button" data-action="confirm-delete" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? "Deleting…" : "Delete Space"}</button></div>
+            <div class="modal-head"><span class="modal-title" id="delete-title">${t("Delete {name}?", { name: `<span class="mono">${escapeHTML(name)}</span>` })}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="${t("Close")}">${icons.close}</button></div>
+            <p class="modal-copy">${t("This permanently removes the space — its VM, workspace files, and usage history.")}${guests ? tp(guests, " {n} paired guest loses access immediately.", " {n} paired guests lose access immediately.") : ""}${t(" There is no undo.")}</p>
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">${t("Cancel")}</button><button class="btn-danger" type="button" data-action="confirm-delete" data-space="${escapeHTML(name)}" ${busy ? "disabled" : ""}>${busy ? t("Deleting…") : t("Delete Space")}</button></div>
           </section>
         </div>`;
     }
@@ -1127,10 +1309,10 @@
       return `
         <main class="page detail-page">
           <header class="detail-head ${animationClass(1)}">
-            <div class="detail-title"><span class="detail-name mono">${escapeHTML(space.name)}</span><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill">${statusDot(space, true)}<span class="${awake ? "awake-text" : "asleep-text"}">${powerLabel}</span></span><span class="pill mono num" style="color:#64748B">${formatNumber(space.memory_gb)} GB · ${formatNumber(space.cpus)} ${plural(space.cpus, "CPU")}</span></div></div>
+            <div class="detail-title"><span class="detail-name mono">${escapeHTML(space.name)}</span><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill">${statusDot(space, true)}<span class="${awake ? "awake-text" : "asleep-text"}">${powerLabel}</span></span><span class="pill mono num" style="color:#64748B">${formatNumber(space.memory_gb)} GB · ${tp(space.cpus, "{n} CPU", "{n} CPUs")}</span></div></div>
             <div class="detail-actions">
-              <button class="btn-ghost" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awake ? `Sleep ${escapeHTML(space.name)} until the Host wakes it` : `Wake ${escapeHTML(space.name)}`}" ${toggleBusy ? "disabled" : ""}>${toggleBusy ? "Working…" : awake ? "Sleep" : "Wake"}</button>
-              <button class="btn-gold" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">${icons.invite} Invite a Guest</button>
+              <button class="btn-ghost" type="button" data-action="toggle-space" data-space="${escapeHTML(space.name)}" aria-label="${awake ? t("Sleep {name} until the Host wakes it", { name: escapeHTML(space.name) }) : t("Wake {name}", { name: escapeHTML(space.name) })}" ${toggleBusy ? "disabled" : ""}>${toggleBusy ? t("Working…") : awake ? t("Sleep") : t("Wake")}</button>
+              <button class="btn-gold" type="button" data-action="open-invite" data-space="${escapeHTML(space.name)}">${icons.invite} ${t("Invite a Guest")}</button>
             </div>
           </header>
           <div class="detail-grid">
@@ -1138,8 +1320,8 @@
             <div class="detail-column">${renderExecution(space)}${renderAccess(space)}${renderProviders(space)}</div>
           </div>
           <div class="detail-footer ${animationClass(5)}">
-            <button class="btn-ghost" type="button" data-action="save-template" data-space="${escapeHTML(space.name)}" ${state.busy === `template:${space.name}` ? "disabled" : ""}>${state.busy === `template:${space.name}` ? "Saving…" : state.templateSavedFor === space.name ? "Saved as template ✓" : "Save as Template"}</button>
-            <button class="text-button danger" style="opacity:.75" type="button" data-action="delete-space" data-space="${escapeHTML(space.name)}" ${deleting ? "disabled" : ""}>${deleting ? "Deleting…" : "Delete Space…"}</button>
+            <button class="btn-ghost" type="button" data-action="save-template" data-space="${escapeHTML(space.name)}" ${state.busy === `template:${space.name}` ? "disabled" : ""}>${state.busy === `template:${space.name}` ? t("Saving…") : state.templateSavedFor === space.name ? t("Saved as template ✓") : t("Save as Template")}</button>
+            <button class="text-button danger" style="opacity:.75" type="button" data-action="delete-space" data-space="${escapeHTML(space.name)}" ${deleting ? "disabled" : ""}>${deleting ? t("Deleting…") : t("Delete Space…")}</button>
           </div>
         </main>`;
     }
@@ -1149,25 +1331,25 @@
       const templates = state.templates || [];
       const templateField = templates.length ? `
             <div class="field-group">
-              <span class="label">Template</span>
+              <span class="label">${t("Template")}</span>
               <select class="field mono" id="new-space-template" name="template">
-                <option value="">Blank space</option>
+                <option value="">${t("Blank space")}</option>
                 ${templates.map(t => `<option value="${escapeHTML(t.name)}" ${space.template === t.name ? "selected" : ""}>${escapeHTML(t.name)}</option>`).join("")}
               </select>
-              ${space.template ? `<button class="text-button danger" style="align-self:flex-start;opacity:.75;font-size:12px" type="button" data-action="delete-template" data-template="${escapeHTML(space.template)}">Delete this template</button>` : ""}
+              ${space.template ? `<button class="text-button danger" style="align-self:flex-start;opacity:.75;font-size:12px" type="button" data-action="delete-template" data-template="${escapeHTML(space.template)}">${t("Delete this template")}</button>` : ""}
             </div>` : "";
       return `
         <div class="modal-backdrop" data-action="close-modal">
           <form class="card modal create-modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="create-title" data-form="create-space">
-            <div class="modal-head"><span class="modal-title" id="create-title">New Space</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
-            <label class="field-group"><span class="label">Name</span><input class="field mono" id="new-space-name" name="name" placeholder="e.g. acme-web" maxlength="31" autocomplete="off" spellcheck="false" value="${escapeHTML(space.name)}"></label>
+            <div class="modal-head"><span class="modal-title" id="create-title">${t("New Space")}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="${t("Close")}">${icons.close}</button></div>
+            <label class="field-group"><span class="label">${t("Name")}</span><input class="field mono" id="new-space-name" name="name" placeholder="${t("e.g. acme-web")}" maxlength="31" autocomplete="off" spellcheck="false" value="${escapeHTML(space.name)}"></label>
             ${templateField}
             <div class="field-group">
-              <span class="label">Memory</span>
-              <div class="segmented" role="group" aria-label="Memory">${[1, 2, 4, 8].map(memory => `<button class="segment ${memory === space.memory_gb ? "active" : ""}" type="button" data-action="pick-memory" data-memory="${memory}" aria-pressed="${memory === space.memory_gb}">${memory} GB</button>`).join("")}</div>
+              <span class="label">${t("Memory")}</span>
+              <div class="segmented" role="group" aria-label="${t("Memory")}">${[1, 2, 4, 8].map(memory => `<button class="segment ${memory === space.memory_gb ? "active" : ""}" type="button" data-action="pick-memory" data-memory="${memory}" aria-pressed="${memory === space.memory_gb}">${memory} GB</button>`).join("")}</div>
             </div>
-              ${space.template ? `<p class="modal-copy" style="font-size:12px;color:#94A3B8;margin:0">AI selection, model, Internet access, budget, and full-auto come from the template; memory above still applies.</p>` : ""}
-            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">Cancel</button><button class="btn-gold" type="submit" ${state.busy === "create" ? "disabled" : ""}>${state.busy === "create" ? "Creating…" : "Create Space"}</button></div>
+              ${space.template ? `<p class="modal-copy" style="font-size:12px;color:#94A3B8;margin:0">${t("AI selection, model, Internet access, budget, and full-auto come from the template; memory above still applies.")}</p>` : ""}
+            <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">${t("Cancel")}</button><button class="btn-gold" type="submit" ${state.busy === "create" ? "disabled" : ""}>${state.busy === "create" ? t("Creating…") : t("Create Space")}</button></div>
           </form>
         </div>`;
     }
@@ -1200,45 +1382,45 @@
       const terminalShell = windows ? "powershell" : "bash";
       let terminalBody;
       if (state.inviteLoading) {
-        terminalBody = '<div class="loading-line"><span class="spinner"></span><span>Creating one-time invite…</span></div>';
+        terminalBody = `<div class="loading-line"><span class="spinner"></span><span>${t("Creating one-time invite…")}</span></div>`;
       } else if (!invite) {
-        terminalBody = '<div class="loading-line"><span>Invite unavailable.</span><button class="btn-ghost terminal-copy" type="button" data-action="retry-invite">Try again</button></div>';
+        terminalBody = `<div class="loading-line"><span>${t("Invite unavailable.")}</span><button class="btn-ghost terminal-copy" type="button" data-action="retry-invite">${t("Try again")}</button></div>`;
       } else {
         const pairCmd = String(invite.command || "");
         const steps = [
-          { label: "Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)", html: escapeHTML(installCommand) },
-          { label: "Pair with this space (one-time code) — a second computer of the same person adds  -name <another-name>", html: highlightedInviteCommand(pairCmd, String(invite.code || "")) },
-          { label: "You're in — reconnect with this anytime", html: `<span class="command-name">ssh</span><span class="command-accent"> ${escapeHTML(spaceName)}</span>` }
+          { label: escapeHTML(t("Install the guest tool — already have cospace? Skip to 2 (it tells you if an update is needed)")), html: escapeHTML(installCommand) },
+          { label: escapeHTML(t("Pair with this space (one-time code) — a second computer of the same person adds  -name <another-name>")), html: highlightedInviteCommand(pairCmd, String(invite.code || "")) },
+          { label: escapeHTML(t("You're in — reconnect with this anytime")), html: `<span class="command-name">ssh</span><span class="command-accent"> ${escapeHTML(spaceName)}</span>` }
         ];
         terminalBody = steps.map((step, index) => `
           <div class="invite-step line-in l${index + 1}">
             <div class="terminal-comment invite-step-label"># ${index + 1} · ${step.label}</div>
-            <div class="invite-line"><span class="prompt">${prompt}</span><span class="cmd mono">${step.html}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-line" data-line="${index}">${state.copied === String(index) ? "Copied" : "Copy"}</button></div>
+            <div class="invite-line"><span class="prompt">${prompt}</span><span class="cmd mono">${step.html}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-line" data-line="${index}">${state.copied === String(index) ? t("Copied") : t("Copy")}</button></div>
           </div>`).join("") + '<div class="line-in l3"><span class="cursor-blink"></span></div>';
       }
       return `
         <div class="modal-backdrop" data-action="close-modal">
           <section class="card modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="invite-title">
-            <div class="modal-head"><span class="modal-title" id="invite-title">Invite a guest to <span class="mono grad-text">${escapeHTML(spaceName)}</span></span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="Close">${icons.close}</button></div>
-            <p class="modal-copy">Pick your guest's operating system, then send them the three steps — or <b>Copy all</b> and paste the lot into your chat. Nothing to sign up for.</p>
-            <div class="segmented" role="group" aria-label="Guest operating system">
+            <div class="modal-head"><span class="modal-title" id="invite-title">${t("Invite a guest to {name}", { name: `<span class="mono grad-text">${escapeHTML(spaceName)}</span>` })}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="${t("Close")}">${icons.close}</button></div>
+            <p class="modal-copy">${t("Pick your guest's operating system, then send them the three steps — or <b>Copy all</b> and paste the lot into your chat. Nothing to sign up for.")}</p>
+            <div class="segmented" role="group" aria-label="${t("Guest operating system")}">
               <button class="segment ${windows ? "" : "active"}" type="button" data-action="pick-invite-platform" data-platform="posix" aria-pressed="${!windows}">macOS / Linux</button>
               <button class="segment ${windows ? "active" : ""}" type="button" data-action="pick-invite-platform" data-platform="windows" aria-pressed="${windows}">Windows</button>
             </div>
             <div class="terminal">
-              <div class="terminal-head">${renderTrafficLights()}<span class="terminal-title mono">invite — ${terminalShell}</span>${invite ? `<button class="btn-ghost terminal-copy" type="button" data-action="copy-invite">${state.copied === "all" ? "Copied" : "Copy all"}</button>` : ""}</div>
+              <div class="terminal-head">${renderTrafficLights()}<span class="terminal-title mono">invite — ${terminalShell}</span>${invite ? `<button class="btn-ghost terminal-copy" type="button" data-action="copy-invite">${state.copied === "all" ? t("Copied") : t("Copy all")}</button>` : ""}</div>
               <div class="terminal-body invite-terminal-body mono">${terminalBody}</div>
             </div>
-            ${inviteLink ? `<div class="invite-link-row"><span class="invite-link-label">Or send one link — same steps, with visuals:</span><span class="invite-link-url mono" title="${escapeHTML(inviteLink)}">${escapeHTML(inviteLink)}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-invite-link">${state.copied === "link" ? "Copied" : "Copy"}</button></div>` : ""}
-            <p class="modal-copy" style="font-size:12.5px;color:#94A3B8;margin-top:2px">Once they pair, they appear under <b>Guests</b> here — you don't need to do anything else. Cursor / VS Code work too: Remote-SSH → <span class="mono">${escapeHTML(spaceName)}</span>.</p>
-            <div class="invite-meta"><span class="pill mono">one-time code</span>${invite ? `<span class="pill mono">${escapeHTML(expiryLabel(invite.expires_at))}</span>` : ""}<button class="btn-gold" type="button" data-action="close-modal">Done</button></div>
+            ${inviteLink ? `<div class="invite-link-row"><span class="invite-link-label">${t("Or send one link — same steps, with visuals:")}</span><span class="invite-link-url mono" title="${escapeHTML(inviteLink)}">${escapeHTML(inviteLink)}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-invite-link">${state.copied === "link" ? t("Copied") : t("Copy")}</button></div>` : ""}
+            <p class="modal-copy" style="font-size:12.5px;color:#94A3B8;margin-top:2px">${t("Once they pair, they appear under <b>Guests</b> here — you don't need to do anything else. Cursor / VS Code work too: Remote-SSH → {name}.", { name: `<span class="mono">${escapeHTML(spaceName)}</span>` })}</p>
+            <div class="invite-meta"><span class="pill mono">${t("one-time code")}</span>${invite ? `<span class="pill mono">${escapeHTML(expiryLabel(invite.expires_at))}</span>` : ""}<button class="btn-gold" type="button" data-action="close-modal">${t("Done")}</button></div>
           </section>
         </div>`;
     }
 
     function renderToast() {
       if (!state.toast) return "";
-      return `<div class="toast" role="alert" aria-live="assertive"><span class="toast-icon">${icons.alert}</span><span class="toast-message">${escapeHTML(state.toast.message)}</span><button class="text-button toast-close" type="button" data-action="close-toast" aria-label="Dismiss error">${icons.close}</button></div>`;
+      return `<div class="toast" role="alert" aria-live="assertive"><span class="toast-icon">${icons.alert}</span><span class="toast-message">${escapeHTML(state.toast.message)}</span><button class="text-button toast-close" type="button" data-action="close-toast" aria-label="${t("Dismiss error")}">${icons.close}</button></div>`;
     }
 
     function render() {
@@ -1274,7 +1456,7 @@
       const space = state.spaces.find(item => item.name === spaceName);
       if (!space) return;
       if (spaceIsMissing(space)) {
-        showError(new Error("This space's VM no longer exists on this Mac. Delete the space, or recreate it and copy its workspace back."));
+        showError(new Error(t("This space's VM no longer exists on this Mac. Delete the space, or recreate it and copy its workspace back.")));
         return;
       }
       const action = spaceIsAwake(space) ? "stop" : "start";
@@ -1401,8 +1583,8 @@
       const body = {};
       body.usd_limit = usdRaw === "" ? 0 : Number(usdRaw);
       body.max_concurrency = concRaw === "" ? 0 : Number(concRaw);
-      if (!Number.isFinite(body.usd_limit) || body.usd_limit < 0) { showError(new Error("Spend cap must be a number ≥ 0.")); return; }
-      if (!Number.isFinite(body.max_concurrency) || body.max_concurrency < 0) { showError(new Error("Concurrency must be a whole number ≥ 0.")); return; }
+      if (!Number.isFinite(body.usd_limit) || body.usd_limit < 0) { showError(new Error(t("Spend cap must be a number ≥ 0."))); return; }
+      if (!Number.isFinite(body.max_concurrency) || body.max_concurrency < 0) { showError(new Error(t("Concurrency must be a whole number ≥ 0."))); return; }
       const busy = `limits:${spaceName}`;
       setState({ busy }, false);
       try {
@@ -1440,7 +1622,7 @@
 
     async function createSpace() {
       const name = state.newSpace.name.trim();
-      if (!name) return showError(new Error("Enter a space name."));
+      if (!name) return showError(new Error(t("Enter a space name.")));
       // The server normalizes the name (e.g. "My Project" -> "my-project") and
       // returns the final name; use that so we select the space that was created.
       setState({ busy: "create" }, false);
@@ -1569,7 +1751,7 @@
       textarea.select();
       const copied = document.execCommand("copy");
       textarea.remove();
-      if (!copied) throw new Error("Copy was blocked by the browser.");
+      if (!copied) throw new Error(t("Copy was blocked by the browser."));
     }
 
     async function copyInvite(which) {
@@ -1695,6 +1877,8 @@
         setState({ toast: null }, false);
       } else if (action === "retry-overview") {
         refreshOverview(true);
+      } else if (action === "toggle-lang") {
+        setLang(lang === "zh" ? "en" : "zh");
       }
     });
 
