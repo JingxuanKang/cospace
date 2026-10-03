@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoSpace</title>
+<meta name="description" content="CoSpace is co-op mode for AI coding: shared Linux dev spaces on your own Mac or Linux server, where people you invite join over plain ssh and Claude Code, Codex and Grok are already signed in.">
+<meta property="og:title" content="CoSpace — Co-op mode for AI coding">
+<meta property="og:description" content="Turn your own machine's compute and AI subscriptions into shared dev spaces. One command to host, one command to join.">
+<meta property="og:image" content="https://jingxuankang.github.io/cospace/demo.jpg">
+<meta property="og:type" content="website">
+<style>
+  :root { --ink:#1F2937; --muted:#475569; --gold:#B45309; --bg:#FDF8EF; --card:#FFFFFF; --line:rgba(180,83,9,.16); --code:#0F172A; --code-ink:#E2E8F0; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#F1F5F9; --muted:#94A3B8; --gold:#F59E0B; --bg:#111318; --card:#1A1D24; --line:rgba(245,158,11,.22); --code:#0B0F17; --code-ink:#E2E8F0; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 -apple-system, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 72px; }
+  h1 { font-size: 40px; line-height: 1.1; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h1 span { color: var(--gold); }
+  .tagline { font-size: 18px; color: var(--muted); margin: 0 0 28px; }
+  .zh { color: var(--muted); font-size: 15px; margin: -18px 0 28px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 14px 0; }
+  .card h2 { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
+  .card p { margin: 6px 0 10px; color: var(--muted); font-size: 14.5px; }
+  pre { margin: 8px 0 0; background: var(--code); color: var(--code-ink); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 13.5px/1.6 "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+  pre small { display: block; color: #94A3B8; font-size: 12px; margin-bottom: 2px; }
+  .links { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 26px; font-size: 15px; }
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .demo { display: block; margin: 0 0 28px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+  .demo img { display: block; width: 100%; height: auto; }
+  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Co<span>Space</span> — Co-op mode for AI coding.</h1>
+  <p class="tagline">Shared Linux dev spaces on your own Mac or Linux server. People you invite join over plain <code>ssh</code>; <code>claude</code>, <code>codex</code> and <code>grok</code> inside are already signed in through a credential gateway on your machine. Real tokens never leave it.</p>
+  <p class="zh">AI 编程的联机模式：在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。</p>
+
+  <a class="demo" href="demo.html" title="66-second demo"><img src="demo.jpg" alt="CoSpace demo video (66 seconds): one command to host, invite a guest in two clicks, a guest coding with Claude Code within a minute."></a>
+
+  <section class="card">
+    <h2>Host · one command</h2>
+    <p>Apple Silicon Mac (macOS 26+) or a Linux server with Docker. Installs the daemon, registers it as a service and opens the console.</p>
+    <pre>curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh</pre>
+  </section>
+
+  <section class="card">
+    <h2>Guest · one command, no account</h2>
+    <p>Installs the <code>cospace</code> tool (alias <code>co</code>). Then paste the one-time pair command your host sends you and run <code>ssh &lt;space&gt;</code>.</p>
+    <pre><small># macOS / Linux</small>curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh</pre>
+    <pre><small># Windows PowerShell (needs OpenSSH Client)</small>irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex</pre>
+  </section>
+
+  <div class="links">
+    <a href="https://github.com/JingxuanKang/cospace">Source and docs on GitHub</a>
+    <a href="https://github.com/JingxuanKang/cospace/blob/master/README.zh-CN.md">中文说明</a>
+    <a href="https://github.com/JingxuanKang/cospace/releases/latest">Releases</a>
+    <a href="demo.html">Demo video</a>
+  </div>
+
+  <footer>MIT licensed. Not affiliated with Anthropic, OpenAI, xAI or Apple. Invite people you trust: spaces use the host's own subscriptions.</footer>
+</main>
+</body>
+</html>
