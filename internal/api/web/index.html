@@ -438,6 +438,7 @@
     }
     .skeleton-line { width: 58%; height: 13px; border-radius: 7px; }
     .skeleton-title { width: 150px; height: 31px; border-radius: 9px; }
+    .host-version { font-size: 11px; color: #94A3B8; flex: none; }
     .lang-toggle { margin-left: auto; font-size: 11px; color: #94A3B8; padding: 0 4px; }
     .lang-toggle:hover { color: #B45309; }
     .toast {
@@ -949,7 +950,7 @@
           </div>
           <div class="sidebar-spacer"></div>
           <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${imageReady() ? "" : `disabled title="${t("Available once the space image finishes downloading")}"`}>${icons.plus} ${t("New Space")}</button>
-          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span><button class="text-button lang-toggle" type="button" data-action="toggle-lang" aria-label="${t("Language")}">${lang === "zh" ? "English" : "中文"}</button></div>
+          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span>${hostReady && state.host.version ? `<span class="host-version" title="cospaced">${escapeHTML(state.host.version)}</span>` : ""}<button class="text-button lang-toggle" type="button" data-action="toggle-lang" aria-label="${t("Language")}">${lang === "zh" ? "English" : "中文"}</button></div>
         </aside>`;
     }
 
@@ -1840,7 +1841,7 @@
       } else if (action === "delete-template") {
         deleteTemplate(control.dataset.template);
       } else if (action === "open-create" && imageReady()) {
-        setState({ modal: "create", newSpace: { name: "", memory_gb: 2, cpus: 4, template: "" }, confirmRevoke: null }, true);
+        setState({ modal: "create", newSpace: { name: "", memory_gb: 2, cpus: Math.min(4, (state.host && state.host.cpus) || 4), template: "" }, confirmRevoke: null }, true);
         requestAnimationFrame(() => document.getElementById("new-space-name")?.focus());
       } else if (action === "pick-memory") {
         setState({ newSpace: { ...state.newSpace, memory_gb: Number(control.dataset.memory) } }, false);

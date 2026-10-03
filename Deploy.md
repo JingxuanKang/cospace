@@ -8,7 +8,7 @@
 curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
 ```
 
-`docs/host.sh` 依次：检查机型与系统 → 安装 Apple container（有 Homebrew 用 `brew install container`，否则下载 Apple 签名 pkg 并 `sudo installer`）→ 从 GitHub Releases 下载 `cospaced_darwin_arm64.tar.gz` 装到 `/opt/homebrew/bin`（不可写时依次退到 `/usr/local/bin`、`~/.local/bin`）→ 执行 `cospaced setup`。重复执行即升级。
+`docs/host.sh` 依次：检查机型与系统 → 安装 Apple container（有 Homebrew 用 `brew install container`，否则下载 Apple 签名 pkg 并 `sudo installer`）→ 从 GitHub Releases 下载 `cospaced_darwin_arm64.tar.gz` 装到 `/opt/homebrew/bin`（不可写时依次退到 `/usr/local/bin`、`~/.local/bin`）→ 执行 `cospaced setup`。重复执行即升级：不带参数时沿用已装服务的 serve 参数（`cospaced setup -reset` 回到默认）；参数先按 `serve` 的规则校验，不合法就直接报错、不改服务；daemon 起不来时 setup 报错并恢复上一版服务（全新安装则移除），错误里附日志尾部。`cospaced version` 查看装的是哪个版本，控制台侧栏也显示。
 
 `cospaced setup` 做的事，也可单独执行（如从源码构建后）：
 
@@ -94,7 +94,7 @@ daemon 也能跑在装了 Docker 的 Linux 服务器上：`-runtime docker`（Li
 
 ```bash
 # 以能用 docker 的普通用户执行（在 docker 组里）
-cospaced setup -- -console-hosts <公网域名可选>     # 写 ~/.config/systemd/user/cospaced.service 并 enable --now，开启 linger
+cospaced setup -- -console-hosts <公网域名可选>     # 写 ~/.config/systemd/user/cospaced.service，enable 并 restart，开启 linger
 journalctl --user -u cospaced -f                   # 日志
 cospaced uninstall                                 # 只删服务，保留空间与数据
 ```

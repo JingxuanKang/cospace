@@ -2,9 +2,11 @@ package spaces
 
 import (
 	"encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -119,7 +121,7 @@ func TestCreateSpace(t *testing.T) {
 		t.Fatalf("want 1 container run, got %v", f.calls)
 	}
 	args := strings.Join(runs[0], " ")
-	for _, want := range []string{"--name acme-web", "--memory 2g", "--cpus 4", "/workspace", "cospace-base"} {
+	for _, want := range []string{"--name acme-web", "--memory 2g", fmt.Sprintf("--cpus %d", min(4, runtime.NumCPU())), "/workspace", "cospace-base"} {
 		if !strings.Contains(args, want) {
 			t.Fatalf("run args missing %q: %s", want, args)
 		}
@@ -434,4 +436,15 @@ func flatten(calls [][]string) []string {
 		out = append(out, strings.Join(c, " "))
 	}
 	return out
+}
+
+func TestCreateClampsCPUsToHost(t *testing.T) {
+	m, _ := newTestManager(t)
+	r, err := m.Create("wide", 2, 1024)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.CPUs != runtime.NumCPU() {
+		t.Fatalf("CPUs = %d, want host count %d", r.CPUs, runtime.NumCPU())
+	}
 }

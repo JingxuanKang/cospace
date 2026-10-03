@@ -66,11 +66,12 @@ var ensureSpaceImage = func(c container.Runtime, ref string, out io.Writer) erro
 func runSetup(args []string, stdout io.Writer) error {
 	fs := newFlagSet("setup")
 	noOpen := fs.Bool("no-open", false, "do not open the console in the browser")
+	reset := fs.Bool("reset", false, "install the service with only the options given after --, dropping those of the existing service")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if runtime.GOOS == "linux" {
-		return runSetupLinux(fs.Args(), *noOpen, stdout)
+		return runSetupLinux(fs.Args(), *noOpen, *reset, stdout)
 	}
 	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" {
 		return errors.New("setup: the CoSpace host runs on Apple Silicon Macs (macOS 26 or later) or Linux servers with Docker")
@@ -86,50 +87,45 @@ func runSetup(args []string, stdout io.Writer) error {
 	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
 		exe = resolved
 	}
-	if err := ensureContainerSystem(defaultConfig(), stdout); err != nil {
-		return err
-	}
-
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
 	logDir := filepath.Join(home, "Library", "Logs", "CoSpace")
+	logPath := filepath.Join(logDir, "cospaced.log")
 	agents := filepath.Join(home, "Library", "LaunchAgents")
+	plistPath := filepath.Join(agents, launchLabel+".plist")
+	prev, _ := os.ReadFile(plistPath) // nil on a fresh install
+	serveArgs, err := setupServeArgs(fs.Args(), *reset, plistPath, launchdServeArgs, stdout)
+	if err != nil {
+		return err
+	}
+	if err := ensureContainerSystem(defaultConfig(), stdout); err != nil {
+		return err
+	}
 	for _, d := range []string{logDir, agents} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			return err
 		}
 	}
-	plistPath := filepath.Join(agents, launchLabel+".plist")
 	pathEnv := strings.Join(uniq([]string{filepath.Dir(containerBin), filepath.Dir(exe),
 		"/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"}), ":")
-	plist := launchdPlist(append([]string{exe, "serve"}, fs.Args()...), pathEnv, filepath.Join(logDir, "cospaced.log"))
+	plist := launchdPlist(append([]string{exe, "serve"}, serveArgs...), pathEnv, logPath)
 	if err := os.WriteFile(plistPath, plist, 0o644); err != nil {
 		return err
 	}
 
 	domain := fmt.Sprintf("gui/%d", os.Getuid())
-	exec.Command("launchctl", "bootout", domain+"/"+launchLabel).Run() // fine if it was not loaded
-	// bootout returns before the old instance is fully gone; bootstrap fails
-	// with an I/O error until it is, so retry briefly.
-	var bootErr error
-	for i := 0; i < 10; i++ {
-		b, err := exec.Command("launchctl", "bootstrap", domain, plistPath).CombinedOutput()
-		if err == nil {
-			bootErr = nil
-			break
-		}
-		bootErr = fmt.Errorf("launchctl bootstrap: %w: %s", err, strings.TrimSpace(string(b)))
-		time.Sleep(time.Second)
-	}
-	if bootErr != nil {
-		return bootErr
+	if err := launchdBootstrap(domain, plistPath); err != nil {
+		return err
 	}
 	fmt.Fprintf(stdout, "CoSpace daemon installed (starts at login; logs in %s).\n", logDir)
 
 	if !waitForConsole(waitConsoleTimeout) {
-		fmt.Fprintf(stdout, "The console is not answering yet — check %s, then open %s\n", filepath.Join(logDir, "cospaced.log"), consoleURL)
+		if code, crashed := launchdCrashed(domain); crashed {
+			return fmt.Errorf("setup: the daemon exits right after starting (exit code %s); %s. Last lines of %s:\n%s", code, rollbackLaunchd(domain, plistPath, prev), logPath, tailFile(logPath, 8))
+		}
+		fmt.Fprintf(stdout, "The console is not answering yet — check %s, then open %s\n", logPath, consoleURL)
 		return nil
 	}
 	fmt.Fprintf(stdout, "Console: %s\n", consoleURL)
@@ -215,4 +211,35 @@ func uniq(in []string) []string {
 		}
 	}
 	return out
+}
+
+// launchdBootstrap (re)loads the service. bootout returns before the old
+// instance is fully gone and bootstrap fails with an I/O error until it is,
+// so retry briefly.
+func launchdBootstrap(domain, plistPath string) error {
+	exec.Command("launchctl", "bootout", domain+"/"+launchLabel).Run() // fine if it was not loaded
+	var bootErr error
+	for i := 0; i < 10; i++ {
+		b, err := exec.Command("launchctl", "bootstrap", domain, plistPath).CombinedOutput()
+		if err == nil {
+			return nil
+		}
+		bootErr = fmt.Errorf("launchctl bootstrap: %w: %s", err, strings.TrimSpace(string(b)))
+		time.Sleep(time.Second)
+	}
+	return bootErr
+}
+
+// rollbackLaunchd undoes an install whose daemon cannot start: the previous
+// service comes back, or a fresh one is removed. It returns what it did for
+// the error message.
+func rollbackLaunchd(domain, plistPath string, prev []byte) string {
+	exec.Command("launchctl", "bootout", domain+"/"+launchLabel).Run()
+	if prev == nil {
+		os.Remove(plistPath)
+		return "the service was removed"
+	}
+	os.WriteFile(plistPath, prev, 0o644)
+	launchdBootstrap(domain, plistPath)
+	return "the previous service was restored"
 }

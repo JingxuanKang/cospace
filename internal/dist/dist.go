@@ -10,7 +10,7 @@ const (
 	// Pages serves the install scripts.
 	Pages = "https://jingxuankang.github.io/cospace"
 
-	GuestInstallPOSIX   = "curl -fsSL " + Pages + "/install.sh | sh"
+	GuestInstallPOSIX = "curl -fsSL " + Pages + "/install.sh | sh"
 	// Pages serves .ps1 as application/octet-stream; raw.githubusercontent
 	// serves it as text, which `irm | iex` handles on every PowerShell.
 	GuestInstallWindows = "irm https://raw.githubusercontent.com/" + Repo + "/master/docs/install.ps1 | iex"

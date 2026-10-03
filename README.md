@@ -36,7 +36,7 @@ A 66-second walkthrough: one command to install the host, invite a guest in two 
 curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
 ```
 
-It installs Apple `container` (through Homebrew when present, otherwise Apple's signed package), downloads the prebuilt `cospaced` daemon, registers it as a login item, and opens the console at `http://127.0.0.1:18931`. On first run the daemon downloads the space image once in the background (about 600 MB) and the console shows the progress; after that every new space starts in seconds. Re-running the command upgrades in place; `cospaced uninstall` removes the service and keeps your spaces. Sign in to `claude`, `codex`, or `grok` on the Mac for whichever AI tools you want spaces to use.
+It installs Apple `container` (through Homebrew when present, otherwise Apple's signed package), downloads the prebuilt `cospaced` daemon, registers it as a login item, and opens the console at `http://127.0.0.1:18931`. On first run the daemon downloads the space image once in the background (about 600 MB) and the console shows the progress; after that every new space starts in seconds. Re-running the command upgrades in place and keeps the options the daemon was installed with; `cospaced uninstall` removes the service and keeps your spaces. Sign in to `claude`, `codex`, or `grok` on the Mac for whichever AI tools you want spaces to use.
 
 **Linux host** — x86_64 or arm64 with Docker Engine usable without `sudo` and systemd. The same command installs `cospaced` as a systemd user service with Docker as the space runtime. The console stays on the server's loopback: reach it with `ssh -L 18931:127.0.0.1:18931 <server>` or over Tailscale, and sign in to the AI CLIs on the server (device-code login works headless).
 

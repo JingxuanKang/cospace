@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -383,6 +384,11 @@ func (m *Manager) CreateWithOptions(name string, o CreateOptions) (*Space, error
 	}
 	if o.CPUs <= 0 {
 		o.CPUs = 4
+	}
+	// Docker refuses a CPU limit above the host's count (a 3-core VPS would
+	// never get its first space); size the space to what exists instead.
+	if n := runtime.NumCPU(); o.CPUs > n {
+		o.CPUs = n
 	}
 	r := &Space{
 		Name:           name,

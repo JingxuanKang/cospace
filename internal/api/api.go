@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -77,6 +78,9 @@ type Server struct {
 	// check on (the Origin check is always on).
 	AllowedHosts []string
 	StrictHost   bool
+	// Version is the daemon build, shown in the console so a host can tell
+	// which release an install left behind.
+	Version string
 
 	inviteHits sync.Map // client IP -> *hitWindow, for the public invite page
 }
@@ -308,9 +312,13 @@ func (s *Server) getHost(w http.ResponseWriter, r *http.Request) {
 		"spaces":             len(statuses),
 		"awake":              awake,
 		"on_battery":         s.OnBattery(),
+		"cpus":               runtime.NumCPU(),
 	}
 	if s.Image != nil {
 		host["image"] = s.Image.Status()
+	}
+	if s.Version != "" {
+		host["version"] = s.Version
 	}
 	writeJSON(w, 200, host)
 }

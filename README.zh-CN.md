@@ -36,7 +36,7 @@ CoSpace 是一个 macOS 常驻程序加一个单文件 guest 命令行工具，�
 curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
 ```
 
-它会装好 Apple `container`（有 Homebrew 就用 brew，否则用 Apple 签名安装包）、下载预编译的 `cospaced`、注册为登录自启服务，并打开控制台 `http://127.0.0.1:18931`。首次运行时 daemon 会在后台下载一次空间镜像（约 600 MB），控制台显示进度；之后每个新空间几秒就开好。重复执行即原地升级；`cospaced uninstall` 只移除服务、保留空间。想给空间用哪家 AI，就在这台 Mac 上登录对应的 `claude`、`codex` 或 `grok`。
+它会装好 Apple `container`（有 Homebrew 就用 brew，否则用 Apple 签名安装包）、下载预编译的 `cospaced`、注册为登录自启服务，并打开控制台 `http://127.0.0.1:18931`。首次运行时 daemon 会在后台下载一次空间镜像（约 600 MB），控制台显示进度；之后每个新空间几秒就开好。重复执行即原地升级，并保留 daemon 原有的启动参数；`cospaced uninstall` 只移除服务、保留空间。想给空间用哪家 AI，就在这台 Mac 上登录对应的 `claude`、`codex` 或 `grok`。
 
 **Linux host**——x86_64 或 arm64，装好 Docker Engine（当前用户免 `sudo` 可用）和 systemd。同一条命令会把 `cospaced` 装成 systemd 用户服务，以 Docker 作为空间运行时。控制台只监听服务器本机：用 `ssh -L 18931:127.0.0.1:18931 <服务器>` 或经 Tailscale 访问；AI CLI 在服务器上登录（无界面可用设备码登录）。
 

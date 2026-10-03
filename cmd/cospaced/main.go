@@ -97,31 +97,48 @@ func runWithIO(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		return runTemplate(args[1:], cfg, stdout)
 	case "member":
 		return runMember(args[1:], cfg, stdin, stdout)
+	case "version":
+		return runVersion(stdout)
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
 	}
 }
 
-func runServe(args []string, cfg config, stderr io.Writer) error {
-	fs := newFlagSet("serve")
-	addGlobalFlags(fs, &cfg)
-	listen := fs.String("listen", "0.0.0.0:18930", "listen address")
-	anthropicRaw := fs.String("anthropic-upstream", "https://api.anthropic.com", "Anthropic upstream URL")
+// serveOptions are serve's command-line flags. defineServeFlags is the one
+// place they are declared, so `cospaced setup` checks an option list exactly
+// the way the daemon will before writing it into a service.
+type serveOptions struct {
+	listen, anthropicRaw, openAIRaw, subIRaw, subIIRaw, subIKey, subIIKey, xaiRaw *string
+	idleTimeout, credKeepalive                                                    *time.Duration
+	consoleAddr, consoleHosts, gatewayAllow                                       *string
+}
+
+func defineServeFlags(fs *flag.FlagSet, cfg *config) *serveOptions {
+	addGlobalFlags(fs, cfg)
+	o := &serveOptions{}
+	o.listen = fs.String("listen", "0.0.0.0:18930", "listen address")
+	o.anthropicRaw = fs.String("anthropic-upstream", "https://api.anthropic.com", "Anthropic upstream URL")
 	// ChatGPT-subscription tokens are only accepted by the chatgpt.com codex
 	// backend, not api.openai.com — this default makes codex-in-spaces work off
 	// the host's subscription with zero extra services. Hosts sponsoring with an
 	// API key instead point this at https://api.openai.com/v1.
-	openAIRaw := fs.String("openai-upstream", "https://chatgpt.com/backend-api/codex", "OpenAI upstream URL (spaces hit <upstream>/responses; use https://api.openai.com/v1 for API-key sponsoring)")
-	subIRaw := fs.String("sub2api-i-upstream", "", "Optional Sub2API I API base URL, including /v1")
-	subIIRaw := fs.String("sub2api-ii-upstream", "", "Optional Sub2API II API base URL, including /v1")
-	subIKey := fs.String("sub2api-i-keychain", "sub2api-gpt-api-key", "Host Keychain service for Sub2API I")       // Keychain lookup name, not a credential. gitleaks:allow
-	subIIKey := fs.String("sub2api-ii-keychain", "sub2api-gpt-api-key-ii", "Host Keychain service for Sub2API II") // Keychain lookup name, not a credential. gitleaks:allow
-	xaiRaw := fs.String("xai-upstream", "https://api.x.ai/v1", "xAI upstream URL (accepts the host's grok subscription token directly)")
-	idleTimeout := fs.Duration("idle-timeout", 30*time.Minute, "stop spaces after this much inactivity (0 disables)")
-	credKeepalive := fs.Duration("cred-keepalive", 30*time.Minute, "refresh sponsor credentials that expire within this window by pinging the vendor CLI with a minimal request (0 disables)")
-	consoleAddr := fs.String("console", "127.0.0.1:18931", "local web console + REST API address (empty disables)")
-	consoleHosts := fs.String("console-hosts", "", "comma-separated public hostnames the console is published under (e.g. behind a tunnel); loopback is always allowed")
-	gatewayAllow := fs.String("gateway-allow", "", "comma-separated CIDRs allowed to reach the gateway besides loopback and the container network (\"any\" disables the check)")
+	o.openAIRaw = fs.String("openai-upstream", "https://chatgpt.com/backend-api/codex", "OpenAI upstream URL (spaces hit <upstream>/responses; use https://api.openai.com/v1 for API-key sponsoring)")
+	o.subIRaw = fs.String("sub2api-i-upstream", "", "Optional Sub2API I API base URL, including /v1")
+	o.subIIRaw = fs.String("sub2api-ii-upstream", "", "Optional Sub2API II API base URL, including /v1")
+	o.subIKey = fs.String("sub2api-i-keychain", "sub2api-gpt-api-key", "Host Keychain service for Sub2API I")       // Keychain lookup name, not a credential. gitleaks:allow
+	o.subIIKey = fs.String("sub2api-ii-keychain", "sub2api-gpt-api-key-ii", "Host Keychain service for Sub2API II") // Keychain lookup name, not a credential. gitleaks:allow
+	o.xaiRaw = fs.String("xai-upstream", "https://api.x.ai/v1", "xAI upstream URL (accepts the host's grok subscription token directly)")
+	o.idleTimeout = fs.Duration("idle-timeout", 30*time.Minute, "stop spaces after this much inactivity (0 disables)")
+	o.credKeepalive = fs.Duration("cred-keepalive", 30*time.Minute, "refresh sponsor credentials that expire within this window by pinging the vendor CLI with a minimal request (0 disables)")
+	o.consoleAddr = fs.String("console", "127.0.0.1:18931", "local web console + REST API address (empty disables)")
+	o.consoleHosts = fs.String("console-hosts", "", "comma-separated public hostnames the console is published under (e.g. behind a tunnel); loopback is always allowed")
+	o.gatewayAllow = fs.String("gateway-allow", "", "comma-separated CIDRs allowed to reach the gateway besides loopback and the container network (\"any\" disables the check)")
+	return o
+}
+
+// parseServeArgs parses serve's command line and checks what the daemon
+// refuses at startup.
+func parseServeArgs(fs *flag.FlagSet, o *serveOptions, cfg *config, args []string) error {
 	pos, err := parseInterspersed(fs, args)
 	if err != nil {
 		return err
@@ -129,9 +146,41 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 	if len(pos) != 0 {
 		return fmt.Errorf("serve: unexpected arguments: %s", strings.Join(pos, " "))
 	}
-	if *idleTimeout < 0 {
+	if *o.idleTimeout < 0 {
 		return errors.New("serve: idle-timeout cannot be negative")
 	}
+	return validateRuntime(*cfg)
+}
+
+// validateServeArgs reports whether `cospaced serve args...` would start.
+// setup calls it before installing a service: an unknown flag would otherwise
+// leave launchd or systemd restarting a daemon that exits immediately, with
+// nothing but "the console is not answering" to show for it.
+func validateServeArgs(args []string) error {
+	cfg := defaultConfig()
+	fs := newFlagSet("serve")
+	o := defineServeFlags(fs, &cfg)
+	if err := parseServeArgs(fs, o, &cfg, args); err != nil {
+		return err
+	}
+	for name, raw := range map[string]string{"anthropic": *o.anthropicRaw, "openai": *o.openAIRaw, "xai": *o.xaiRaw} {
+		if _, err := parseUpstream(name, raw); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runServe(args []string, cfg config, stderr io.Writer) error {
+	fs := newFlagSet("serve")
+	o := defineServeFlags(fs, &cfg)
+	if err := parseServeArgs(fs, o, &cfg, args); err != nil {
+		return err
+	}
+	listen, anthropicRaw, openAIRaw, xaiRaw := o.listen, o.anthropicRaw, o.openAIRaw, o.xaiRaw
+	subIRaw, subIIRaw, subIKey, subIIKey := o.subIRaw, o.subIIRaw, o.subIKey, o.subIIKey
+	idleTimeout, credKeepalive := o.idleTimeout, o.credKeepalive
+	consoleAddr, consoleHosts, gatewayAllow := o.consoleAddr, o.consoleHosts, o.gatewayAllow
 
 	anthropic, err := parseUpstream("anthropic", *anthropicRaw)
 	if err != nil {
@@ -159,6 +208,7 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 	}
 	m := newManager(cfg)
 	logger := log.New(stderr, "", 0)
+	logger.Printf("cospaced %s (%s/%s)", version, runtime.GOOS, runtime.GOARCH)
 	// One pairing store per process: the console's Invite and the transport's
 	// Pair would otherwise race each other's load→save on invites.json.
 	invites := pairing.NewStore(filepath.Join(cfg.data, "invites.json"))
@@ -280,6 +330,7 @@ func runServe(args []string, cfg config, stderr io.Writer) error {
 
 	if *consoleAddr != "" {
 		console := &api.Server{
+			Version:     version,
 			Image:       image,
 			CodexRoutes: routeOptions,
 			Spaces:      m,

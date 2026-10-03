@@ -8,11 +8,16 @@
 # Linux (x86_64 / arm64): needs Docker Engine usable without sudo and systemd;
 #   installs cospaced, then `cospaced setup` registers a systemd user service.
 # The space image (about 600 MB) then downloads once in the background; the
-# console shows its progress. Safe to re-run: it upgrades in place.
+# console shows its progress. Safe to re-run: it upgrades in place and keeps
+# the options the installed daemon runs with.
 #
-# Extra arguments are passed to the daemon (`cospaced serve`), e.g. to serve
-# the console under a public hostname:
+# Extra arguments are passed to the daemon (`cospaced serve`) and replace the
+# installed service's options, e.g. to serve the console under a public
+# hostname:
 #   curl -fsSL …/host.sh | sh -s -- -console-hosts console.example.com
+# They are checked before the service is written; a typo fails here instead
+# of leaving a daemon that restarts forever. `cospaced setup -reset` returns
+# to the defaults.
 set -eu
 
 BASE="https://github.com/JingxuanKang/cospace/releases/latest/download"
@@ -82,7 +87,8 @@ chmod +x "$tmp/cospaced"
 mv "$tmp/cospaced" "$bindir/cospaced"
 # Unsigned for now: clear the quarantine flag so Gatekeeper lets it run.
 if [ "$goos" = darwin ]; then xattr -d com.apple.quarantine "$bindir/cospaced" 2>/dev/null || true; fi
-say "installed $bindir/cospaced"
+ver=$("$bindir/cospaced" version 2>/dev/null || true)
+if [ -n "$ver" ]; then say "installed $bindir/cospaced ($ver)"; else say "installed $bindir/cospaced"; fi
 
 # --- service + console ---------------------------------------------------------
 "$bindir/cospaced" setup -- "$@"

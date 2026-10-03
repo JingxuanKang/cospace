@@ -18,7 +18,7 @@ const systemdUnit = "cospaced.service"
 // host with Docker. Arguments after "--" are passed through to `cospaced
 // serve`. The unit runs as the invoking user, who must be in the docker
 // group; lingering is enabled so the service outlives the login session.
-func runSetupLinux(serveArgs []string, noOpen bool, stdout io.Writer) error {
+func runSetupLinux(serveArgs []string, noOpen, reset bool, stdout io.Writer) error {
 	if err := (container.Docker{}).Available(); err != nil {
 		return fmt.Errorf("setup: %w", err)
 	}
@@ -41,12 +41,20 @@ func runSetupLinux(serveArgs []string, noOpen bool, stdout io.Writer) error {
 		return err
 	}
 	unitPath := filepath.Join(unitDir, systemdUnit)
+	prev, _ := os.ReadFile(unitPath) // nil on a fresh install
+	serveArgs, err = setupServeArgs(serveArgs, reset, unitPath, systemdServeArgs, stdout)
+	if err != nil {
+		return err
+	}
 	if err := os.WriteFile(unitPath, systemdUnitFile(append([]string{exe, "serve"}, serveArgs...)), 0o644); err != nil {
 		return err
 	}
+	// restart, not enable --now: an upgrade replaced the binary and may have
+	// changed the options, and --now leaves a running service as it is.
 	steps := [][]string{
 		{"systemctl", "--user", "daemon-reload"},
-		{"systemctl", "--user", "enable", "--now", systemdUnit},
+		{"systemctl", "--user", "enable", systemdUnit},
+		{"systemctl", "--user", "restart", systemdUnit},
 	}
 	for _, step := range steps {
 		if b, err := exec.Command(step[0], step[1:]...).CombinedOutput(); err != nil {
@@ -59,6 +67,10 @@ func runSetupLinux(serveArgs []string, noOpen bool, stdout io.Writer) error {
 	}
 	fmt.Fprintf(stdout, "CoSpace daemon installed as a user service (logs: journalctl --user -u %s).\n", systemdUnit)
 	if !waitForConsole(waitConsoleTimeout) {
+		if n, crashed := systemdCrashed(); crashed {
+			tail := journalTail(8)
+			return fmt.Errorf("setup: the daemon exits right after starting (%s restarts); %s. journalctl --user -u %s:\n%s", n, rollbackSystemd(unitPath, prev), systemdUnit, tail)
+		}
 		fmt.Fprintf(stdout, "The console is not answering yet — check  journalctl --user -u %s , then open %s\n", systemdUnit, consoleURL)
 		return nil
 	}
@@ -83,6 +95,23 @@ func runUninstallLinux(cfg config, stdout io.Writer) error {
 	exec.Command("systemctl", "--user", "daemon-reload").Run()
 	fmt.Fprintf(stdout, "CoSpace daemon stopped and removed.\nSpaces and data are kept in %s; existing space containers are listed by  docker ps -a.\n", cfg.data)
 	return nil
+}
+
+// rollbackSystemd undoes an install whose daemon cannot start: the previous
+// service comes back, or a fresh one is removed. It returns what it did for
+// the error message.
+func rollbackSystemd(unitPath string, prev []byte) string {
+	exec.Command("systemctl", "--user", "stop", systemdUnit).Run()
+	if prev == nil {
+		exec.Command("systemctl", "--user", "disable", systemdUnit).Run()
+		os.Remove(unitPath)
+		exec.Command("systemctl", "--user", "daemon-reload").Run()
+		return "the service was removed"
+	}
+	os.WriteFile(unitPath, prev, 0o644)
+	exec.Command("systemctl", "--user", "daemon-reload").Run()
+	exec.Command("systemctl", "--user", "restart", systemdUnit).Run()
+	return "the previous service was restored"
 }
 
 func systemdUnitFile(programArgs []string) []byte {
