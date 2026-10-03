@@ -24,7 +24,7 @@ CoSpace 是一个 macOS 常驻程序加一个单文件 guest 命令行工具，�
 
 ## 演示视频
 
-[<img src="assets/demo.jpg" alt="CoSpace 演示视频：点击播放（66 秒）" width="100%">](https://github.com/JingxuanKang/cospace/releases/download/v0.4.0/cospace-promo.mp4)
+[<img src="assets/demo.jpg" alt="CoSpace 演示视频：点击播放（66 秒）" width="100%">](https://jingxuankang.github.io/cospace/demo.html)
 
 66 秒演示：一条命令装好 host、两下点击发出邀请、guest 一分钟内用上 Claude Code、两个人实时看到同一个 agent 会话。
 

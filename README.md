@@ -24,7 +24,7 @@ Each space is a Linux VM (Apple container) on the host's Mac. Guests join over p
 
 ## Demo
 
-[<img src="assets/demo.jpg" alt="CoSpace demo video: click to play (66 seconds)" width="100%">](https://github.com/JingxuanKang/cospace/releases/download/v0.4.0/cospace-promo.mp4)
+[<img src="assets/demo.jpg" alt="CoSpace demo video: click to play (66 seconds)" width="100%">](https://jingxuankang.github.io/cospace/demo.html)
 
 A 66-second walkthrough: one command to install the host, invite a guest in two clicks, a guest coding with Claude Code within a minute, and two people watching the same agent session live (on-screen text in Chinese).
 

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoSpace 演示视频</title>
+<meta name="description" content="CoSpace：AI 编程的联机模式。在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。">
+<meta property="og:title" content="CoSpace — AI 编程的联机模式">
+<meta property="og:description" content="在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。66 秒演示。">
+<meta property="og:image" content="https://jingxuankang.github.io/cospace/demo.jpg">
+<meta property="og:video" content="https://jingxuankang.github.io/cospace/demo.mp4">
+<meta property="og:type" content="video.other">
+<style>
+  :root { --ink:#1F2937; --muted:#475569; --gold:#B45309; --bg:#FDF8EF; --card:#FFFFFF; --line:rgba(180,83,9,.16); --code:#0F172A; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#F1F5F9; --muted:#94A3B8; --gold:#F59E0B; --bg:#111318; --card:#1A1D24; --line:rgba(245,158,11,.22); --code:#0B0F17; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { margin: 0; font: 700 34px/1.2 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 1px; }
+  h1 span { color: var(--gold); }
+  .tag { margin: 6px 0 22px; font-size: 19px; color: var(--muted); }
+  video { display: block; width: 100%; border-radius: 14px; background: #000; box-shadow: 0 24px 60px -28px rgba(120,53,15,.5); }
+  .card { margin-top: 24px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .card h2 { margin: 0 0 8px; font-size: 16px; }
+  pre { margin: 6px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--code); color: #E2E8F0; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, monospace; overflow-x: auto; }
+  .muted { color: var(--muted); font-size: 14px; }
+  a { color: var(--gold); }
+  .links { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Co<span>Space</span></h1>
+  <p class="tag">AI 编程的联机模式：在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。</p>
+  <video controls playsinline preload="metadata" poster="demo.jpg" src="demo.mp4"></video>
+
+  <div class="card">
+    <h2>Host：一条命令装好（Mac 或 Linux）</h2>
+    <pre>curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh</pre>
+    <p class="muted">Mac 需要 Apple 芯片和 macOS 26 或更新；Linux 需要 Docker 和 systemd。装完浏览器自动打开控制台。</p>
+  </div>
+  <div class="card">
+    <h2>Guest：零注册，一分钟上手</h2>
+    <pre>curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh</pre>
+    <p class="muted">打开 host 发来的邀请链接，粘贴一次命令，之后 <code>ssh 空间名</code> 就能进来，claude / codex / grok 直接可用。</p>
+  </div>
+
+  <div class="links">
+    <a href="https://github.com/JingxuanKang/cospace">GitHub：JingxuanKang/cospace</a>
+    <a href="demo.mp4">下载视频（MP4，8 MB）</a>
+    <span class="muted">MIT 开源</span>
+  </div>
+</main>
+</body>
+</html>
