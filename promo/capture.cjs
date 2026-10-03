@@ -29,7 +29,8 @@ const usage = Array.from({ length: 14 }, (_, i) => {
   const t = [0.8, 1.2, 0.6, 1.9, 2.4, 1.1, 0.4, 2.8, 3.3, 2.1, 3.9, 2.6, 4.4, 5.8][i] * 1e6;
   return { date: day(13 - i), requests: Math.round(t / 16000), tokens_in: Math.round(t * 0.9), tokens_out: Math.round(t * 0.1) };
 });
-const invite = { code: '7KQ4-M9XT', command: 'cospace pair tc1:9hQx…mK2a 7KQ4-M9XT', expires_at: new Date(Date.now() + 600e3).toISOString() };
+const INSTALL = { posix: 'curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh', windows: 'irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex' };
+const invite = { code: '7KQ4-M9XT', command: 'cospace pair tc1:9hQx…mK2a 7KQ4-M9XT', expires_at: new Date(Date.now() + 600e3).toISOString(), install: INSTALL };
 
 let spaces = others;
 const json = body => ({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -37,6 +38,8 @@ const json = body => ({ status: 200, contentType: 'application/json', body: JSON
 function invitePage() {
   let s = fs.readFileSync(path.join(ROOT, 'internal/api/invite.html'), 'utf8');
   s = s.replace(/\{\{if \.Dead\}\}[\s\S]*?\{\{else\}\}/, '').replace('{{if not .Dead}}', '').replace(/\{\{end\}\}/g, '');
+  s = s.replace('{{.InstallPOSIX}},', JSON.stringify(INSTALL.posix) + ',').replace('{{.InstallWindows}}', JSON.stringify(INSTALL.windows))
+    .replaceAll('{{.InstallPOSIX}}', INSTALL.posix);
   return s.replaceAll('{{.Space}}', 'shopfront').replaceAll('{{.PairCommand}}', invite.command)
     .replaceAll('{{.MinutesLeft}}', '10').replace('{{printf "%q" .Space}}', '"shopfront"');
 }
@@ -61,7 +64,7 @@ async function route(r) {
 const scrub = page => page.evaluate(() => {
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n; (n = w.nextNode());) {
-    n.nodeValue = n.nodeValue.replace(/https:\/\/get\.[a-z0-9.]+\//g, '…/').replace(/http:\/\/cospace\.local/g, '…');
+    n.nodeValue = n.nodeValue.replace(/https:\/\/[a-z0-9.]+\/(?:JingxuanKang\/cospace\/master\/docs\/|cospace\/)?/g, '…/').replace(/http:\/\/cospace\.local/g, '…');
   }
 });
 const box = async loc => { const b = await loc.boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };

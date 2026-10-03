@@ -7,15 +7,21 @@ Usage: python3 music.py out/music.wav   (then loudness-normalize with ffmpeg)
 import sys, wave
 import numpy as np
 
-SR, DUR = 44100, 62.0
+SR, DUR = 44100, 66.0
 N = int(SR * DUR)
 BEAT = 60 / 100
 BAR = BEAT * 4
 DROP = 6.0                  # logo reveal: groove starts here
-OUTRO = 56.4                # end card: drums drop out
-CLICKS = [13.05, 14.95, 16.65, 18.4, 23.6]
-CHIMES = [27.8, 40.1]
-CUTS = [11.0, 22.0, 32.0, 44.0, 52.0]
+# index.html splices a 4 s host-install beat in at 11 s; cue times below are
+# written on the original timeline and shifted past it.
+INS_AT, INS = 11.0, 4.0
+def at(x):
+    return x if x < INS_AT else x + INS
+OUTRO = at(56.4)            # end card: drums drop out
+CLICKS = [at(x) for x in (13.05, 14.95, 16.65, 18.4, 23.6)]
+CHIMES = [13.7, at(27.8), at(40.1)]   # console opens, guest in Claude, tests pass
+CUTS = [11.0] + [at(x) for x in (11.0, 22.0, 32.0, 44.0, 52.0)]
+FULL_AUTO = at(44.0)
 rng = np.random.default_rng(7)
 
 
@@ -134,7 +140,7 @@ for k in np.arange(DROP, OUTRO - 0.01, BEAT):
     if pos in (1, 3):
         t = seg(0.3)
         add(drum_bus, k, snr_src[:len(t)] * np.exp(-t * 16) * 0.38)
-    busy = k >= CUTS[3]  # full-auto section gets 16th hats
+    busy = k >= FULL_AUTO  # full-auto section gets 16th hats
     steps = 4 if busy else 2
     for s in range(steps):
         sw = (0.06 if s % 2 else 0) * BEAT if not busy else 0
