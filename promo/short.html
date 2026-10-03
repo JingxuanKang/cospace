@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>CoSpace Short</title>
+<style>
+  :root {
+    --ink: #1F2937; --muted: #475569; --faint: #94A3B8; --gold: #B45309;
+    --t-cmd: #E2E8F0; --t-out: #94A3B8; --t-ok: #4ADE80; --t-hi: #FBBF24; --t-dim: #64748B; --t-claude: #E07A52;
+    --sans: "PingFang SC", -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #111; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+  /* 1080×1920. Xiaohongshu overlays the bottom ~340 px (title, comments) and a
+     right-hand column of buttons, so everything that matters sits above y≈1560
+     and left of x≈940. */
+  .stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; flex: none; font-family: var(--sans); color: var(--ink);
+    background: linear-gradient(160deg, #FDFBF6 0%, #FDF3E1 55%, #F7F1E6 100%); transform-origin: center center; }
+  .grid { position: absolute; inset: -60px; background-image: linear-gradient(rgba(180,83,9,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(180,83,9,.06) 1px, transparent 1px); background-size: 60px 60px; }
+  .blob { position: absolute; border-radius: 50%; }
+  .blob.a { width: 900px; height: 900px; right: -380px; top: -300px; background: radial-gradient(#F59E0B38, #F59E0B00 70%); }
+  .blob.b { width: 800px; height: 800px; left: -360px; bottom: -200px; background: radial-gradient(#D9770628, #D9770600 70%); }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  [data-in] { opacity: 0; will-change: transform, opacity; }
+
+  .title { position: absolute; left: 70px; right: 140px; top: 150px; }
+  .title h2 { font-size: 78px; line-height: 1.22; font-weight: 700; letter-spacing: 1px; }
+  .title h2 b { color: var(--gold); }
+  .title p { margin-top: 18px; font-size: 36px; color: var(--muted); line-height: 1.5; }
+  .chip { display: inline-flex; align-items: center; gap: 14px; padding: 16px 30px; border-radius: 999px; background: #fff;
+    border: 1px solid rgba(180,83,9,.2); box-shadow: 0 12px 26px -14px rgba(180,83,9,.45); font-size: 34px; font-weight: 600; color: var(--ink); }
+  .chip .dot { width: 14px; height: 14px; border-radius: 50%; background: #22C55E; }
+
+  .term { position: absolute; border-radius: 26px; background: linear-gradient(135deg, #1E293B, #0F172A); overflow: hidden;
+    box-shadow: 0 40px 80px -24px rgba(15,23,42,.5), 0 0 0 1px rgba(255,255,255,.08) inset; }
+  .term .bar { height: 58px; display: flex; align-items: center; gap: 11px; padding: 0 26px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .term .bar span { width: 15px; height: 15px; border-radius: 50%; }
+  .term .bar span:nth-child(1) { background: #EF4444; } .term .bar span:nth-child(2) { background: #EAB308; } .term .bar span:nth-child(3) { background: #22C55E; }
+  .term .bar em { font-style: normal; margin-left: 14px; font-family: var(--mono); font-size: 22px; color: var(--t-dim); }
+  .term .body { position: absolute; top: 58px; bottom: 0; left: 0; right: 0; padding: 22px 30px; display: flex; flex-direction: column; justify-content: flex-end;
+    font-family: var(--mono); font-size: 31px; line-height: 1.6; color: var(--t-cmd); white-space: pre; overflow: hidden; }
+  .term .body > * { flex: none; }
+  .p { color: var(--t-ok); } .o { color: var(--t-out); } .ok { color: var(--t-ok); } .hi { color: var(--t-hi); } .dim { color: var(--t-dim); } .cl { color: var(--t-claude); } .w { color: #fff; }
+  .cur { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.18em; background: var(--t-hi); margin-left: 2px; }
+
+  .app { position: absolute; left: 60px; width: 900px; height: 560px; border-radius: 26px; background: #fff; overflow: hidden;
+    box-shadow: 0 34px 70px -30px rgba(15,23,42,.38), 0 0 0 1px rgba(15,23,42,.08); display: flex; flex-direction: column; }
+  .app .abar { height: 64px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 22px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+  .app .abar .l { width: 14px; height: 14px; border-radius: 50%; }
+  .app .abar .who { margin-left: 12px; font-size: 27px; font-weight: 700; color: #334155; }
+  .app .abar .conn { margin-left: auto; font-family: var(--mono); font-size: 20px; color: #0F766E; background: #ECFDF5; border: 1px solid #A7F3D0; padding: 5px 14px; border-radius: 999px; }
+  .app .msgs { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 18px 26px 8px; gap: 14px; font-size: 28px; line-height: 1.5; }
+  .app .msgs > * { flex: none; }
+  .app .u { align-self: flex-end; max-width: 86%; background: #FFF7ED; border: 1px solid #FED7AA; color: #7C2D12; padding: 12px 18px; border-radius: 18px 18px 4px 18px; }
+  .app .u small { display: block; font-size: 20px; color: #C2410C; }
+  .app .tool { font-family: var(--mono); font-size: 23px; color: #475569; background: #F1F5F9; border-radius: 12px; padding: 9px 16px; display: flex; align-items: center; gap: 12px; white-space: nowrap; overflow: hidden; }
+  .app .tool .spin { width: 20px; height: 20px; border-radius: 50%; border: 4px solid #CBD5E1; border-top-color: #F59E0B; flex: none; }
+  .g { color: #16A34A; } .r { color: #DC2626; }
+  .app .composer { margin: 8px 22px 20px; height: 66px; flex: none; border: 2px solid #E2E8F0; border-radius: 16px; padding: 0 20px; display: flex; align-items: center; font-size: 26px; color: #94A3B8; }
+  .app .composer.typing { color: #1F2937; border-color: #F59E0B; }
+  .live { position: absolute; z-index: 3; font-family: var(--mono); font-size: 24px; font-weight: 700; color: #fff; background: #DC2626; padding: 6px 16px; border-radius: 8px; letter-spacing: 1px; }
+
+  .win { position: absolute; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 40px 80px -30px rgba(120,53,15,.45), 0 0 0 1px rgba(180,83,9,.14); }
+  .win .bar { height: 50px; background: #F3F1EC; display: flex; align-items: center; gap: 10px; padding: 0 20px; border-bottom: 1px solid #E7E2D8; position: relative; }
+  .win .bar span { width: 14px; height: 14px; border-radius: 50%; }
+  .win .bar span:nth-child(1) { background: #FF5F57; } .win .bar span:nth-child(2) { background: #FEBC2E; } .win .bar span:nth-child(3) { background: #28C840; }
+  .win .url { position: absolute; left: 50%; transform: translateX(-50%); top: 9px; height: 32px; padding: 0 20px; border-radius: 9px; background: #fff; border: 1px solid #E7E2D8; font-family: var(--mono); font-size: 18px; color: #64748B; display: flex; align-items: center; }
+  .win img { display: block; width: 100%; }
+  .card { position: absolute; background: #fff; border-radius: 26px; border: 1px solid rgba(180,83,9,.12); box-shadow: 0 30px 60px -30px rgba(120,53,15,.35); padding: 30px 36px; }
+  .logo { width: 190px; height: 190px; border-radius: 48px; background: linear-gradient(135deg, #F59E0B, #B45309); display: grid; place-items: center;
+    box-shadow: 0 34px 70px -24px rgba(180,83,9,.6), 0 0 0 2px rgba(255,255,255,.35) inset; }
+  .wordmark { font-family: var(--mono); font-weight: 700; letter-spacing: 4px; font-size: 136px; }
+  .wordmark span { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="grid" id="grid"></div>
+  <div class="blob a" id="blobA"></div>
+  <div class="blob b" id="blobB"></div>
+
+  <!-- 1 · Hook -->
+  <section class="scene" data-from="0" data-to="3.6">
+    <div style="position:absolute; left:70px; right:110px; top:520px">
+      <div data-in="0.15" data-anim="up" style="font-size:150px; font-weight:800; line-height:1.15">AI 编程</div>
+      <div data-in="0.55" data-anim="up" style="font-size:150px; font-weight:800; line-height:1.15; color:var(--gold)">终于能联机了</div>
+      <div data-in="1.2" data-anim="up" style="margin-top:56px; font-size:44px; color:var(--muted); line-height:1.5">一个人提问，<br>所有人<b style="color:var(--ink)">实时</b>看到同一个 AI 在干活</div>
+    </div>
+    <div style="position:absolute; left:70px; top:1260px; display:flex; gap:18px; flex-wrap:wrap; width:860px">
+      <span class="chip" data-in="1.8" data-anim="pop"><span class="dot" style="background:#C2410C"></span>Claude Code</span>
+      <span class="chip" data-in="1.95" data-anim="pop"><span class="dot" style="background:#0F766E"></span>Codex</span>
+      <span class="chip" data-in="2.1" data-anim="pop"><span class="dot" style="background:#334155"></span>Grok</span>
+    </div>
+  </section>
+
+  <!-- 2 · Live together -->
+  <section class="scene" data-from="3.4" data-to="10.2">
+    <div class="title"><h2 data-in="3.6" data-anim="up">alice 在提问，<br><b>bob 同时看到</b></h2></div>
+    <div class="app" data-in="3.8" data-anim="up" style="top:420px">
+      <div class="abar"><span class="l" style="background:#FF5F57"></span><span class="l" style="background:#FEBC2E"></span><span class="l" style="background:#28C840"></span><span class="who">alice 的电脑</span><span class="conn">● 同一个空间</span></div>
+      <div class="msgs" id="chatA"></div><div class="composer" id="compA">问点什么…</div>
+    </div>
+    <div class="app" data-in="4.0" data-anim="up" style="top:1010px">
+      <div class="abar"><span class="l" style="background:#FF5F57"></span><span class="l" style="background:#FEBC2E"></span><span class="l" style="background:#28C840"></span><span class="who">bob 的电脑</span><span class="conn">● 同一个空间</span></div>
+      <div class="msgs" id="chatB"></div><div class="composer">bob 也能接着问…</div>
+    </div>
+    <div class="live" id="liveTag" style="left:808px; top:990px">● LIVE</div>
+  </section>
+
+  <!-- 3 · Join in a minute -->
+  <section class="scene" data-from="10.0" data-to="15.2">
+    <div class="title"><h2 data-in="10.2" data-anim="up">朋友加入，<br><b>只要 1 分钟</b></h2>
+      <p data-in="10.6" data-anim="up">不注册 · 不要 API key · 不装 VPN</p></div>
+    <div class="win" data-in="10.5" data-anim="up" style="left:60px; top:560px; width:900px">
+      <div class="bar"><span></span><span></span><span></span><div class="url">🔒 …/i/7KQ4-M9XT</div></div>
+      <img src="ui/invite-page.png" style="height:500px; object-fit:cover; object-position:top">
+    </div>
+    <div class="term" data-in="11.0" data-anim="up" style="left:60px; top:1040px; width:900px; height:500px"><div class="bar"><span></span><span></span><span></span><em>朋友的电脑</em></div>
+      <div class="body" id="t3"></div></div>
+  </section>
+
+  <!-- 4 · Full speed, safely -->
+  <section class="scene" data-from="15.0" data-to="19.6">
+    <div class="title"><h2 data-in="15.2" data-anim="up">放心让 AI<br><b>全速跑</b></h2>
+      <p data-in="15.6" data-anim="up">每个空间是一台独立虚拟机，不用逐个点"允许"</p></div>
+    <div class="term" data-in="15.6" data-anim="up" style="left:60px; top:540px; width:900px; height:500px"><div class="bar"><span></span><span></span><span></span><em>AI 正在自动干活</em></div>
+      <div class="body" id="t4" style="font-size:27px"></div></div>
+    <div class="card" data-in="16.0" data-anim="up" style="left:60px; top:1090px; width:900px; height:220px">
+      <div style="display:flex; justify-content:space-between; font-size:36px; font-weight:600"><span>花费上限</span><span style="font-family:var(--mono)"><span id="spent">$0.00</span><span style="color:var(--faint)"> / $20</span></span></div>
+      <div style="height:22px; border-radius:11px; background:#F1F5F9; margin-top:26px; overflow:hidden"><div id="meter" style="height:100%; width:0; background:linear-gradient(90deg,#F59E0B,#B45309)"></div></div>
+      <div id="cap" style="margin-top:20px; font-size:30px; color:var(--faint)">到顶自动停下，不会超支</div>
+    </div>
+  </section>
+
+  <!-- 5 · End -->
+  <section class="scene" data-from="19.4" data-to="25">
+    <div style="position:absolute; left:0; right:0; top:440px; display:flex; flex-direction:column; align-items:center; text-align:center">
+      <div class="logo" data-in="19.6" data-anim="spin">
+        <svg width="108" height="108" viewBox="0 0 48 48" fill="none" stroke="#FFFBEB" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="33" r="10.5"/><path d="M22.5 25.5 L45 3"/><path d="M37 8 L44 15"/><path d="M30 15 L35 20"/></svg>
+      </div>
+      <div class="wordmark" data-in="19.9" data-anim="up" style="margin-top:46px">Co<span>Space</span></div>
+      <div data-in="20.3" data-anim="up" style="margin-top:26px; font-size:58px; font-weight:700">AI 编程的<span style="color:var(--gold)">联机模式</span></div>
+      <div data-in="20.7" data-anim="up" style="margin-top:22px; font-size:36px; color:var(--muted)">开源免费 · Mac / Linux 都能当主机</div>
+      <div data-in="21.2" data-anim="pop" style="margin-top:70px; display:flex; align-items:center; gap:20px; padding:26px 40px; border-radius:24px; background:linear-gradient(135deg,#1E293B,#0F172A); color:#F8FAFC; box-shadow:0 30px 60px -20px rgba(15,23,42,.5)">
+        <svg width="54" height="54" viewBox="0 0 16 16" fill="#F8FAFC"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <div style="text-align:left"><div style="font-size:30px; color:#94A3B8">GitHub 搜</div><div style="font-family:var(--mono); font-size:44px; font-weight:700">JingxuanKang/<span style="color:#FBBF24">cospace</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="fade" style="position:absolute; inset:0; background:#FDFBF6; opacity:0"></div>
+</div>
+
+<script>
+const DURATION = 24;
+window.__size = [1080, 1920];
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeBack = x => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const easeInOut = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const $ = id => document.getElementById(id);
+
+// --- shared conversation, rendered identically in both windows ---
+const ASK = '支付回调偶发 500，帮我修好';
+const CHAT = [
+  { at: 5.0, user: ASK },
+  { at: 5.3, say: '我先复现一下。', cps: 14 },
+  { at: 5.9, tool: '运行测试', done: 7.0, res: '<span class="r">✗ 1 个失败</span>' },
+  { at: 7.2, say: '找到了：重试时幂等键丢失。', cps: 16 },
+  { at: 8.0, tool: '修改 callback.ts', done: 8.3, res: '<span class="g">+12</span> <span class="r">−3</span>' },
+  { at: 8.4, tool: '再跑一遍测试', done: 9.1, res: '<span class="g">✓ 46 个全部通过</span>' },
+  { at: 9.25, say: '修好了 ✅', cps: 10 },
+];
+function chatHTML(t) {
+  let h = '';
+  for (const m of CHAT) {
+    if (t < m.at) break;
+    if (m.user) h += `<div class="u"><small>alice</small>${m.user}</div>`;
+    else if (m.say) { const n = Math.floor((t - m.at) * m.cps); h += `<div>${m.say.slice(0, n)}${n < m.say.length ? '<span style="color:#F59E0B">▍</span>' : ''}</div>`; }
+    else {
+      const running = t < m.done;
+      h += `<div class="tool">${running ? `<span class="spin" style="transform:rotate(${t * 720}deg)"></span><b style="color:#B45309">运行中</b>` : '<span class="g">●</span>'}<span>${m.tool}${running ? '' : '　' + m.res}</span></div>`;
+    }
+  }
+  return h;
+}
+
+// --- guest terminal ---
+const P = '<span class="p">$</span> ';
+const T3 = [
+  { at: 11.4, out: '<span class="dim"># 粘贴邀请页上的命令</span>' },
+  { at: 11.6, out: P + 'cospace pair …7KQ4-M9XT' },
+  { at: 12.1, out: '<span class="ok">  ✓ 已加入 shopfront</span>' },
+  { at: 12.5, out: P + 'ssh shopfront' },
+  { at: 13.0, out: '<span class="ok">space@shopfront</span><span class="w">$</span> claude' },
+  { at: 13.5, out: '<div style="display:inline-block; margin-top:8px; padding:10px 22px; border:2px solid var(--t-claude); border-radius:12px"><span class="cl">✻</span> <span class="w">Welcome to Claude Code!</span></div>' },
+];
+function linesHTML(lines, t) {
+  let h = '';
+  for (const l of lines) if (t >= l.at) h += `<div>${l.out}</div>`;
+  if (Math.floor(t * 2) % 2 === 0) h += '<div><span class="cur"></span></div>';
+  return h;
+}
+
+// --- full-auto stream ---
+const STREAM = [['Bash', 'npm install'], ['Edit', 'login.ts'], ['Bash', 'pytest -q'], ['Write', 'test_relay.py'], ['Bash', 'make'], ['Edit', 'meter.go'],
+  ['Bash', 'go test ./...'], ['Edit', 'app.js'], ['Bash', 'git commit'], ['Bash', 'curl /health']];
+function stream(t) {
+  const n = Math.floor(clamp((t - 15.8) * 3.6, 0, 40));
+  let h = '';
+  for (let i = Math.max(0, n - 9); i < n; i++) {
+    const [tool, arg] = STREAM[i % STREAM.length];
+    h += `<div><span class="cl">⏺</span> <span class="w">${tool}</span><span class="o">(${esc(arg)})</span>  <span class="ok">✓</span></div>`;
+  }
+  return h;
+}
+
+function animEl(el, t) {
+  const t0 = +el.dataset.in, kind = el.dataset.anim || 'up';
+  const x = clamp((t - t0) / 0.6), e = easeOut(x);
+  let tr = '';
+  if (kind === 'up') tr = `translateY(${(1 - e) * 50}px)`;
+  else if (kind === 'pop') tr = `scale(${0.85 + 0.15 * easeBack(x)})`;
+  else if (kind === 'spin') tr = `rotate(${(1 - e) * -90}deg) scale(${0.6 + 0.4 * easeBack(x)})`;
+  el.style.opacity = e; el.style.transform = tr;
+}
+const scenes = [...document.querySelectorAll('.scene')];
+const animated = [...document.querySelectorAll('[data-in]')];
+
+function render(t) {
+  $('grid').style.transform = `translate(${(t * 8) % 60}px, ${(t * 4) % 60}px)`;
+  $('blobA').style.transform = `translate(${Math.sin(t / 4) * 50}px, ${Math.cos(t / 5) * 40}px)`;
+  $('blobB').style.transform = `translate(${Math.cos(t / 5) * 50}px, ${Math.sin(t / 4) * 40}px)`;
+  for (const s of scenes) {
+    const a = +s.dataset.from, b = +s.dataset.to;
+    const o = clamp((t - a) / 0.3) * clamp((b - t) / 0.3);
+    s.style.opacity = o; s.style.visibility = o > 0 ? 'visible' : 'hidden';
+  }
+  for (const el of animated) animEl(el, t);
+
+  const html = chatHTML(t);
+  $('chatA').innerHTML = html; $('chatB').innerHTML = html;
+  const n = Math.floor(clamp((t - 4.1) / 0.8) * ASK.length);
+  const composing = t >= 4.1 && t < 5.0;
+  $('compA').textContent = composing ? ASK.slice(0, n) + '▍' : '问点什么…';
+  $('compA').classList.toggle('typing', composing);
+  $('liveTag').style.opacity = t > 5.0 ? 0.65 + 0.35 * Math.cos(t * 6) : 0;
+
+  $('t3').innerHTML = linesHTML(T3, t);
+  $('t4').innerHTML = stream(t);
+  const spent = 20 * easeInOut(clamp((t - 16.2) / 2.4));
+  $('spent').textContent = `$${spent.toFixed(2)}`;
+  $('meter').style.width = `${spent / 20 * 100}%`;
+  $('cap').innerHTML = t > 18.6 ? '<span style="color:#DC2626; font-weight:700">已到上限，自动停下</span>' : '到顶自动停下，不会超支';
+  $('fade').style.opacity = clamp((t - 23.3) / 0.7);
+}
+window.__render = render;
+window.__duration = DURATION;
+
+function fit() { const s = Math.min(innerWidth / 1080, innerHeight / 1920); $('stage').style.transform = `scale(${s})`; }
+const q = new URLSearchParams(location.search);
+if (!q.has('render')) {
+  fit(); addEventListener('resize', fit);
+  if (q.has('t')) render(+q.get('t'));
+  else { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); }
+}
+</script>
+</body>
+</html>

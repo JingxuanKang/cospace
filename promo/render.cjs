@@ -1,5 +1,7 @@
-// Render promo/index.html frame-by-frame to out/cospace-promo.mp4.
-// Usage: NODE_PATH=$(npm root -g) node render.cjs [--stills 3,12,...] [--fps 30]
+// Render a promo page frame-by-frame to an MP4 in out/.
+// Usage: NODE_PATH=$(npm root -g) node render.cjs [--page index.html] [--name cospace-promo]
+//        [--audio music.wav] [--stills 3,12,...] [--fps 30]
+// The page sets window.__size = [w, h] when it is not 1920×1080 (e.g. vertical).
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -10,12 +12,17 @@ const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] :
 const FPS = +opt('--fps', 30);
 const WORKERS = +opt('--workers', 6);
 const stills = opt('--stills');
+const PAGE = opt('--page', 'index.html');
+const NAME = opt('--name', 'cospace-promo');
+const AUDIO = opt('--audio', 'music.wav');
 const out = path.join(__dirname, 'out');
-const url = 'file://' + path.join(__dirname, 'index.html') + '?render';
+const url = 'file://' + path.join(__dirname, PAGE) + '?render';
 
 async function page(browser) {
   const p = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   await p.goto(url);
+  const size = await p.evaluate(() => window.__size);
+  if (size) await p.setViewportSize({ width: size[0], height: size[1] });
   await p.evaluate(() => document.fonts.ready);
   await p.waitForFunction(() => [...document.images].every(i => i.complete && i.naturalWidth));
   await p.waitForTimeout(300);
@@ -29,7 +36,7 @@ async function page(browser) {
     const p = await page(browser);
     for (const t of stills.split(',').map(Number)) {
       await p.evaluate(t => window.__render(t), t);
-      await p.screenshot({ path: path.join(out, `still-${t}.png`) });
+      await p.screenshot({ path: path.join(out, `${NAME === 'cospace-promo' ? 'still' : NAME}-${t}.png`) });
     }
     await browser.close();
     return;
@@ -37,7 +44,7 @@ async function page(browser) {
   const p0 = await page(browser);
   const dur = await p0.evaluate(() => window.__duration);
   const total = Math.round(dur * FPS);
-  const dir = path.join(out, 'frames');
+  const dir = path.join(out, 'frames-' + NAME);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
   const pages = [p0, ...(await Promise.all(Array.from({ length: WORKERS - 1 }, () => page(browser))))];
@@ -51,11 +58,11 @@ async function page(browser) {
     }
   }));
   await browser.close();
-  const audio = path.join(out, 'music.wav');
+  const audio = path.join(out, AUDIO);
   const ff = ['-y', '-framerate', String(FPS), '-i', path.join(dir, 'f%05d.jpg')];
   if (fs.existsSync(audio)) ff.push('-i', audio, '-c:a', 'aac', '-b:a', '192k', '-shortest');
-  ff.push('-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', path.join(out, 'cospace-promo.mp4'));
+  ff.push('-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', path.join(out, NAME + '.mp4'));
   await new Promise((res, rej) => spawn('ffmpeg', ff, { stdio: ['ignore', 'ignore', 'inherit'] }).on('exit', c => c ? rej(new Error('ffmpeg ' + c)) : res()));
   fs.rmSync(dir, { recursive: true, force: true });
-  console.log('wrote out/cospace-promo.mp4');
+  console.log(`wrote out/${NAME}.mp4`);
 })();

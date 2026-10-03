@@ -1,27 +1,35 @@
-"""Synthesize the promo soundtrack (62 s), synced to the cuts in index.html.
+"""Synthesize the promo soundtracks, synced to the cuts in index.html (66 s) or short.html (24 s).
 
 Warm lo-fi groove at 100 BPM: FM electric piano, sub bass, soft drums, a pad
 underneath, room reverb, plus UI clicks and two chimes on the "it works" beats.
-Usage: python3 music.py out/music.wav   (then loudness-normalize with ffmpeg)
+Usage: python3 music.py out/music.wav [short]   (then loudness-normalize with ffmpeg)
 """
 import sys, wave
 import numpy as np
 
-SR, DUR = 44100, 66.0
-N = int(SR * DUR)
+SR = 44100
 BEAT = 60 / 100
 BAR = BEAT * 4
-DROP = 6.0                  # logo reveal: groove starts here
-# index.html splices a 4 s host-install beat in at 11 s; cue times below are
-# written on the original timeline and shifted past it.
-INS_AT, INS = 11.0, 4.0
-def at(x):
-    return x if x < INS_AT else x + INS
-OUTRO = at(56.4)            # end card: drums drop out
-CLICKS = [at(x) for x in (13.05, 14.95, 16.65, 18.4, 23.6)]
-CHIMES = [13.7, at(27.8), at(40.1)]   # console opens, guest in Claude, tests pass
-CUTS = [11.0] + [at(x) for x in (11.0, 22.0, 32.0, 44.0, 52.0)]
-FULL_AUTO = at(44.0)
+if len(sys.argv) > 2 and sys.argv[2] == "short":
+    # short.html: 24 s vertical cut; the groove starts with the first demo.
+    DUR, DROP, OUTRO = 24.0, 3.4, 19.4
+    CLICKS = [5.0]                      # alice sends her question
+    CHIMES = [9.1, 13.5]                # tests pass, guest lands in Claude
+    CUTS = [3.4, 10.0, 15.0, 19.4]
+    FULL_AUTO = 15.0
+else:
+    # index.html splices a 4 s host-install beat in at 11 s; cue times below
+    # are written on the original timeline and shifted past it.
+    DUR, DROP = 66.0, 6.0       # logo reveal: groove starts here
+    INS_AT, INS = 11.0, 4.0
+    def at(x):
+        return x if x < INS_AT else x + INS
+    OUTRO = at(56.4)            # end card: drums drop out
+    CLICKS = [at(x) for x in (13.05, 14.95, 16.65, 18.4, 23.6)]
+    CHIMES = [13.7, at(27.8), at(40.1)]   # console opens, guest in Claude, tests pass
+    CUTS = [11.0] + [at(x) for x in (11.0, 22.0, 32.0, 44.0, 52.0)]
+    FULL_AUTO = at(44.0)
+N = int(SR * DUR)
 rng = np.random.default_rng(7)
 
 
