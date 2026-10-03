@@ -3,3 +3,6 @@ bin/
 /cospace
 /index.html
 /dist/
+.claude/
+.DS_Store
+*.log
