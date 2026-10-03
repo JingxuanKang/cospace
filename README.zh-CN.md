@@ -127,3 +127,7 @@ Go 1.26；控制台前端是单个零依赖 HTML，`go:embed` 进 daemon 二进�
 ## 许可证
 
 [MIT](LICENSE)。
+
+## 友情链接
+
+[![认可linux.do](https://ld.xh.do/ld-badge.svg)](https://linux.do)

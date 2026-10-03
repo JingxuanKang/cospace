@@ -127,3 +127,7 @@ Go 1.26; the console frontend is a single dependency-free HTML file embedded int
 ## License
 
 [MIT](LICENSE).
+
+## Links
+
+[![认可linux.do](https://ld.xh.do/ld-badge.svg)](https://linux.do)
