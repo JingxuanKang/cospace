@@ -158,5 +158,4 @@ workflow 用自身的 `GITHUB_TOKEN` 推送，不需要个人 token 的 write:pa
 
 已知限制：
 - `cospace` / `cospaced` 未签名/未公证：安装器与 cask 清除 quarantine 标记绕过 Gatekeeper；正式对外前应改为 Apple Developer ID 签名 + 公证。
-- 大陆网络访问 GitHub / ghcr.io 可能很慢，暂无镜像加速。
 - Windows 安装器尚未做真机端到端验证。

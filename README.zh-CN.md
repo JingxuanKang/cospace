@@ -137,5 +137,3 @@ Go 1.26；控制台前端是单个零依赖 HTML，`go:embed` 进 daemon 二进�
 ## 链接
 
 官网：[cospace.jingxuan.uk](https://cospace.jingxuan.uk) · 联系：hello@cospace.jingxuan.uk
-
-[![认可linux.do](https://ld.xh.do/ld-badge.svg)](https://linux.do)

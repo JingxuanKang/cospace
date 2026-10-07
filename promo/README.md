@@ -5,7 +5,7 @@
 运行环境：macOS 本机，全局 npm `playwright` + ffmpeg + python3/numpy。
 
 - `capture.cjs`：用 mock API 打开 `internal/api/web/index.html` 和 `internal/api/invite.html`，截出各状态的界面图和点击坐标，输出到 `ui/`。
-- `short.html`：小红书等竖屏平台用的 24 秒短版（1080×1920，重要内容避开底部和右侧的界面遮挡区）。
+- `short.html`：竖屏短视频平台用的 24 秒短版（1080×1920，重要内容避开底部和右侧的界面遮挡区）。
 - `index.html`：全部画面与时间轴（`window.__render(t)` 确定性渲染）。浏览器直接打开即循环预览，`?t=12.3` 定格某一帧。
 - `music.py`：合成配乐（FM 电钢琴 + 贝斯 + 鼓 + 点击音效），与画面切点对齐。
 - `render.cjs`：逐帧截图并用 ffmpeg 合成 `out/cospace-promo.mp4`；`--stills 4,18,29` 只出单帧 PNG 用于检查。

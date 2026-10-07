@@ -137,5 +137,3 @@ Go 1.26; the console frontend is a single dependency-free HTML file embedded int
 ## Links
 
 Website: [cospace.jingxuan.uk](https://cospace.jingxuan.uk) · Contact: hello@cospace.jingxuan.uk
-
-[![认可linux.do](https://ld.xh.do/ld-badge.svg)](https://linux.do)

@@ -46,7 +46,7 @@ guest 的标准 ssh / Cursor Remote SSH
   │    能打洞即 WireGuard P2P 直连，失败走 Tailscale 公共 DERP 兜底（限速、无 SLA，故不可为唯一路线）。
   │    guest 首次粘贴一条命令：从 GitHub（Pages 上的安装脚本 + Releases 产物）下载 `cospace` 小工具、走配对、自动写 ~/.ssh/config 的
   │    ProxyCommand Host 条目，并把空间 host key 固定到专用 `~/.ssh/cospace_known_hosts`；此后
-  │    `ssh <空间名>`，Cursor 直接可选。大陆 guest 拉 GitHub 可能受阻。
+  │    `ssh <空间名>`，Cursor 直接可选。
   └─ BYO VPS 哑中转（稳定通道，紧随实现）：host 自备任意廉价 VPS，产品一键部署；只转发加密 TCP，
        看不到内容。guest 真正零安装（纯系统 ssh，全平台），顺带托管邀请网页。有 VPS 的 host 的升级路线。
         ↑ Mac 主动出站隧道（yamux 多路复用）
@@ -145,7 +145,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 - **日常**：tmux、vim、nano、less、ripgrep(rg)、fd、tree、jq、unzip/zip、htop、procps(ps)
 - **不装**：docker（Apple container 内跑不了）、Go/Rust 等重型运行时（按需，默认不带）
 
-建空间可选项：clone 一个 repo；注入代理设置（国内 Mac 场景，容器出网走 Mac，需把代理配进空间）。
+建空间可选项：clone 一个 repo；注入代理设置（host 出网依赖代理时，容器出网走 host，需把代理配进空间）。
 
 已知限制：空间内不能再跑 Docker（VM 内嵌套，v1 不支持）。
 
@@ -214,7 +214,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 - 邀请网页的最终形态细节（VPS 托管的实现面）
 - **分发全部在 GitHub，项目不运营下载服务器**：安装脚本在仓库 `docs/`（guest 的 `install.sh` 与 host 的 `host.sh` 经 GitHub Pages 下发；Windows 的 `install.ps1` 经 raw.githubusercontent 下发，因为 Pages 把 .ps1 当二进制、`irm | iex` 需要文本），二进制与 `VERSION` 在 GitHub Releases（`scripts/release.sh` 调 goreleaser），guest 的 Homebrew cask 在 `JingxuanKang/homebrew-tap`，空间镜像在 ghcr.io。下载地址与安装命令的单一源是 `internal/dist`：控制台邀请弹窗、邀请页和 CLI 都从它取，前端不写死。**安装命令即更新命令、可重复执行**：仓库根 `VERSION` 是版本单一源，发布时经 ldflags 注入并作为 `releases/latest/download/VERSION` 发布；guest 安装器先看 `command -v cospace`，版本一致就退出，否则原地覆盖 PATH 上那份（Homebrew 装的交给 `brew upgrade`），所以邀请永远只有一套三步命令。host 的 `host.sh` 装 Apple container（有 Homebrew 用 brew，否则用 Apple 签名 pkg）、装 `cospaced`、执行 `cospaced setup`（启动 container 服务并自动装内核、写 launchd、打开控制台），重复执行即升级；`cospaced uninstall` 只移除服务、保留空间与数据。Windows 产物已交叉编译，尚未做 Windows 真机端到端验证。**Linux/Docker 后端**（`-runtime docker`、systemd 用户服务、bridge 网关地址、`~/.config/cospace/secrets` 密钥文件）已实现并通过单测，Linux 真机端到端验证状态见本节末尾。零安装（纯 ssh）需要 BYO VPS 中转——`internal/relay` + `cmd/cospace-relay` + `deploy/relay-install.sh` 已实现并测试，但**尚未接进 `cospaced serve`**。
 - **launchd 下 guest ssh 修复（已解决）**：长期运行的 daemon 进程启动早于 Apple container 的 vmnet 网桥，对容器 IP 得 `no route to host`（新起的进程则正常）。DialSSH 改为每次连接 spawn `nc <ip> 22` 子进程桥接（`ncDial`，socketpair 包成 net.Conn），新进程有路由、且天然扛容器/vmnet 重启。真机全链路（launchd daemon + brew cospace + tailcat + 空间内 claude）已验证通过。
-- `cospace` 未签名/未公证，cask 用 postflight `xattr -dr com.apple.quarantine` 绕过 Gatekeeper；正式对外前应换 Apple Developer ID 签名+公证。大陆网络访问 GitHub / ghcr.io 可能很慢，待定镜像加速方案。
+- `cospace` 未签名/未公证，cask 用 postflight `xattr -dr com.apple.quarantine` 绕过 Gatekeeper；正式对外前应换 Apple Developer ID 签名+公证。
 - relay 控制通道目前明文 TCP：guest 流量本身是 SSH 加密不受影响，但 daemon↔relay 的认证 token 可被路径上的中间人截获并冒用 daemon 注册空间。待加 TLS + 证书固定
 
 Spike 实测记下的工程事实（daemon 实现要处理）：
