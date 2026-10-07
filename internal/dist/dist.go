@@ -8,7 +8,7 @@ const (
 	// Repo is the GitHub repository that publishes releases.
 	Repo = "JingxuanKang/cospace"
 	// Pages serves the install scripts.
-	Pages = "https://jingxuankang.github.io/cospace"
+	Pages = "https://cospace.jingxuan.uk"
 
 	GuestInstallPOSIX = "curl -fsSL " + Pages + "/install.sh | sh"
 	// Pages serves .ps1 as application/octet-stream; raw.githubusercontent

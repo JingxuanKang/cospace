@@ -1,6 +1,6 @@
 #!/bin/sh
 # CoSpace host installer — turns this machine into a CoSpace host.
-#   curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
+#   curl -fsSL https://cospace.jingxuan.uk/host.sh | sh
 #
 # macOS (Apple Silicon, macOS 26+): installs Apple container (Homebrew, or
 #   Apple's signed package) and the prebuilt cospaced, then `cospaced setup`

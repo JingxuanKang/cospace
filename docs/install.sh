@@ -1,6 +1,6 @@
 #!/bin/sh
 # CoSpace guest tool installer.
-#   curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh
+#   curl -fsSL https://cospace.jingxuan.uk/install.sh | sh
 # Installs the `cospace` binary for this machine into a bin dir on PATH.
 # Safe to re-run: an existing install is left alone when it is already the
 # published version and updated in place otherwise.
