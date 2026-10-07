@@ -55,7 +55,7 @@ access token 只活数小时且只有 CLI 运行时才续期，所以 daemon 内
 到期前 30 分钟（`-cred-keepalive`，0 关闭）自动 spawn 一次最便宜的 CLI 调用
 （claude haiku / codex gpt-5.6-luna low-effort / grok 默认模型）触发官方续期，host 整夜不在
 空间也不断线；动作与结果见日志里的 `keepalive:` 行。CLI 按 PATH 加
-`~/.local/bin`、`~/.grok/bin`、`/opt/homebrew/bin`、`/usr/local/bin` 查找。控制台的赞助开关（`/api/sponsor`，持久化在 `sponsor.json`）
+`~/.local/bin`、`~/.grok/bin`、`/opt/homebrew/bin`、`/usr/local/bin` 查找。控制台的 AI 额度总开关（`/api/sponsor`，持久化在 `sponsor.json`）
 对应控制台首页的 provider 卡片开关——**按 provider 独立**（可只关 claude 一家，全部空间生效，网关对该家返回 503）；API 请求不带 provider 时三家一起设置。开启后，每个空间的 provider 列表作为第二层策略，关闭某工具后网关返回 403，即使 guest 手工构造请求也不能绕过。
 
 空间内 claude 跟随自身默认模型（`-claude-model` 可覆盖）；

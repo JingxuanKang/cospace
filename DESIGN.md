@@ -33,7 +33,7 @@
 ### Host
 
 1. 一行 `curl -fsSL https://cospace.jingxuan.uk/host.sh | sh` 装好：自动装 Apple container、下载预编译的无界面引擎 `cospaced`（单二进制，不需要 Go）、注册为登录自启服务并打开 localhost 控制台。空间镜像首次在后台下载（一次性，几百 MB），控制台显示进度，下完之后每个新空间几秒开出。建空间、邀请、停启、撤销、看额度和资源账，全在网页上；CLI 只是薄壳。
-2. 凭证是 host 自己本机登录的 claude/codex（订阅或 API key），产品只在网关内读用、绝不复制进空间、不上传。控制台首页的 **AI for all spaces** 可统一暂停三家赞助；开启后每个空间再单独选择 provider，实际可用条件是两层同时开启。
+2. 凭证是 host 自己本机登录的 claude/codex（本机登录凭证或 API key），产品只在网关内读用、绝不复制进空间、不上传。控制台首页的 **AI for all spaces** 可统一暂停三家 AI 额度；开启后每个空间再单独选择 provider，实际可用条件是两层同时开启。
 3. **空间模板**：把一个空间的创建参数（内存/CPU、AI 选装、预算与并发上限、full-auto）存成命名模板，一键按模板开新空间——训练营一人一个同款空间、一实验一个标准空间。控制台空间详情页 "Save as Template"，新建空间弹窗选模板；CLI `cospaced template list/save/delete` 与 `space create -template`。模板只含创建参数，不含成员与状态，存于数据目录 `templates.json`。
 
 ## 4. 架构
@@ -75,12 +75,12 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 
 ### 凭证代理（已实现 ✅）
 
-- 真 token（订阅 OAuth 或 API key）永远只在 Mac 上的网关进程；空间内注入**每空间独立的假 token** + `ANTHROPIC_BASE_URL`/`OPENAI_BASE_URL` 指向网关；网关验证假 token 后换真 token 转发。
+- 真 token（host 登录凭证或 API key）永远只在 Mac 上的网关进程；空间内注入**每空间独立的假 token** + `ANTHROPIC_BASE_URL`/`OPENAI_BASE_URL` 指向网关；网关验证假 token 后换真 token 转发。
 - 收益：凭证翻遍空间也拿不走；**撤销 = 网关拒绝该空间**，即刻生效；请求路径上精确计量额度（SSE token 解析）。
 - 对上游无区别：同账号、同出口 IP（空间流量本来就从 Mac 出去），等同 host 本机多开并行 session。
 - **凭证来源 = 直读 host CLI 自己维护的凭证（`internal/gateway/creds_file.go` / `creds_claude.go`）**：codex 读 `~/.codex/auth.json` 的 `tokens.access_token`，grok 读 `~/.grok/auth.json` 中 `exp` 最晚的那条，按 mtime 缓存、变更即重读。claude 在 macOS 上有两份独立副本：Keychain 项 "Claude Code-credentials" 与 `~/.claude/.credentials.json`，Claude Code 用哪份就续哪份，两份过期时间各不相同；网关两份都读、取过期最晚的一份（Keychain 读取缓存 30 秒），keepalive 用同一个来源判断是否续期成功。早期的 learn 模式（偷看一次流量拍快照）已废弃，因为快照会随本地续期而失效。
 - **两层 AI 开关（`sponsor.json` + `/api/sponsor` + `Space.Providers`）**：Host 层**按 provider 独立**——首页每张 provider 卡一个开关，可单独把 Claude/Codex/Grok 对所有空间统一暂停（例如只关 claude）；UI 无 master 总开关（`/api/sponsor` 不带 provider 时仍是三家一起设置）。空间详情页再独立开关本空间的三项，允许全关。有效条件是 `host_provider_on && space_provider_on`。空间层除同步移除 env/config 外，网关还按 space/provider 强制校验，手工拿空间假 token 请求已关闭 provider 会得到 403；“所有空间的 AI”关闭则得到 503。
-- **本机端到端实测（2026-08-29）**：赞助开关默认 ON、建空间后空间内 `claude -p` 直接成功（无需任何 learn 步骤），用的是本地实时 token。codex（ChatGPT 登录）走 `openai_base_url` + Bearer JWT 换头，M0 已验证上游 200。
+- **本机端到端实测（2026-08-29）**：AI 额度开关默认 ON、建空间后空间内 `claude -p` 直接成功（无需任何 learn 步骤），用的是本地实时 token。codex（ChatGPT 登录）走 `openai_base_url` + Bearer JWT 换头，M0 已验证上游 200。
 
 ### 空间模型与联网策略
 
@@ -119,7 +119,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 
 ## 6. 额度与资源
 
-- **额度 = 等价美元计量 + 软管控（空间粒度）**：网关路径实时计量（`internal/usage`，JSONL 持久化 + SSE 里解析 input/output_tokens **和 model**），控制台按空间/按日展示 token、请求数与**累计花费 $**。计费把 token 数乘一张按模型族的 list-price 价表（`internal/gateway/pricing.go`，opus/sonnet/haiku/gpt-5/grok，未知模型走 provider 默认再兜底）折算成等价美元——host 付的是订阅月费不是按量，这个美元数是**通用标尺不是真账单**。
+- **额度 = 等价美元计量 + 软管控（空间粒度）**：网关路径实时计量（`internal/usage`，JSONL 持久化 + SSE 里解析 input/output_tokens **和 model**），控制台按空间/按日展示 token、请求数与**累计花费 $**。计费把 token 数乘一张按模型族的 list-price 价表（`internal/gateway/pricing.go`，opus/sonnet/haiku/gpt-5/grok，未知模型走 provider 默认再兜底）折算成等价美元——host 的实际计费不一定按量，这个美元数是**通用标尺不是真账单**。
   - **两道软闸**（`internal/gateway/quota.go`，`SpacePolicy` 由 `spaces.Manager` 实现）：**累计花费上限**（每空间 `usd_limit`，0=不限）与**并发上限**（`max_concurrency`，默认 `DefaultMaxConcurrency=5`）。请求进来先抢并发槽、再比累计花费，任一超限返回 **429**（并发满 / 花费到顶）。
   - **累计花费覆盖当前空间这一代的完整生命周期**：`spent` 每完成一个请求累加，重启时从历史 JSONL 按当前空间 `created_at` 重新播种，limit 跨重启仍成立；删除空间后重建同名空间不会继承旧一代的图表或额度。花费在流式响应结束才知道，所以是**预检对已累计值**——正在跑的那一个可越顶，下一个才被拒（至多一个请求的超调）。
   - 控制台每空间 Budget 卡展示"已用 $ / 上限"进度条 + 并发上限，`Edit limits…` 弹窗改 `usd_limit` 与 `max_concurrency`（`PUT /api/spaces/{name}/limits`）。硬预算（预扣、按成员计量）留给将来"API key"的企业模式（架构已留口）。
@@ -169,7 +169,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 ## 11. 里程碑
 
 - **M0 spikes（2026-08-29 全部完成 ✅）**：
-  - claude 订阅走代理 ✅；codex ChatGPT 登录走代理 ✅（`openai_base_url` 覆盖 + Bearer JWT 换头，上游 200）
+  - claude 走代理 ✅；codex ChatGPT 登录走代理 ✅（`openai_base_url` 覆盖 + Bearer JWT 换头，上游 200）
   - Apple container ✅（brew 装 1.3.1 + kata 内核；debian+sshd 镜像 build、限额运行、Mac 直连容器 IP ssh、volume 停启后持久）
   - tailcat ✅（`tailcat --serve=2222` 出 token，guest 侧 `ssh -o ProxyCommand="tailcat <token> 2222"` 穿隧道进空间）
   - **端到端 ✅**：cospace-base 镜像（debian + Node 22 + claude + codex + git/tmux/python/rg/jq + bubblewrap，见 `image/`）内 `claude -p` 带每空间假 token → Mac 网关换真 token → 正常应答；真凭证未进空间。Codex 使用镜像内系统 `bwrap`，不依赖 bundled fallback。
@@ -182,21 +182,21 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 
 ## 12. 控制台视觉方向（已定稿）
 
-「Daylight Gold」：暖白渐变底 + 金色光球 + 淡金 64px 网格的分层背景，白色玻璃卡片 + 彩色投影，金色渐变按钮与钥匙 logo，深色终端元素作对比焦点（邀请弹窗的三步终端窗、Access 卡的单行 ssh 命令条），破坏性操作（删空间）走居中确认弹窗 + 红色确认按钮，赞助区使用带官方 provider 标志的独立卡片，交错入场动画。可点原型与画布源在 `design/`（`Main.dc.html` 为唯一真源），体系参考 Sub2API 前端。
+「Daylight Gold」：暖白渐变底 + 金色光球 + 淡金 64px 网格的分层背景，白色玻璃卡片 + 彩色投影，金色渐变按钮与钥匙 logo，深色终端元素作对比焦点（邀请弹窗的三步终端窗、Access 卡的单行 ssh 命令条），破坏性操作（删空间）走居中确认弹窗 + 红色确认按钮，AI 额度区使用带官方 provider 标志的独立卡片，交错入场动画。可点原型与画布源在 `design/`（`Main.dc.html` 为唯一真源），体系参考 Sub2API 前端。
 
 ## 13. 空间内的 AI 工具（per-space）
 
-- **每空间选装**（`Space.Providers`，控制台 "AI in this space" 卡片可开关，CLI/API `SetProviders`）：`anthropic`(Claude Code)/`openai`(Codex)/`xai`(Grok)独立开关，允许三项全关；只有改名前的旧 space.json 完全缺少 `providers` 字段时才兼容解释为全开。A 空间可只 Codex、B 空间可 Codex+Claude Code+Grok。关闭 provider 会移除对应 env/config，并由网关按 space/provider 返回 403，不能用空间 token 绕过。三家全部用 host 订阅、经网关换头；首页 **AI for all spaces** 默认开，关闭时三家统一暂停。
+- **每空间选装**（`Space.Providers`，控制台 "AI in this space" 卡片可开关，CLI/API `SetProviders`）：`anthropic`(Claude Code)/`openai`(Codex)/`xai`(Grok)独立开关，允许三项全关；只有改名前的旧 space.json 完全缺少 `providers` 字段时才兼容解释为全开。A 空间可只 Codex、B 空间可 Codex+Claude Code+Grok。关闭 provider 会移除对应 env/config，并由网关按 space/provider 返回 403，不能用空间 token 绕过。三家全部用 host 提供的额度、经网关换头；首页 **AI for all spaces** 默认开，关闭时三家统一暂停。
 - **Full-auto 预设（`Space.FullAuto`，新空间默认开）**：空间的安全边界是环境级（VM 隔离 + 空间内零真凭证 + 美元/并发闸），不是动作级审批，所以 agent 出厂即全速：syncRuntime 托管写入 claude `~/.claude/settings.json` 的 `defaultMode: bypassPermissions` 与 codex `config.toml` 的 `approval_policy="never"` + `sandbox_mode="danger-full-access"`（后两者是 TOML 顶层键，必须在 `[model_providers.*]` 表头之前）。关闭 full-auto 即移除自动审批字段，回到工具默认审批流；Codex 配置由 sync 整体重写，Claude 仅合并托管的 permissions 字段并保留用户其他配置。grok CLI 暂无已知等价配置，不含在内。改名前的旧空间 `full_auto` 缺省为关。控制台 "AI in this space" 卡片有开关，API `PUT /api/spaces/{name}/full_auto`，CLI `space create -full-auto`。
-- **claude**：网关注入假 token + `ANTHROPIC_BASE_URL`,边缘换真订阅 token。空间内显示 API 登录、实际计订阅额度,正常。托管 `settings.json` 常驻注入：statusline（空间名行 + `claude-hud`，镜像已预装；旧镜像回退 jq 单行"模型 · 目录"）与可选默认模型（`-claude-model`，默认不设、跟随 claude 自身默认）。注意 API-token 认证模式下 `/model` 选择器不列订阅档位模型（如 fable），但网关照常放行——显式指定或默认配置即可用（真机 `FABLE-VIA-GATEWAY-OK`）。空间内 `COSPACE_SPACE` 环境变量恒有，脚本可用。sync 时还向 `~/.claude.json` **合并**（不覆盖）预置：`hasCompletedOnboarding`、`bypassPermissionsModeAccepted` 与 `/home/space`、`/workspace` 的 `hasTrustDialogAccepted`——空间本身就是边界，逐目录信任弹窗是纯摩擦。**statusline 架构（真机踩坑后定稿）**：渲染器 = npm 包 `claude-hud` 的**安装器**落到 `~/.claude/statusline-command.sh` 的脚本（镜像 build 时以 space 用户预跑生成，settings.json 由安装器写的那份要删掉让 sync 播种带前缀版）；托管命令 = `[空间名]` 前缀经 awk 拼进渲染器第一行（claude 只渲染两三行 statusline，独立前缀行会被挤掉）。三个死坑：`claude-hud` 命令本身是安装器、每次执行都重装并改写配置，绝不能放进 statusline 命令；statusline 命令执行失败时 claude 会**自愈**重写 settings.json（生成默认脚本），所以命令必须先裸测通过；ccusage 的 native 二进制被 npm 装完没有执行位，需 `chmod -R a+rx`（否则 💰/⏱ 永远是 —）。
-- **codex**：ChatGPT 订阅 token 只被 `https://chatgpt.com/backend-api/codex` 认，裸转 api.openai.com 被拒(缺 scope)。网关 openai 上游**默认**即该后端，bearer 换头直连即可(真机验证:真 token→400 参数错、假 token→401；空间内 `codex exec` 端到端通过)，**零外部依赖**。端点路径形状由上游 URL 自带(chatgpt 后端无 `/v1`；API-key 赞助传 `-openai-upstream https://api.openai.com/v1`)，空间侧 base_url 一律 `<gateway>/openai`。syncRuntime 自动为空间写 `~/.codex/config.toml`(model_provider 指网关、`supports_websockets=false`、model 用 `-codex-model` 默认 `gpt-5.6-sol`，并镜像 host 的显示/行为偏好：`model_reasoning_effort/plan_mode_reasoning_effort=xhigh`、`model_reasoning_summary=auto`、`personality=pragmatic`、`review_model=同主模型`、`project_doc_fallback_filenames=[AGENTS.md, CLAUDE.md]`；另写 `model_catalog_json`（go:embed 的官方目录快照，sol/terra/luna 三模型均真机验证过网关）——codex 对自定义 provider 不枚举模型，没有目录则 /model 选择器为空；以及 `/home/space` 与 `/workspace` 的 trust_level=trusted，防止每次 sync 整写 config 把 codex 自己追加的信任条目抹掉后反复弹信任框)+ 设 `OPENAI_API_KEY`=假 token。
-- **grok**：**已打通、走 host 订阅**(真机 `grok -p` 端到端 `GROK-SPACE-OK`)。xAI Grok CLI 预装镜像(`grok 1.0.13`;安装器的 symlink 指向 `/root/.grok` 空间用户读不了,Dockerfile 已改成拷真身+重建 symlink)。网关新增 `xai` provider,上游默认 `https://api.x.ai/v1`(订阅 OIDC JWT 直接被接受:真 token→200、假→401)。凭证读 `~/.grok/auth.json`(顶层键是动态 `issuer::uuid`,取其 `.key`)。空间侧:`GROK_MODELS_BASE_URL=<gateway>/xai` + `XAI_API_KEY`=假 token 切到 BYOK 模式,但**还须** `~/.grok/config.toml` 写 `[auth] preferred_method="api_key"`,否则仍强制 `grok login`(这是关键坑,syncRuntime 自动写)。
-- **cursor**：**仍不纳入当前三家 Host 赞助**（2026-08-30 用 Cursor Agent `2026.08.11-e8db854` 复核）。guest 使用自己的 Cursor Remote SSH 一直可用；不能把它误写成 Host Cursor 订阅已接入。
+- **claude**：网关注入假 token + `ANTHROPIC_BASE_URL`,边缘换 host 真凭证。空间内显示 API 登录、实际计 host 提供的额度,正常。托管 `settings.json` 常驻注入：statusline（空间名行 + `claude-hud`，镜像已预装；旧镜像回退 jq 单行"模型 · 目录"）与可选默认模型（`-claude-model`，默认不设、跟随 claude 自身默认）。注意 API-token 认证模式下 `/model` 选择器不列部分档位模型（如 fable），但网关照常放行——显式指定或默认配置即可用（真机 `FABLE-VIA-GATEWAY-OK`）。空间内 `COSPACE_SPACE` 环境变量恒有，脚本可用。sync 时还向 `~/.claude.json` **合并**（不覆盖）预置：`hasCompletedOnboarding`、`bypassPermissionsModeAccepted` 与 `/home/space`、`/workspace` 的 `hasTrustDialogAccepted`——空间本身就是边界，逐目录信任弹窗是纯摩擦。**statusline 架构（真机踩坑后定稿）**：渲染器 = npm 包 `claude-hud` 的**安装器**落到 `~/.claude/statusline-command.sh` 的脚本（镜像 build 时以 space 用户预跑生成，settings.json 由安装器写的那份要删掉让 sync 播种带前缀版）；托管命令 = `[空间名]` 前缀经 awk 拼进渲染器第一行（claude 只渲染两三行 statusline，独立前缀行会被挤掉）。三个死坑：`claude-hud` 命令本身是安装器、每次执行都重装并改写配置，绝不能放进 statusline 命令；statusline 命令执行失败时 claude 会**自愈**重写 settings.json（生成默认脚本），所以命令必须先裸测通过；ccusage 的 native 二进制被 npm 装完没有执行位，需 `chmod -R a+rx`（否则 💰/⏱ 永远是 —）。
+- **codex**：ChatGPT 登录 token 只被 `https://chatgpt.com/backend-api/codex` 认，裸转 api.openai.com 被拒(缺 scope)。网关 openai 上游**默认**即该后端，bearer 换头直连即可(真机验证:真 token→400 参数错、假 token→401；空间内 `codex exec` 端到端通过)，**零外部依赖**。端点路径形状由上游 URL 自带(chatgpt 后端无 `/v1`；API key 接入传 `-openai-upstream https://api.openai.com/v1`)，空间侧 base_url 一律 `<gateway>/openai`。syncRuntime 自动为空间写 `~/.codex/config.toml`(model_provider 指网关、`supports_websockets=false`、model 用 `-codex-model` 默认 `gpt-5.6-sol`，并镜像 host 的显示/行为偏好：`model_reasoning_effort/plan_mode_reasoning_effort=xhigh`、`model_reasoning_summary=auto`、`personality=pragmatic`、`review_model=同主模型`、`project_doc_fallback_filenames=[AGENTS.md, CLAUDE.md]`；另写 `model_catalog_json`（go:embed 的官方目录快照，sol/terra/luna 三模型均真机验证过网关）——codex 对自定义 provider 不枚举模型，没有目录则 /model 选择器为空；以及 `/home/space` 与 `/workspace` 的 trust_level=trusted，防止每次 sync 整写 config 把 codex 自己追加的信任条目抹掉后反复弹信任框)+ 设 `OPENAI_API_KEY`=假 token。
+- **grok**：**已打通、走 host 提供的额度**(真机 `grok -p` 端到端 `GROK-SPACE-OK`)。xAI Grok CLI 预装镜像(`grok 1.0.13`;安装器的 symlink 指向 `/root/.grok` 空间用户读不了,Dockerfile 已改成拷真身+重建 symlink)。网关新增 `xai` provider,上游默认 `https://api.x.ai/v1`(host 登录的 OIDC JWT 直接被接受:真 token→200、假→401)。凭证读 `~/.grok/auth.json`(顶层键是动态 `issuer::uuid`,取其 `.key`)。空间侧:`GROK_MODELS_BASE_URL=<gateway>/xai` + `XAI_API_KEY`=假 token 切到 BYOK 模式,但**还须** `~/.grok/config.toml` 写 `[auth] preferred_method="api_key"`,否则仍强制 `grok login`(这是关键坑,syncRuntime 自动写)。
+- **cursor**：**仍不纳入当前三家 Host 额度**（2026-08-30 用 Cursor Agent `2026.08.11-e8db854` 复核）。guest 使用自己的 Cursor Remote SSH 一直可用；不能把它误写成 Host Cursor 已接入。
   - 当前 CLI 已正式支持 `--endpoint` / `CURSOR_API_ENDPOINT`，因此“完全没有自定义端点”不再是障碍；但现有 Host 浏览器登录 token 仍不能当 User API Key 使用。实测假 `CURSOR_API_KEY` 经网关换成 Host 登录 token 后，`GetMe` 可 200，但 `/auth/exchange_user_api_key` 仍 401，聊天不会开始。
   - 官方另有 Dashboard 生成的 User API Key，可能形成新的独立 spike；当前 Host 没有这类 key，而且 exchange 响应是否会把可复用真凭证发回客户端仍需证明。未通过“空间只持假 token”的端到端验证前，不算可接入。
   - 换头方案(claude/codex/grok 那套:空间发假 token、网关换真 token)对 cursor **不成立**。真机验证过:所有控制面请求(DashboardService/AiService 十余个)都能经网关换头成功(200),但 cursor-agent 会拿 `GetMe` 返回的真实身份和它本地持有的 token 做校验,发实际聊天**前**就报 "Authentication error"。把本地 token 伪造成"真 payload(真 userId)+ 假签名"的 JWT 也不行(仍卡在同一处;签名是 HS256 对称,客户端本可不验签,但实测仍拒——推测真实 access token 还被放进了某个请求 body 由服务端校验)。
   - 唯一能跑通的是**真 cursor 凭证直接进空间**(`CURSOR_AUTH_TOKEN`=真 token 直连官方,真机 `CURSOR-DIRECT-OK`/`CURSOR-PROXY-OK` 成功)。但真凭证落进空间文件/env,ssh 进空间的 guest 能读走、拿去别处登录 host 的 cursor 账号,破坏"凭证不出 Mac"红线。
-  - 结论:cursor 只适合"真凭证透传给完全信任的人"的极窄场景,不符合产品的通用赞助模型,不做。guest 仍可用**自己的** Cursor 经 Remote SSH 连空间(那是 guest 自己的凭证,一直可用,与此无关)。
+  - 结论:cursor 只适合"真凭证透传给完全信任的人"的极窄场景,不符合产品的通用额度模型,不做。guest 仍可用**自己的** Cursor 经 Remote SSH 连空间(那是 guest 自己的凭证,一直可用,与此无关)。
   - 若将来非要做,方向是把网关认空间从 token-based 改成 IP-based(每空间容器 IP 唯一),让 token 位置能放真 userId 过身份校验——但那是动网关核心的一笔大活,且仍需先解决"真 token 是否被放进 body"这个未定项。
 
 ## 14. 待验证 / 开放问题 / Roadmap
@@ -208,7 +208,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 
 待验证 / 开放问题：
 
-- **凭证保活（已实现 ✅，`internal/keepalive` + `-cred-keepalive`）**：真机实测（2026-08-31）access token 寿命 claude ~8h、grok ~8h、codex ~6 天，且只有 vendor CLI 实际运行时才续期——host 一夜不用，空间内该家 AI 全 401。解法是 daemon 每 5 分钟检查各凭证的精确过期时间（claude 取文件与 Keychain 两份中最晚的 `expiresAt`；codex/grok 解 JWT 的 `exp`），距过期 <30 分钟（`-cred-keepalive`，0 关闭）就 spawn 一次最便宜的 CLI 调用让官方 CLI 自己续期回写：claude `--model haiku -p`、codex `exec -m gpt-5.6-luna -c model_reasoning_effort="low"`（后端拒绝 "minimal"；luna 实测比默认模型省约 1/3）、grok 默认模型 `-p --disable-web-search`（订阅只有 4.6/4.5，无更便宜模型，不 pin slug 以免下线后保活变哑）。只 ping「Host 总闸开 && 至少一个空间启用」的 provider。ping 子进程在空临时目录、最小环境（必须带 `USER`，否则 `claude -p` 直接鉴权失败）、独立进程组中运行，超时杀整组且 `WaitDelay` 10 秒，防止 hook/MCP 子进程持有管道挂死保活。实测 grok CLI 对未过期 token 不主动续期，所以过期后按 tick 级重试，最坏断档 ≈ 一个 tick（5 分钟）而非 8 小时。**不在网关里自实现 OAuth 刷新**：refresh token 可能轮换，与本地 CLI 互踩会把 host 登出。真机教训（2026-10-02）：此前网关与保活只看 `.credentials.json`，而 Claude Code 实际续的是 Keychain 那份，日志里 103 次 "ping ran but expiry did not advance" 全是这个原因；现在两处共用 `gateway.ClaudeOAuth`。
+- **凭证保活（已实现 ✅，`internal/keepalive` + `-cred-keepalive`）**：真机实测（2026-08-31）access token 寿命 claude ~8h、grok ~8h、codex ~6 天，且只有 vendor CLI 实际运行时才续期——host 一夜不用，空间内该家 AI 全 401。解法是 daemon 每 5 分钟检查各凭证的精确过期时间（claude 取文件与 Keychain 两份中最晚的 `expiresAt`；codex/grok 解 JWT 的 `exp`），距过期 <30 分钟（`-cred-keepalive`，0 关闭）就 spawn 一次最便宜的 CLI 调用让官方 CLI 自己续期回写：claude `--model haiku -p`、codex `exec -m gpt-5.6-luna -c model_reasoning_effort="low"`（后端拒绝 "minimal"；luna 实测比默认模型省约 1/3）、grok 默认模型 `-p --disable-web-search`（可用模型只有 4.6/4.5，无更便宜模型，不 pin slug 以免下线后保活变哑）。只 ping「Host 总闸开 && 至少一个空间启用」的 provider。ping 子进程在空临时目录、最小环境（必须带 `USER`，否则 `claude -p` 直接鉴权失败）、独立进程组中运行，超时杀整组且 `WaitDelay` 10 秒，防止 hook/MCP 子进程持有管道挂死保活。实测 grok CLI 对未过期 token 不主动续期，所以过期后按 tick 级重试，最坏断档 ≈ 一个 tick（5 分钟）而非 8 小时。**不在网关里自实现 OAuth 刷新**：refresh token 可能轮换，与本地 CLI 互踩会把 host 登出。真机教训（2026-10-02）：此前网关与保活只看 `.credentials.json`，而 Claude Code 实际续的是 Keychain 那份，日志里 103 次 "ping ran but expiry did not advance" 全是这个原因；现在两处共用 `gateway.ClaudeOAuth`。
 
 - cospace 域名（cospace.dev / cospace.sh 等）可用性实查；对外物料统一写法 CamelCase "CoSpace"，README 首句带定义句压 SEO（存在 CoSpaces Edu 与联合办公品牌同名碰撞）
 - 邀请网页的最终形态细节（VPS 托管的实现面）
