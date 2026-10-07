@@ -42,7 +42,7 @@
     <text x="232" y="204" font-size="15" letter-spacing="1">
       <tspan fill="#00ADD8">Go</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#B45309">Apple container</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#059669">ssh</tspan><tspan fill="#94A3B8"> · </tspan><tspan fill="#C2410C">Claude Code</tspan><tspan fill="#94A3B8"> / </tspan><tspan fill="#0F766E">Codex</tspan><tspan fill="#94A3B8"> / </tspan><tspan fill="#334155">Grok</tspan>
     </text>
-    <text x="232" y="236" font-size="13" fill="#94A3B8" font-style="italic">Your subscriptions, one ssh away for people you trust.</text>
+    <text x="232" y="236" font-size="13" fill="#94A3B8" font-style="italic">Host-provided AI quota, one ssh away for people you trust.</text>
   </g>
 
   <!-- terminal card -->

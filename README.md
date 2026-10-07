@@ -16,15 +16,15 @@
 
 ---
 
-CoSpace is a macOS daemon and a single-file guest CLI that turn your Mac's compute and AI subscriptions into shared Linux dev spaces. It is for developers and coding agents that need to work in one place — same files, same Claude Code sessions, same memory — and for hosts who hand people they trust a ready-to-run agent environment with no signup, no API keys, and no cloud bill.
+CoSpace is a macOS daemon and a single-file guest CLI that turn your Mac's compute into shared Linux dev spaces, with AI quota provided by the host. It is for developers and coding agents that need to work in one place — same files, same Claude Code sessions, same memory — and for hosts who hand people they trust a ready-to-run agent environment with no signup, no API keys, and no cloud bill.
 
-Each space is a Linux VM (Apple container) on the host's Mac. Guests join over plain `ssh`; `claude`, `codex`, and `grok` inside are already signed in through a credential gateway on the Mac. Real tokens never enter a space — each space holds only a revocable fake token.
+Each space is a Linux VM (Apple container) on the host's Mac. Guests join over plain `ssh`; `claude`, `codex`, and `grok` inside work immediately, on AI quota the host provides through a gateway on the Mac. Host credentials never enter a space — each space holds only a revocable per-space token.
 
 <img src="assets/console.jpg" alt="Space detail in the host console: guests with their key fingerprints, a 14-day token chart, the budget card, per-space model and network settings, and the ssh access card with the pinned host key" width="100%">
 
 ## Demo
 
-[<img src="assets/demo.jpg" alt="CoSpace demo video: click to play (66 seconds)" width="100%">](https://jingxuankang.github.io/cospace/demo.html)
+[<img src="assets/demo.jpg" alt="CoSpace demo video: click to play (66 seconds)" width="100%">](https://cospace.jingxuan.uk/demo.html)
 
 A 66-second walkthrough: one command to install the host, invite a guest in two clicks, a guest coding with Claude Code within a minute, and two people watching the same agent session live (on-screen text in Chinese).
 
@@ -33,7 +33,7 @@ A 66-second walkthrough: one command to install the host, invite a guest in two 
 **Mac host** — an Apple Silicon Mac on macOS 26 or later. One command:
 
 ```bash
-curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
+curl -fsSL https://cospace.jingxuan.uk/host.sh | sh
 ```
 
 It installs Apple `container` (through Homebrew when present, otherwise Apple's signed package), downloads the prebuilt `cospaced` daemon, registers it as a login item, and opens the console at `http://127.0.0.1:18931`. On first run the daemon downloads the space image once in the background (about 600 MB) and the console shows the progress; after that every new space starts in seconds. Re-running the command upgrades in place and keeps the options the daemon was installed with; `cospaced uninstall` removes the service and keeps your spaces. Sign in to `claude`, `codex`, or `grok` on the Mac for whichever AI tools you want spaces to use.
@@ -43,7 +43,7 @@ It installs Apple `container` (through Homebrew when present, otherwise Apple's 
 **Guest** — one command, no account (installs `cospace`, alias `co`):
 
 ```bash
-curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh     # macOS / Linux
+curl -fsSL https://cospace.jingxuan.uk/install.sh | sh     # macOS / Linux
 irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex          # Windows PowerShell (needs OpenSSH Client; cross-compiled, not yet verified on a real Windows machine)
 ```
 
@@ -74,9 +74,9 @@ Claude Code keeps sessions and memory as plain files in the home directory, so o
 
 ## A minute to a working Claude Code
 
-Guests never sign up, install an IDE, or touch an API key — the space is pre-authenticated against the host's own accounts. The host stays in control the whole time: a per-space dollar cap and concurrency cap (over-limit requests get a clean 429), per-space provider switches, host-wide provider switches, and revocation that cuts a guest's access the moment you click it. Usage draws on your subscription and its rate limits, so invite people you trust.
+Guests never sign up, install an IDE, or touch an API key — the host provides the AI quota through the gateway. The host stays in control the whole time: a per-space dollar cap and concurrency cap (over-limit requests get a clean 429), per-space provider switches, host-wide provider switches, and revocation that cuts a guest's access the moment you click it. Guests use the quota you provide as host, so invite people you trust.
 
-Spaces stay signed in while you're away: provider tokens only live for hours, so the daemon watches their expiry and pings each vendor CLI with a minimal cheapest-model request just before they go stale.
+Spaces keep working while you're away: the daemon keeps the host's AI access fresh, so guests never wait for the host to come back to the keyboard.
 
 ## Full-auto spaces
 
@@ -113,7 +113,7 @@ The vendor runs no service: connectivity is peer-to-peer or through the host's o
 
 ## Security
 
-- Real OAuth/API tokens live only in the gateway process on the Mac; spaces get per-space fake tokens, swapped at the edge and revocable instantly.
+- Real provider credentials live only in the gateway process on the Mac; spaces get per-space tokens, swapped at the edge and revocable instantly.
 - Spaces cannot see the Mac's home directory, other spaces, or the host's git/ssh identity; per-space ED25519 host keys are pinned by the guest CLI in a dedicated managed `known_hosts`.
 - The host can see everything inside a space — it is a collaboration space, not a private VM. Guests spend the host's quota; both facts are by design and disclosed.
 - The VPS relay (experimental, not yet wired into `cospaced serve`) forwards encrypted SSH bytes and sees only connection metadata. Its control channel is not yet TLS-pinned; see DESIGN.md §14.
@@ -135,5 +135,7 @@ Go 1.26; the console frontend is a single dependency-free HTML file embedded int
 [MIT](LICENSE).
 
 ## Links
+
+Website: [cospace.jingxuan.uk](https://cospace.jingxuan.uk) · Contact: hello@cospace.jingxuan.uk
 
 [![认可linux.do](https://ld.xh.do/ld-badge.svg)](https://linux.do)

@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CoSpace</title>
-<meta name="description" content="CoSpace is co-op mode for AI coding: shared Linux dev spaces on your own Mac or Linux server, where people you invite join over plain ssh and Claude Code, Codex and Grok are already signed in.">
+<meta name="description" content="CoSpace is co-op mode for AI coding: shared Linux dev spaces on your own Mac or Linux server, where people you invite join over plain ssh and Claude Code, Codex and Grok work immediately on AI quota the host provides.">
 <meta property="og:title" content="CoSpace — Co-op mode for AI coding">
-<meta property="og:description" content="Turn your own machine's compute and AI subscriptions into shared dev spaces. One command to host, one command to join.">
-<meta property="og:image" content="https://jingxuankang.github.io/cospace/demo.jpg">
+<meta property="og:description" content="Turn your own machine into shared AI dev spaces, with AI quota provided by the host. One command to host, one command to join.">
+<meta property="og:image" content="https://cospace.jingxuan.uk/demo.jpg">
 <meta property="og:type" content="website">
 <style>
   :root { --ink:#1F2937; --muted:#475569; --gold:#B45309; --bg:#FDF8EF; --card:#FFFFFF; --line:rgba(180,83,9,.16); --code:#0F172A; --code-ink:#E2E8F0; }
@@ -35,7 +35,7 @@
 <body>
 <main>
   <h1>Co<span>Space</span> — Co-op mode for AI coding.</h1>
-  <p class="tagline">Shared Linux dev spaces on your own Mac or Linux server. People you invite join over plain <code>ssh</code>; <code>claude</code>, <code>codex</code> and <code>grok</code> inside are already signed in through a credential gateway on your machine. Real tokens never leave it.</p>
+  <p class="tagline">Shared Linux dev spaces on your own Mac or Linux server. People you invite join over plain <code>ssh</code>; <code>claude</code>, <code>codex</code> and <code>grok</code> inside work immediately, on AI quota you provide as host through a gateway on your machine. Your credentials never leave it.</p>
   <p class="zh">AI 编程的联机模式：在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。</p>
 
   <a class="demo" href="demo.html" title="66-second demo"><img src="demo.jpg" alt="CoSpace demo video (66 seconds): one command to host, invite a guest in two clicks, a guest coding with Claude Code within a minute."></a>
@@ -43,13 +43,13 @@
   <section class="card">
     <h2>Host · one command</h2>
     <p>Apple Silicon Mac (macOS 26+) or a Linux server with Docker. Installs the daemon, registers it as a service and opens the console.</p>
-    <pre>curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh</pre>
+    <pre>curl -fsSL https://cospace.jingxuan.uk/host.sh | sh</pre>
   </section>
 
   <section class="card">
     <h2>Guest · one command, no account</h2>
     <p>Installs the <code>cospace</code> tool (alias <code>co</code>). Then paste the one-time pair command your host sends you and run <code>ssh &lt;space&gt;</code>.</p>
-    <pre><small># macOS / Linux</small>curl -fsSL https://jingxuankang.github.io/cospace/install.sh | sh</pre>
+    <pre><small># macOS / Linux</small>curl -fsSL https://cospace.jingxuan.uk/install.sh | sh</pre>
     <pre><small># Windows PowerShell (needs OpenSSH Client)</small>irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex</pre>
   </section>
 
@@ -60,7 +60,7 @@
     <a href="demo.html">Demo video</a>
   </div>
 
-  <footer>MIT licensed. Not affiliated with Anthropic, OpenAI, xAI or Apple. Invite people you trust: spaces use the host's own subscriptions.</footer>
+  <footer>Contact: <a href="mailto:hello@cospace.jingxuan.uk">hello@cospace.jingxuan.uk</a>. MIT licensed. Not affiliated with Anthropic, OpenAI, xAI or Apple. Invite people you trust: guests use the AI quota the host provides.</footer>
 </main>
 </body>
 </html>

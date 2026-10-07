@@ -1,10 +1,10 @@
 # CoSpace 设计文档（v1 单一真源）
 
-> **CoSpace：把你 Mac 上的算力和 AI 订阅，变成别人一条 ssh 命令就能进来的共享 AI 开发空间。**
+> **CoSpace：把你 Mac 上的算力变成别人一条 ssh 命令就能进来的共享 AI 开发空间，AI 额度由 host 提供。**
 
 术语：**host**（管理者，Mac 拥有者）/ **guest**（成员，受邀者）/ **space**（空间，隔离的 Linux 开发环境）。品牌名是 CoSpace；产品上下一律用 space：UI、CLI、API 路径 `/api/spaces`、磁盘 `space.json`、容器内 Linux 用户 `space`、Go 标识符。改名前的旧数据（rooms/、room.json、usage.jsonl 旧字段）由 daemon 启动时自动迁移；改名前建的容器内仍是旧 Linux 用户 `room`，`syncRuntime` 首次同步时就地改名为 `space`（`usermod -l`，同 uid，`/home/room` 符号链接保留）。
 
-对外宣传优先级（README/邀请页照此排布）：① 多人共享 agent 状态的协作（同 home、session/memory 互见、`--resume` 接管）；② 60 秒零注册即用；③ 安全狂跑 agent（full-auto + VM 边界 + 预算闸）。"凭证不出 Mac"作为支撑性信任文案，不做标题；对外不使用"共享/出借订阅给陌生人"类表述，一律说"邀请你信任的人"。
+对外宣传优先级（README/邀请页照此排布）：① 多人共享 agent 状态的协作（同 home、session/memory 互见、`--resume` 接管）；② 60 秒零注册即用；③ 安全狂跑 agent（full-auto + VM 边界 + 预算闸）。"凭证不出 Mac"作为支撑性信任文案，不做标题；对外 AI 来源一律写"AI 额度由 host 提供"，不写"共享 host 的 Claude/Codex/Grok 订阅"类表述；对象一律说"邀请你信任的人"。
 
 本文档是产品与架构的单一真源。历史讨论与变更叙事不在此记录（归 git）。
 
@@ -32,7 +32,7 @@
 
 ### Host
 
-1. 一行 `curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh` 装好：自动装 Apple container、下载预编译的无界面引擎 `cospaced`（单二进制，不需要 Go）、注册为登录自启服务并打开 localhost 控制台。空间镜像首次在后台下载（一次性，几百 MB），控制台显示进度，下完之后每个新空间几秒开出。建空间、邀请、停启、撤销、看额度和资源账，全在网页上；CLI 只是薄壳。
+1. 一行 `curl -fsSL https://cospace.jingxuan.uk/host.sh | sh` 装好：自动装 Apple container、下载预编译的无界面引擎 `cospaced`（单二进制，不需要 Go）、注册为登录自启服务并打开 localhost 控制台。空间镜像首次在后台下载（一次性，几百 MB），控制台显示进度，下完之后每个新空间几秒开出。建空间、邀请、停启、撤销、看额度和资源账，全在网页上；CLI 只是薄壳。
 2. 凭证是 host 自己本机登录的 claude/codex（订阅或 API key），产品只在网关内读用、绝不复制进空间、不上传。控制台首页的 **AI for all spaces** 可统一暂停三家赞助；开启后每个空间再单独选择 provider，实际可用条件是两层同时开启。
 3. **空间模板**：把一个空间的创建参数（内存/CPU、AI 选装、预算与并发上限、full-auto）存成命名模板，一键按模板开新空间——训练营一人一个同款空间、一实验一个标准空间。控制台空间详情页 "Save as Template"，新建空间弹窗选模板；CLI `cospaced template list/save/delete` 与 `space create -template`。模板只含创建参数，不含成员与状态，存于数据目录 `templates.json`。
 
@@ -131,7 +131,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 ## 7. 信任边界（明说，不粉饰）
 
 - host 可见空间内一切（文件、session、用量）——空间是协作空间，不是对 host 保密的私人 VM。
-- 邀请 = 交出订阅使用权：guest 在空间内可任意使用 host 的额度；订阅 rate limit 全账号共享，多人猛跑会互相挤。只请信任的人。
+- 邀请 = 交出额度使用权：guest 在空间内可任意使用 host 提供的额度；rate limit 由所有空间共享，多人猛跑会互相挤。只请信任的人。
 - 出口流量走 host 的 IP，滥用责任在 host（可按空间关闭出网，见 §4 的空间模型与联网策略）。
 - VPS 中转只见连接元数据与流量大小，看不到 SSH 内容。
 - guest 不可见：Mac 主目录、真凭证、其他空间、host 个人 git/ssh 凭据。
@@ -139,7 +139,7 @@ host 上的 daemon（单二进制，含 go:embed 控制台前端；macOS 或 Lin
 ## 8. 镜像
 
 单一基础镜像（`image/Dockerfile`，Debian bookworm-slim）。哲学：**够 agent 起步就行，进去之后 agent 自己会装。** 内置：
-- **AI CLI**：claude / codex / grok（三家走 host 订阅经网关，见 §13）
+- **AI CLI**：claude / codex / grok（三家走 host 提供的额度经网关，见 §13）
 - **VCS / 网络**：git、openssh-client+server（git over ssh / deploy key 必需，不只是 server）、gh（GitHub CLI）、curl、wget、dnsutils(dig)、netcat
 - **构建 / 运行时**：build-essential(gcc/make，npm node-gyp & pip C 扩展必需)、Node 22（Claude Code 依赖）、Python3+venv、uv（现代 python 装包，装在 /usr/local/bin 供空间用户）
 - **日常**：tmux、vim、nano、less、ripgrep(rg)、fd、tree、jq、unzip/zip、htop、procps(ps)

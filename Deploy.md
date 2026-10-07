@@ -5,7 +5,7 @@
 ## 安装（Host）
 
 ```bash
-curl -fsSL https://jingxuankang.github.io/cospace/host.sh | sh
+curl -fsSL https://cospace.jingxuan.uk/host.sh | sh
 ```
 
 `docs/host.sh` 依次：检查机型与系统 → 安装 Apple container（有 Homebrew 用 `brew install container`，否则下载 Apple 签名 pkg 并 `sudo installer`）→ 从 GitHub Releases 下载 `cospaced_darwin_arm64.tar.gz` 装到 `/opt/homebrew/bin`（不可写时依次退到 `/usr/local/bin`、`~/.local/bin`）→ 执行 `cospaced setup`。重复执行即升级：不带参数时沿用已装服务的 serve 参数（`cospaced setup -reset` 回到默认）；参数先按 `serve` 的规则校验，不合法就直接报错、不改服务；daemon 起不来时 setup 报错并恢复上一版服务（全新安装则移除），错误里附日志尾部。`cospaced version` 查看装的是哪个版本，控制台侧栏也显示。
