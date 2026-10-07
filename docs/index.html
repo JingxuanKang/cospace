@@ -3,64 +3,503 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CoSpace</title>
-<meta name="description" content="CoSpace is co-op mode for AI coding: shared Linux dev spaces on your own Mac or Linux server, where people you invite join over plain ssh and Claude Code, Codex and Grok work immediately on AI quota the host provides.">
+<title>CoSpace — Co-op mode for AI coding</title>
+<meta name="description" content="CoSpace turns your Mac or Linux server into shared dev spaces. Teammates join over plain ssh; people and coding agents work in one place, with AI quota provided by the host.">
 <meta property="og:title" content="CoSpace — Co-op mode for AI coding">
-<meta property="og:description" content="Turn your own machine into shared AI dev spaces, with AI quota provided by the host. One command to host, one command to join.">
+<meta property="og:description" content="Shared Linux dev spaces on your own machine. Teammates join over plain ssh and work with the same coding agents, files and sessions.">
 <meta property="og:image" content="https://cospace.jingxuan.uk/demo.jpg">
+<meta property="og:url" content="https://cospace.jingxuan.uk/">
 <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23F59E0B'/%3E%3Cstop offset='1' stop-color='%23B45309'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cg fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='19' r='4.5'/%3E%3Cpath d='M15.5 15.5 L24 7 M21 10 L24 13 M18.5 12.5 L20.5 14.5'/%3E%3C/g%3E%3C/svg%3E">
 <style>
-  :root { --ink:#1F2937; --muted:#475569; --gold:#B45309; --bg:#FDF8EF; --card:#FFFFFF; --line:rgba(180,83,9,.16); --code:#0F172A; --code-ink:#E2E8F0; }
-  @media (prefers-color-scheme: dark) { :root { --ink:#F1F5F9; --muted:#94A3B8; --gold:#F59E0B; --bg:#111318; --card:#1A1D24; --line:rgba(245,158,11,.22); --code:#0B0F17; --code-ink:#E2E8F0; } }
+  :root {
+    --bg: #FBF8F2; --bg-2: #FDF8EF; --ink: #1F2937; --ink-2: #374151; --muted: #64748B;
+    --gold: #B45309; --gold-2: #D97706; --amber: #F59E0B; --gold-soft: rgba(245, 158, 11, .12);
+    --card: rgba(255, 255, 255, .78); --card-solid: #FFFFFF; --line: rgba(15, 23, 42, .08); --line-gold: rgba(180, 83, 9, .16);
+    --term: #0F172A; --term-ink: #E2E8F0; --term-dim: #94A3B8; --ok: #059669;
+    --grid: rgba(180, 83, 9, .04); --shadow: 0 10px 40px rgba(15, 23, 42, .07), 0 0 24px rgba(245, 158, 11, .06);
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101217; --bg-2: #13161C; --ink: #F1F5F9; --ink-2: #CBD5E1; --muted: #94A3B8;
+      --gold: #F59E0B; --gold-2: #FBBF24; --gold-soft: rgba(245, 158, 11, .14);
+      --card: rgba(26, 29, 36, .82); --card-solid: #1A1D24; --line: rgba(255, 255, 255, .08); --line-gold: rgba(245, 158, 11, .22);
+      --term: #0B0F17; --grid: rgba(245, 158, 11, .035); --shadow: 0 10px 40px rgba(0, 0, 0, .35);
+    }
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 -apple-system, "SF Pro Text", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 72px; }
-  h1 { font-size: 40px; line-height: 1.1; margin: 0 0 8px; letter-spacing: -0.02em; }
-  h1 span { color: var(--gold); }
-  .tagline { font-size: 18px; color: var(--muted); margin: 0 0 28px; }
-  .zh { color: var(--muted); font-size: 15px; margin: -18px 0 28px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 14px 0; }
-  .card h2 { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
-  .card p { margin: 6px 0 10px; color: var(--muted); font-size: 14.5px; }
-  pre { margin: 8px 0 0; background: var(--code); color: var(--code-ink); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 13.5px/1.6 "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
-  pre small { display: block; color: #94A3B8; font-size: 12px; margin-bottom: 2px; }
-  .links { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 26px; font-size: 15px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(at 30% 0%, rgba(245, 158, 11, .10) 0, transparent 45%),
+      radial-gradient(at 90% 10%, rgba(251, 191, 36, .07) 0, transparent 40%),
+      linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: auto, auto, 64px 64px, 64px 64px; }
   a { color: var(--gold); text-decoration: none; }
   a:hover { text-decoration: underline; }
-  .demo { display: block; margin: 0 0 28px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
-  .demo img { display: block; width: 100%; height: auto; }
-  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
+  code, pre, .mono { font-family: var(--mono); }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  header.nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid var(--line); }
+  .nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; font-size: 18px; }
+  .brand:hover { text-decoration: none; }
+  .brand b { color: var(--gold); font-weight: 700; }
+  .logo { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: #fff;
+    background: linear-gradient(135deg, #F59E0B, #B45309); box-shadow: 0 4px 14px rgba(245, 158, 11, .35), inset 0 1px 0 rgba(255,255,255,.3); }
+  .nav nav { display: flex; gap: 22px; margin-left: auto; font-size: 14.5px; }
+  .nav nav a { color: var(--ink-2); }
+  .nav nav a:hover { color: var(--gold); text-decoration: none; }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 11px; font-weight: 600; font-size: 15px;
+    border: 1px solid var(--line); background: var(--card-solid); color: var(--ink); transition: transform .2s, box-shadow .2s, filter .2s; }
+  .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-gold { color: #fff; border: 0; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); box-shadow: 0 4px 14px rgba(245, 158, 11, .35); }
+  .btn-gold:hover { filter: brightness(1.05); box-shadow: 0 6px 20px rgba(245, 158, 11, .45); }
+  .btn-sm { padding: 8px 14px; font-size: 14px; }
+
+  /* hero */
+  .hero { padding: 72px 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1fr; gap: 48px; }
+  .pill { display: inline-flex; gap: 8px; align-items: center; padding: 5px 12px; border-radius: 999px; font-size: 13px; color: var(--gold);
+    background: var(--gold-soft); border: 1px solid var(--line-gold); }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(5, 150, 105, .15); }
+  h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -.03em; margin: 18px 0 18px; max-width: 14ch; }
+  h1 span { background: linear-gradient(90deg, #B45309, #F59E0B); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--ink-2); max-width: 640px; margin: 0 0 28px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .ticks { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 0; margin: 0; list-style: none; font-size: 14px; color: var(--muted); }
+  .ticks li::before { content: "✓"; color: var(--ok); font-weight: 700; margin-right: 7px; }
+  .shot { position: relative; }
+  .frame { border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--card-solid); box-shadow: 0 30px 80px rgba(15, 23, 42, .14), 0 0 40px rgba(245, 158, 11, .10); }
+  .frame-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: var(--bg-2); }
+  .frame-bar i { width: 11px; height: 11px; border-radius: 50%; background: #E5E7EB; }
+  .frame-bar i:nth-child(1) { background: #F87171; } .frame-bar i:nth-child(2) { background: #FBBF24; } .frame-bar i:nth-child(3) { background: #34D399; }
+  .frame-bar span { margin-left: 10px; font: 12.5px var(--mono); color: var(--muted); }
+  .frame img { display: block; width: 100%; height: auto; }
+  .float-term { position: absolute; right: -12px; bottom: -28px; width: min(380px, 70%); }
+  .term { background: var(--term); color: var(--term-ink); border-radius: 12px; padding: 14px 16px; font: 13px/1.7 var(--mono);
+    box-shadow: 0 20px 50px rgba(2, 6, 23, .35); border: 1px solid rgba(255,255,255,.06); overflow-x: auto; white-space: pre; }
+  .term .p { color: #34D399; } .term .c { color: var(--term-dim); } .term .y { color: #FBBF24; } .term .b { color: #93C5FD; }
+
+  /* sections */
+  section { padding: 84px 0; }
+  .kicker { font: 600 12.5px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; }
+  h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 14px; max-width: 22ch; }
+  .sub { color: var(--muted); font-size: 17.5px; max-width: 680px; margin: 0 0 40px; }
+  .works { padding: 34px 0 0; color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+  .works span.chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); font-weight: 500; }
+
+  .cards { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px; backdrop-filter: blur(12px);
+    box-shadow: 0 1px 3px rgba(0,0,0,.04); transition: transform .3s, box-shadow .3s, border-color .3s; }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--line-gold); }
+  .card h3 { margin: 14px 0 8px; font-size: 19px; letter-spacing: -.01em; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted); font-size: 14.5px; }
+  .card ul li { margin: 3px 0; }
+  .icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; color: var(--gold); background: var(--gold-soft); border: 1px solid var(--line-gold); }
+
+  .steps { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); counter-reset: s; }
+  .step { counter-increment: s; }
+  .step .n::before { content: counter(s); }
+  .step .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 14px;
+    background: linear-gradient(135deg, #F59E0B, #B45309); }
+  .step .term { margin-top: 16px; font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .feat { display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr); background: var(--line); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .feat div { background: var(--card-solid); padding: 24px; }
+  .feat h4 { margin: 0 0 6px; font-size: 16px; display: flex; gap: 9px; align-items: center; }
+  .feat h4 svg { color: var(--gold); flex: none; }
+  .feat p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  .arch { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; overflow-x: auto; }
+  .arch svg { display: block; min-width: 760px; width: 100%; height: auto; }
+  .arch .box { fill: var(--card-solid); stroke: var(--line-gold); }
+  .arch .host { fill: var(--gold-soft); stroke: var(--line-gold); stroke-dasharray: 6 5; }
+  .arch .vm { fill: var(--card-solid); stroke: var(--line); }
+  .arch .gw { fill: var(--term); }
+  .arch text { font-family: var(--sans); fill: var(--ink); font-size: 14px; }
+  .arch .t-muted { fill: var(--muted); font-size: 12.5px; }
+  .arch .t-gold { fill: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: .08em; }
+  .arch .t-term { fill: #F8FAFC; font-weight: 600; }
+  .arch .t-term-dim { fill: #94A3B8; font-size: 12.5px; }
+  .arch .wire { stroke: var(--gold-2); stroke-width: 2; fill: none; }
+  .arch .wire-d { stroke: var(--muted); stroke-width: 1.6; fill: none; stroke-dasharray: 4 4; }
+  .arch .dot { fill: var(--ok); }
+
+  .two { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+  .checks { list-style: none; padding: 0; margin: 0; }
+  .checks li { position: relative; padding: 12px 0 12px 32px; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 15px; }
+  .checks li:last-child { border-bottom: 0; }
+  .checks li::before { content: ""; position: absolute; left: 0; top: 15px; width: 20px; height: 20px; border-radius: 6px; background: var(--gold-soft);
+    border: 1px solid var(--line-gold); }
+  .checks li::after { content: "✓"; position: absolute; left: 5px; top: 12px; color: var(--gold); font-weight: 700; font-size: 13px; }
+  .note { border-left: 3px solid var(--amber); background: var(--gold-soft); padding: 16px 18px; border-radius: 0 12px 12px 0; color: var(--ink-2); font-size: 15px; }
+  .note b { color: var(--ink); }
+
+  .install .card { padding: 24px; }
+  .cmd { position: relative; margin-top: 12px; }
+  .cmd small { display: block; color: var(--muted); font: 12px var(--mono); margin-bottom: 6px; }
+  .cmd .term { white-space: pre; box-shadow: none; }
+  .copy { position: absolute; right: 0; top: -3px; font: 600 12px var(--sans); color: var(--gold); background: var(--gold-soft);
+    border: 1px solid var(--line-gold); border-radius: 7px; padding: 3px 10px; cursor: pointer; }
+  .copy:hover { filter: brightness(1.08); }
+  .req { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+
+  details { border-bottom: 1px solid var(--line); padding: 4px 0; }
+  details summary { cursor: pointer; list-style: none; padding: 16px 32px 16px 0; font-weight: 600; font-size: 16.5px; position: relative; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; position: absolute; right: 4px; top: 12px; font-size: 22px; color: var(--gold); font-weight: 400; transition: transform .2s; }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { margin: 0 0 18px; color: var(--muted); max-width: 760px; }
+
+  .band { text-align: center; padding: 64px 24px; border-radius: 24px; border: 1px solid var(--line-gold);
+    background: radial-gradient(at 50% 0%, rgba(245, 158, 11, .18), transparent 60%), var(--card); }
+  .band h2 { margin: 0 auto 12px; }
+  .band p { color: var(--muted); margin: 0 auto 26px; max-width: 560px; }
+  .band .cta { justify-content: center; margin: 0; }
+
+  footer { padding: 48px 0 56px; border-top: 1px solid var(--line); margin-top: 84px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: grid; gap: 28px; grid-template-columns: 1.4fr 1fr 1fr; }
+  footer h5 { margin: 0 0 10px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+  footer ul { list-style: none; padding: 0; margin: 0; }
+  footer li { margin: 6px 0; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--gold); }
+  .fine { margin-top: 14px; font-size: 12.5px; }
+
+  @media (min-width: 960px) {
+    .hero-grid { grid-template-columns: 1fr 1.08fr; align-items: center; }
+    h1 { max-width: none; }
+  }
+  @media (max-width: 960px) { .feat { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 760px) {
+    .feat { grid-template-columns: 1fr; }
+    .wrap { padding: 0 16px; }
+    .nav nav a:not(.keep) { display: none; }
+    .hero { padding-top: 44px; }
+    section { padding: 60px 0; }
+    .float-term { position: static; width: 100%; margin-top: 14px; }
+    footer .wrap { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>Co<span>Space</span> — Co-op mode for AI coding.</h1>
-  <p class="tagline">Shared Linux dev spaces on your own Mac or Linux server. People you invite join over plain <code>ssh</code>; <code>claude</code>, <code>codex</code> and <code>grok</code> inside work immediately, on AI quota you provide as host through a gateway on your machine. Your credentials never leave it.</p>
-  <p class="zh">AI 编程的联机模式：在你自己的电脑上开一个空间，信任的人一条 ssh 进来，和你用同一个 AI agent。</p>
 
-  <a class="demo" href="demo.html" title="66-second demo"><img src="demo.jpg" alt="CoSpace demo video (66 seconds): one command to host, invite a guest in two clicks, a guest coding with Claude Code within a minute."></a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="CoSpace home">
+      <span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="14" r="4"/><path d="M11 11 L20 2"/><path d="M17 5 L20 8"/><path d="M14.5 7.5 L16.5 9.5"/></svg></span>
+      <span>Co<b>Space</b></span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#faq">FAQ</a>
+      <a class="keep" href="https://github.com/JingxuanKang/cospace">GitHub</a>
+    </nav>
+    <a class="btn btn-gold btn-sm" href="#install">Get started</a>
+  </div>
+</header>
 
-  <section class="card">
-    <h2>Host · one command</h2>
-    <p>Apple Silicon Mac (macOS 26+) or a Linux server with Docker. Installs the daemon, registers it as a service and opens the console.</p>
-    <pre>curl -fsSL https://cospace.jingxuan.uk/host.sh | sh</pre>
-  </section>
-
-  <section class="card">
-    <h2>Guest · one command, no account</h2>
-    <p>Installs the <code>cospace</code> tool (alias <code>co</code>). Then paste the one-time pair command your host sends you and run <code>ssh &lt;space&gt;</code>.</p>
-    <pre><small># macOS / Linux</small>curl -fsSL https://cospace.jingxuan.uk/install.sh | sh</pre>
-    <pre><small># Windows PowerShell (needs OpenSSH Client)</small>irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex</pre>
-  </section>
-
-  <div class="links">
-    <a href="https://github.com/JingxuanKang/cospace">Source and docs on GitHub</a>
-    <a href="https://github.com/JingxuanKang/cospace/blob/master/README.zh-CN.md">中文说明</a>
-    <a href="https://github.com/JingxuanKang/cospace/releases/latest">Releases</a>
-    <a href="demo.html">Demo video</a>
+<main id="top">
+  <!-- hero -->
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill"><i></i>Open source · MIT · v0.4</span>
+        <h1>Co-op mode for <span>AI coding.</span></h1>
+        <p class="lede">CoSpace turns your Mac or Linux server into shared dev spaces. Teammates join over plain <code>ssh</code>, and people and coding agents work in one place: the same files, the same Claude Code sessions, the same memory.</p>
+        <div class="cta">
+          <a class="btn btn-gold" href="#install">Install the host</a>
+          <a class="btn" href="demo.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Watch the 66-second demo</a>
+        </div>
+        <ul class="ticks">
+          <li>No signup for guests</li>
+          <li>AI quota provided by the host</li>
+          <li>Runs on your own machine</li>
+        </ul>
+      </div>
+      <div class="shot">
+        <div class="frame">
+          <div class="frame-bar"><i></i><i></i><i></i><span>CoSpace host console</span></div>
+          <img src="console.jpg" width="1600" height="950" alt="The CoSpace host console: a space named shopfront with two guests, a 14-day token chart, an $18.40 of $20.00 budget, model and network settings, and the ssh command guests use.">
+        </div>
+        <div class="float-term term" aria-label="A guest session"><span class="p">$</span> ssh shopfront
+<span class="p">space@shopfront</span>:<span class="b">~</span>$ claude --resume
+<span class="c"># every teammate's session, ready to pick up</span></div>
+      </div>
+    </div>
+    <div class="wrap works">
+      Ready inside every space:
+      <span class="chip">Claude Code</span><span class="chip">Codex</span><span class="chip">Grok</span>
+      <span>· and from your own editor:</span>
+      <span class="chip">Cursor</span><span class="chip">VS Code Remote-SSH</span><span class="chip">tmux</span>
+    </div>
   </div>
 
-  <footer>Contact: <a href="mailto:hello@cospace.jingxuan.uk">hello@cospace.jingxuan.uk</a>. MIT licensed. Not affiliated with Anthropic, OpenAI, xAI or Apple. Invite people you trust: guests use the AI quota the host provides.</footer>
+  <!-- pillars -->
+  <section id="why">
+    <div class="wrap">
+      <p class="kicker">Why CoSpace</p>
+      <h2>One place where your team and its agents work together</h2>
+      <p class="sub">Coding agents keep their sessions and memory as plain files in the home directory. Give everyone the same home, and collaboration comes for free.</p>
+      <div class="cards">
+        <article class="card">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6"/><rect x="15" y="9" width="6" height="6" rx="1.6"/><path d="M17 12h2"/></svg></div>
+          <h3>People and agents, side by side</h3>
+          <p>One space holds one shared home, so every session is visible to everyone in it.</p>
+          <ul>
+            <li><code>claude --resume</code> lists everyone's sessions</li>
+            <li>Take over a teammate's run with full context</li>
+            <li>Watch or pair live with <code>tmux attach</code></li>
+            <li>Commits stay attributed to each guest</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 L4 14 L11 14 L10 22 L20 9 L13 9 Z"/></svg></div>
+          <h3>A working agent in a minute</h3>
+          <p>Guests install one small file and pair once. After that, a space is one <code>ssh</code> away.</p>
+          <ul>
+            <li>No account, no API key, no IDE to install</li>
+            <li>Claude Code, Codex and Grok ready on login</li>
+            <li>macOS, Linux and Windows guests</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 L20 6 V12 C20 16.5 16.6 20 12 21 C7.4 20 4 16.5 4 12 V6 Z"/><path d="M9 12 L11.2 14.2 L15.5 9.8"/></svg></div>
+          <h3>Full-auto agents, inside a fence</h3>
+          <p>Each space is its own Linux VM, so agents can run without permission prompts.</p>
+          <ul>
+            <li>Full-auto mode on by default, per space</li>
+            <li>Dollar budget and concurrency cap per space</li>
+            <li>Host credentials never enter a space</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- how -->
+  <section id="how">
+    <div class="wrap">
+      <p class="kicker">How it works</p>
+      <h2>Three steps from install to a shared session</h2>
+      <p class="sub">The host runs the daemon. Guests only need ssh and the small <code>cospace</code> tool.</p>
+      <div class="steps">
+        <div class="card step">
+          <div class="n"></div>
+          <h3>Install the host</h3>
+          <p>One command on an Apple Silicon Mac or a Linux server. The console opens in your browser.</p>
+          <div class="term"><span class="p">$</span> curl -fsSL cospace.jingxuan.uk/host.sh | sh
+<span class="c"># installs the runtime and the daemon</span>
+Console: http://127.0.0.1:18931</div>
+        </div>
+        <div class="card step">
+          <div class="n"></div>
+          <h3>Create a space, invite a guest</h3>
+          <p>Click <b>New Space</b>, then <b>Invite a Guest</b>. Send the link; it holds a one-time pairing code.</p>
+          <div class="term"><span class="c"># or from the CLI</span>
+<span class="p">$</span> cospaced space create shopfront
+<span class="p">$</span> cospaced invite shopfront
+<span class="c"># prints the lines to send your guest</span></div>
+        </div>
+        <div class="card step">
+          <div class="n"></div>
+          <h3>Guests ssh in</h3>
+          <p>The guest pairs once. From then on, the space works like any other ssh host.</p>
+          <div class="term"><span class="p">$</span> cospace pair <span class="y">&lt;host&gt; &lt;code&gt;</span>
+<span class="c"># pins the space's host key, adds the ssh alias</span>
+<span class="p">$</span> ssh shopfront
+<span class="p">space@shopfront</span>:<span class="b">~</span>$ claude</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- features -->
+  <section id="features">
+    <div class="wrap">
+      <p class="kicker">Features</p>
+      <h2>The host stays in control</h2>
+      <p class="sub">Everything a host needs to open a shared workspace to people they trust, and to close it again in one click.</p>
+      <div class="feat">
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 19h16"/><path d="M7 15v-4M12 15V7M17 15v-6"/></svg>Budgets per space</h4><p>Set a dollar cap and a concurrency cap for each space. Requests over the limit get a clean 429.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>Revoke in one click</h4><p>Each guest has their own key. Revoking it cuts their access immediately.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 18 L8 12 L12 15 L20 6"/></svg>Usage at a glance</h4><p>A 14-day token chart and an estimated cost for every space.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M10 10v10"/></svg>Templates</h4><p>Save a space's size, AI selection, model, network, budget and full-auto setting. Stamp out identical spaces.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.7 2.5 13.3 0 16"/></svg>Internet switch</h4><p>Turn off outbound Internet for a space. SSH and the AI gateway keep working.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Sleeps when idle</h4><p>Idle spaces sleep to free memory and wake on the next connection.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M8 7 L3 12 L8 17M16 7 L21 12 L16 17"/></svg>Your own editor</h4><p>Cursor and VS Code Remote-SSH connect by space name. Common dev ports forward to the guest's localhost.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.3 11 L15.7 7M8.3 13 L15.7 17"/></svg>Peer-to-peer</h4><p>Guests connect peer-to-peer through an embedded Tailscale library, with Tailscale's relays as a fallback. There is no CoSpace server in the middle.</p></div>
+        <div><h4><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Mac or Linux host</h4><p>Apple container on macOS 26 or later, Docker on Linux. One VM per space, with a persistent volume.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- architecture -->
+  <section id="architecture">
+    <div class="wrap">
+      <p class="kicker">Architecture</p>
+      <h2>Everything runs on the host's machine</h2>
+      <p class="sub">A single Go daemon runs the console, the AI gateway and the spaces. Guests reach a space over ssh; agents in the space reach AI providers only through the gateway.</p>
+      <div class="arch">
+        <svg viewBox="0 0 1000 380" role="img" aria-label="Guests connect over ssh, peer to peer, to spaces on the host machine. Each space is a Linux VM. Agents in spaces call the AI gateway with a per-space token. The gateway meters usage, enforces caps and forwards requests to AI providers with the host's credentials.">
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#D97706"/></marker></defs>
+          <!-- guests -->
+          <text x="20" y="40" class="t-gold">GUESTS</text>
+          <rect class="box" x="20" y="60" width="180" height="62" rx="12"/><text x="38" y="88">alice · macOS</text><text x="38" y="108" class="t-muted">cospace + ssh</text>
+          <rect class="box" x="20" y="140" width="180" height="62" rx="12"/><text x="38" y="168">bob · Windows</text><text x="38" y="188" class="t-muted">Cursor Remote-SSH</text>
+          <rect class="box" x="20" y="220" width="180" height="62" rx="12"/><text x="38" y="248">carol · Linux</text><text x="38" y="268" class="t-muted">tmux attach</text>
+          <path class="wire" d="M200 91 C 250 91, 250 150, 300 150" marker-end="url(#ah)"/>
+          <path class="wire" d="M200 171 L 300 171" marker-end="url(#ah)"/>
+          <path class="wire" d="M200 251 C 250 251, 250 192, 300 192" marker-end="url(#ah)"/>
+          <text x="20" y="312" class="t-muted">plain ssh, peer-to-peer</text>
+          <!-- host -->
+          <rect class="host" x="310" y="20" width="440" height="340" rx="18"/>
+          <text x="330" y="48" class="t-gold">HOST MACHINE · MAC OR LINUX</text>
+          <rect class="vm" x="330" y="68" width="400" height="160" rx="14"/>
+          <text x="348" y="94" style="font-weight:600">Spaces</text><text x="414" y="94" class="t-muted">one Linux VM each</text>
+          <rect class="box" x="348" y="110" width="116" height="98" rx="10"/><circle class="dot" cx="364" cy="130" r="4.5"/><text x="375" y="135" class="mono" style="font-size:13px">shopfront</text><text x="362" y="162" class="t-muted">shared home</text><text x="362" y="182" class="t-muted">claude · codex</text>
+          <rect class="box" x="472" y="110" width="116" height="98" rx="10"/><circle class="dot" cx="488" cy="130" r="4.5"/><text x="499" y="135" class="mono" style="font-size:13px">hackathon</text><text x="486" y="162" class="t-muted">shared home</text><text x="486" y="182" class="t-muted">grok · codex</text>
+          <rect class="box" x="596" y="110" width="116" height="98" rx="10"/><circle cx="612" cy="130" r="4.5" fill="#CBD5E1"/><text x="623" y="135" class="mono" style="font-size:13px">thesis-lab</text><text x="610" y="162" class="t-muted">asleep</text><text x="610" y="182" class="t-muted">wakes on ssh</text>
+          <path class="wire-d" d="M530 228 L 530 262"/>
+          <text x="540" y="250" class="t-muted">per-space token</text>
+          <rect class="gw" x="330" y="264" width="400" height="76" rx="14"/>
+          <text x="350" y="292" class="t-term">cospaced</text>
+          <text x="350" y="316" class="t-term-dim">console · AI gateway · metering · budgets · revocation</text>
+          <!-- providers -->
+          <path class="wire" d="M730 302 L 800 302" marker-end="url(#ah)"/>
+          <text x="740" y="290" class="t-muted">host</text>
+          <text x="740" y="330" class="t-muted">credentials</text>
+          <text x="810" y="250" class="t-gold">AI PROVIDERS</text>
+          <rect class="box" x="810" y="264" width="170" height="76" rx="12"/>
+          <text x="828" y="292">Anthropic · OpenAI</text><text x="828" y="316">xAI</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- security -->
+  <section id="security">
+    <div class="wrap">
+      <p class="kicker">Security</p>
+      <h2>Clear boundaries, stated up front</h2>
+      <p class="sub">CoSpace is built for people you trust. It still keeps the host's machine and credentials out of reach.</p>
+      <div class="two">
+        <div class="card">
+          <ul class="checks">
+            <li>Real provider credentials stay in the gateway process on the host. A space only holds its own token, which the host can revoke at any time.</li>
+            <li>A space cannot see the host's home directory, other spaces, or the host's git and ssh identity.</li>
+            <li>Every space has its own ED25519 host key. The guest tool pins it, so guests never accept an unknown key.</li>
+            <li>The console refuses cross-site requests and unexpected Host headers. The gateway only answers the host and its spaces.</li>
+            <li>No CoSpace cloud: binaries and install scripts are published on GitHub, and connections are peer-to-peer.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="note"><b>Shared by design.</b> The host can see everything inside a space: it is a team workspace, not a private VM. Guests use AI quota the host provides. So invite people you trust, and set a budget for each space.</div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- install -->
+  <section id="install" class="install">
+    <div class="wrap">
+      <p class="kicker">Get started</p>
+      <h2>Install in one command</h2>
+      <p class="sub">The same command upgrades an existing install. Everything is published on GitHub.</p>
+      <div class="two">
+        <div class="card">
+          <h3 style="margin-top:0">Host</h3>
+          <p>Installs the container runtime if needed, the <code>cospaced</code> daemon as a service, and opens the console.</p>
+          <div class="cmd"><small># macOS 26+ (Apple Silicon) or Linux with Docker</small><div class="term">curl -fsSL https://cospace.jingxuan.uk/host.sh | sh</div><button class="copy" type="button">Copy</button></div>
+          <p class="req">First run downloads the space image once (about 600 MB). New spaces then start in seconds.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Guest</h3>
+          <p>Installs the <code>cospace</code> tool (alias <code>co</code>). Then run the pairing line your host sends you.</p>
+          <div class="cmd"><small># macOS / Linux</small><div class="term">curl -fsSL https://cospace.jingxuan.uk/install.sh | sh</div><button class="copy" type="button">Copy</button></div>
+          <div class="cmd"><small># Windows PowerShell (needs OpenSSH Client)</small><div class="term">irm https://raw.githubusercontent.com/JingxuanKang/cospace/master/docs/install.ps1 | iex</div><button class="copy" type="button">Copy</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- faq -->
+  <section id="faq">
+    <div class="wrap">
+      <p class="kicker">FAQ</p>
+      <h2>Questions</h2>
+      <details><summary>Who pays for the AI usage?</summary><p>The host provides the AI quota for their spaces. Each space has a dollar cap and a concurrency cap, and the console shows the estimated cost per space. The estimate uses list prices; the host's actual bill may differ.</p></details>
+      <details><summary>Is CoSpace a cloud service?</summary><p>No. Spaces, the console and the gateway all run on the host's own Mac or Linux server. Install scripts and binaries are published on GitHub, and guests connect peer-to-peer. There is no CoSpace server that sees your code or traffic.</p></details>
+      <details><summary>Do guests need an account?</summary><p>No. A guest installs one small tool, pairs once with a one-time code, and then uses plain ssh. Cursor and VS Code Remote-SSH work with the same space name.</p></details>
+      <details><summary>Can the host see my work?</summary><p>Yes. A space is a shared team workspace, and the host can see everything inside it. Do not use a space for anything you would not share with the host.</p></details>
+      <details><summary>Which tools are inside a space?</summary><p>Claude Code, Codex and Grok come preinstalled and ready, together with git, gh, curl and the usual build tools. Agents can install anything else with apt, npm or pip.</p></details>
+      <details><summary>What does CoSpace cost?</summary><p>CoSpace is free and open source under the MIT license.</p></details>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="band">
+      <h2>Open a space for your team</h2>
+      <p>One command on your machine, one invite link, and your team is coding with agents in the same place.</p>
+      <div class="cta">
+        <a class="btn btn-gold" href="#install">Install the host</a>
+        <a class="btn" href="https://github.com/JingxuanKang/cospace">View on GitHub</a>
+      </div>
+    </div>
+  </div>
 </main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="#top"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="14" r="4"/><path d="M11 11 L20 2"/><path d="M17 5 L20 8"/><path d="M14.5 7.5 L16.5 9.5"/></svg></span><span>Co<b>Space</b></span></a>
+      <p>Co-op mode for AI coding.<br>Contact: <a href="mailto:hello@cospace.jingxuan.uk">hello@cospace.jingxuan.uk</a></p>
+      <p class="fine">© 2026 CoSpace · MIT licensed. Not affiliated with Anthropic, OpenAI, xAI or Apple.</p>
+    </div>
+    <div>
+      <h5>Product</h5>
+      <ul>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="demo.html">Demo video</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Resources</h5>
+      <ul>
+        <li><a href="https://github.com/JingxuanKang/cospace">Source on GitHub</a></li>
+        <li><a href="https://github.com/JingxuanKang/cospace/releases/latest">Releases</a></li>
+        <li><a href="https://github.com/JingxuanKang/cospace/blob/master/DESIGN.md">Design notes</a></li>
+        <li><a href="https://github.com/JingxuanKang/cospace/blob/master/README.zh-CN.md">中文说明</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.parentElement.querySelector('.term').textContent.trim();
+      navigator.clipboard.writeText(t).then(function () {
+        b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
+      });
+    });
+  });
+</script>
 </body>
 </html>
