@@ -1,0 +1,31 @@
+# CoSpace
+
+> CoSpace is open-source software (MIT) that turns a Mac or Linux server into shared Linux dev spaces for people and AI coding agents. Guests join over plain `ssh`, with no account and no API key. Claude Code, Codex and Grok work inside each space on AI quota that the host provides through a credential gateway. Host credentials never enter a space.
+
+CoSpace is for hosts who want to give people they trust a ready-to-run coding-agent environment on their own machine, with no signup and no cloud bill. It is also for people who want to work with a teammate's coding agent: one shared home directory holds the same files, the same Claude Code sessions and the same memory.
+
+Key facts:
+
+- Host: Apple Silicon Mac on macOS 26+ (each space is an Apple container Linux VM), or a Linux x86_64/arm64 server with Docker and systemd.
+- Guests: macOS, Linux, Windows. They connect with standard ssh or Cursor Remote SSH.
+- Host install: `curl -fsSL https://cospace.jingxuan.uk/host.sh | sh`
+- Guest install: `curl -fsSL https://cospace.jingxuan.uk/install.sh | sh` (command `cospace`, alias `co`); Homebrew: `brew install jingxuankang/tap/cospace`
+- The host controls each space: dollar budget cap, concurrency cap, per-provider switches, Internet access switch, instant revocation.
+- Connectivity is peer-to-peer (embedded Tailscale library with DERP fallback). The vendor runs no server.
+- Web console and guest CLI are in English and Simplified Chinese.
+- Written in Go; single static binaries. Latest version: see GitHub Releases.
+- Contact: hello@cospace.jingxuan.uk
+
+## Docs
+
+- [Website](https://cospace.jingxuan.uk/): product overview, install commands, FAQ
+- [README](https://raw.githubusercontent.com/JingxuanKang/cospace/master/README.md): install, quick start, architecture, security model
+- [README (简体中文)](https://raw.githubusercontent.com/JingxuanKang/cospace/master/README.zh-CN.md)
+- [Deploy and operations](https://raw.githubusercontent.com/JingxuanKang/cospace/master/Deploy.md): host install, daemon flags, service management, Sub2API accounts
+- [Design (Chinese)](https://raw.githubusercontent.com/JingxuanKang/cospace/master/DESIGN.md): full system design
+
+## Optional
+
+- [Demo video (66 s)](https://cospace.jingxuan.uk/demo.html)
+- [Source code on GitHub](https://github.com/JingxuanKang/cospace)
+- [Releases](https://github.com/JingxuanKang/cospace/releases)
