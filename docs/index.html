@@ -90,8 +90,10 @@
   /* hero */
   .hero { padding: 72px 0 40px; }
   .hero-grid { display: grid; grid-template-columns: 1fr; gap: 48px; }
+  .hero-grid > * { min-width: 0; }
   .pill { display: inline-flex; gap: 8px; align-items: center; padding: 5px 12px; border-radius: 999px; font-size: 13px; color: var(--gold);
     background: var(--gold-soft); border: 1px solid var(--line-gold); }
+  a.pill:hover { text-decoration: none; border-color: var(--gold-2); }
   .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(5, 150, 105, .15); }
   h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -.03em; margin: 18px 0 18px; max-width: 14ch; }
   h1 span { background: linear-gradient(90deg, #B45309, #F59E0B); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -175,6 +177,10 @@
     border: 1px solid var(--line-gold); border-radius: 7px; padding: 3px 10px; cursor: pointer; }
   .copy:hover { filter: brightness(1.08); }
   .req { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .hero-cmd { max-width: 600px; margin: 0 0 20px; }
+  .hero-cmd .line { position: relative; }
+  .hero-cmd .term { padding: 12px 74px 12px 16px; font-size: 12.5px; box-shadow: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .hero-cmd .copy { top: 50%; right: 10px; transform: translateY(-50%); color: #FBBF24; background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); }
 
   details { border-bottom: 1px solid var(--line); padding: 4px 0; }
   details summary { cursor: pointer; list-style: none; padding: 16px 32px 16px 0; font-weight: 600; font-size: 16.5px; position: relative; }
@@ -238,13 +244,14 @@
   <div class="hero">
     <div class="wrap hero-grid">
       <div>
-        <span class="pill"><i></i>Open source · MIT · v0.4</span>
+        <a class="pill" href="https://github.com/JingxuanKang/cospace/releases/latest" title="Latest release on GitHub"><i></i>Open source · MIT · v0.4</a>
         <h1>Co-op mode for <span>AI coding.</span></h1>
         <p class="lede">CoSpace turns your Mac or Linux server into shared dev spaces. Teammates join over plain <code>ssh</code>, and people and coding agents work in one place: the same files, the same Claude Code sessions, the same memory.</p>
         <div class="cta">
           <a class="btn btn-gold" href="#install">Install the host</a>
           <a class="btn" href="demo.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Watch the 66-second demo</a>
         </div>
+        <div class="cmd hero-cmd"><small># host · macOS 26+ (Apple Silicon) or Linux</small><div class="line"><div class="term" data-copy="curl -fsSL https://cospace.jingxuan.uk/host.sh | sh"><span class="p">$</span> curl -fsSL https://cospace.jingxuan.uk/host.sh | sh</div><button class="copy" type="button">Copy</button></div></div>
         <ul class="ticks">
           <li>No signup for guests</li>
           <li>AI quota provided by the host</li>
@@ -515,7 +522,8 @@ Console: http://127.0.0.1:18931</div>
 <script>
   document.querySelectorAll('.copy').forEach(function (b) {
     b.addEventListener('click', function () {
-      var t = b.parentElement.querySelector('.term').textContent.trim();
+      var term = b.parentElement.querySelector('.term');
+      var t = term.getAttribute('data-copy') || term.textContent.trim();
       navigator.clipboard.writeText(t).then(function () {
         b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
       });

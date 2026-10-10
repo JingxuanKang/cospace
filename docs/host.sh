@@ -26,8 +26,14 @@ CONTAINER_RELEASES="https://github.com/apple/container/releases"
 say() { printf 'cospace: %s\n' "$*"; }
 die() { printf 'cospace: %s\n' "$*" >&2; exit 1; }
 
+# Everything runs from main, called on the last line, so a download cut off
+# halfway through `curl | sh` runs nothing.
+main() {
+
 os=$(uname -s)
 arch=$(uname -m)
+# A shell under Rosetta reports x86_64 on Apple Silicon; check the hardware.
+if [ "$os" = Darwin ] && [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = 1 ]; then arch=arm64; fi
 
 # --- runtime prerequisites -----------------------------------------------------
 case "$os" in
@@ -82,7 +88,11 @@ if [ -z "$bindir" ]; then bindir="$HOME/.local/bin"; mkdir -p "$bindir"; fi
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 say "downloading cospaced ($goos/$goarch)…"
-curl -fsSL "$BASE/cospaced_${goos}_${goarch}.tar.gz" | tar -xz -C "$tmp"
+url="$BASE/cospaced_${goos}_${goarch}.tar.gz"
+curl -fsSL -o "$tmp/cospaced.tar.gz" "$url" \
+  || die "download failed: $url — check that github.com is reachable, then re-run."
+tar -xzf "$tmp/cospaced.tar.gz" -C "$tmp" && [ -f "$tmp/cospaced" ] \
+  || die "the downloaded archive is incomplete; re-run."
 chmod +x "$tmp/cospaced"
 mv "$tmp/cospaced" "$bindir/cospaced"
 # Unsigned for now: clear the quarantine flag so Gatekeeper lets it run.
@@ -120,3 +130,6 @@ Next:
   • In the console, create a space and click "Invite a Guest".
 EOF
 fi
+}
+
+main "$@"

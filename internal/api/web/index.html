@@ -115,11 +115,16 @@
     .nav-label { padding: 20px 12px 8px; }
     .nav-spaces { display: flex; flex-direction: column; gap: 2px; }
     .sidebar-spacer { flex: 1; min-height: 18px; }
-    .host-state {
-      display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 14px 10px 0;
-      color: #64748B; font-size: 11.5px;
+    .sidebar-foot { display: flex; flex-direction: column; gap: 10px; padding: 14px 10px 0; }
+    .host-state { min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 20px; color: #64748B; font-size: 11.5px; }
+    .host-copy { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lang-switch { align-self: flex-start; display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: rgba(15, 23, 42, 0.05); }
+    .lang-option {
+      min-height: 24px; padding: 0 10px; border: 0; border-radius: 6px; color: #64748B; background: none;
+      font-size: 11.5px; cursor: pointer; transition: all 0.15s ease;
     }
-    .host-state span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lang-option:hover { color: #B45309; }
+    .lang-option.active { color: #B45309; background: #FFFFFF; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1); font-weight: 600; }
 
     .content-shell {
       flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 1;
@@ -291,7 +296,7 @@
     .guest-fingerprint { min-width: 0; flex: 1; overflow: hidden; color: #94A3B8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
     .guest-added { width: 92px; color: #64748B; font-size: 12px; white-space: nowrap; }
     .guest-row {
-      display: grid; grid-template-columns: minmax(72px, 96px) minmax(110px, 1fr) 112px auto;
+      display: grid; grid-template-columns: minmax(72px, 96px) minmax(110px, 1fr) auto auto;
       column-gap: 14px;
     }
     .guest-row .guest-name, .guest-row .guest-added { width: auto; }
@@ -439,8 +444,6 @@
     .skeleton-line { width: 58%; height: 13px; border-radius: 7px; }
     .skeleton-title { width: 150px; height: 31px; border-radius: 9px; }
     .host-version { font-size: 11px; color: #94A3B8; flex: none; }
-    .lang-toggle { margin-left: auto; font-size: 11px; color: #94A3B8; padding: 0 4px; }
-    .lang-toggle:hover { color: #B45309; }
     .toast {
       position: fixed; right: 22px; bottom: 22px; z-index: 30; max-width: min(390px, calc(100vw - 44px));
       display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
@@ -475,7 +478,7 @@
     }
     @media (max-width: 900px) {
       body { overflow: auto; }
-      .app-shell { min-height: 100vh; height: auto; overflow: visible; }
+      .app-shell { min-height: 100vh; height: auto; overflow: visible; overflow-x: clip; }
       .sidebar { width: 210px; min-height: 100vh; position: sticky; top: 0; align-self: flex-start; }
       .content-shell, .content-scroll { overflow: visible; }
       .summary-grid, .detail-grid { grid-template-columns: 1fr; }
@@ -488,7 +491,9 @@
       .sidebar { width: 100%; min-height: 0; position: relative; padding-bottom: 14px; border-right: 0; border-bottom: 1px solid rgba(15, 23, 42, 0.07); }
       .brand { padding-bottom: 14px; }
       .nav-scroll { display: flex; gap: 6px; overflow-x: auto; }
-      .nav-label, .sidebar-spacer, .host-state { display: none; }
+      .nav-label, .sidebar-spacer { display: none; }
+      .sidebar-foot { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 4px 0; }
+      .lang-switch { align-self: auto; flex: none; }
       .nav-spaces { display: contents; }
       .nav-item { width: auto; flex: none; padding: 0 12px; }
       .sidebar > .btn-gold { position: absolute; top: 23px; right: 14px; width: auto !important; }
@@ -739,7 +744,9 @@
       "This space's VM no longer exists on this Mac (it was removed outside CoSpace). Delete the space, or recreate it and copy its workspace back.": "这个空间的 VM 已不在本机上（在 CoSpace 之外被删除了）。删除该空间，或重建后把 workspace 拷回去。",
       "This space is upgrading its network controls. Try again when the upgrade finishes.": "这个空间正在升级网络控制，升级完成后再试。",
       "Request refused: open the console from its own address (localhost or the published hostname).": "请求被拒绝：请从控制台自己的地址打开（localhost 或已发布的域名）。",
-      "Language": "语言"
+      "Language": "语言",
+      "Host key": "主机密钥",
+      "Official account": "官方账号"
     };
     function detectLang() {
       try {
@@ -796,7 +803,7 @@
       try {
         response = await fetch(path, { ...options, headers });
       } catch (error) {
-        throw new Error(error && error.message ? error.message : t("Could not reach the CoSpace daemon."));
+        throw new Error(t("Could not reach the CoSpace daemon."));
       }
       const text = response.status === 204 ? "" : await response.text();
       let payload = null;
@@ -949,8 +956,11 @@
             <div class="nav-spaces">${navSpaces}</div>
           </div>
           <div class="sidebar-spacer"></div>
-          <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${imageReady() ? "" : `disabled title="${t("Available once the space image finishes downloading")}"`}>${icons.plus} ${t("New Space")}</button>
-          <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span>${escapeHTML(hostCopy)}</span>${hostReady && state.host.version ? `<span class="host-version" title="cospaced">${escapeHTML(state.host.version)}</span>` : ""}<button class="text-button lang-toggle" type="button" data-action="toggle-lang" aria-label="${t("Language")}">${lang === "zh" ? "English" : "中文"}</button></div>
+          <button class="btn-gold" style="width:100%" type="button" data-action="open-create" ${createDisabledAttr()}>${icons.plus} ${t("New Space")}</button>
+          <div class="sidebar-foot">
+            <div class="host-state"><span class="dot ${hostReady ? "awake pulse" : ""}" style="width:7px;height:7px"></span><span class="host-copy">${escapeHTML(hostCopy)}</span>${hostReady && state.host.version ? `<span class="host-version" title="cospaced">${escapeHTML(state.host.version)}</span>` : ""}</div>
+            <div class="lang-switch" role="group" aria-label="${t("Language")}">${[["en", "English"], ["zh", "中文"]].map(([code, label]) => `<button class="lang-option ${lang === code ? "active" : ""}" type="button" data-action="set-lang" data-lang="${code}" lang="${code === "zh" ? "zh-CN" : "en"}" aria-pressed="${lang === code}">${label}</button>`).join("")}</div>
+          </div>
         </aside>`;
     }
 
@@ -959,6 +969,11 @@
     function imageReady() {
       const image = state.host && state.host.image;
       return !image || image.state === "ready";
+    }
+    function canCreate() { return !!state.host && imageReady(); }
+    function createDisabledAttr() {
+      if (!state.host) return `disabled title="${t("Host unavailable")}"`;
+      return imageReady() ? "" : `disabled title="${t("Available once the space image finishes downloading")}"`;
     }
 
     function renderImageBanner() {
@@ -1005,7 +1020,7 @@
           <div class="empty-icon">${icons.key}</div>
           <span class="empty-title">${loadError ? t("Couldn’t load spaces") : t("No spaces yet")}</span>
           <span class="empty-copy">${loadError ? t("Check that the CoSpace daemon is running, then try again.") : t("Create one and invite your first guest.")}</span>
-          ${loadError ? `<button class="btn-ghost" type="button" data-action="retry-overview">${t("Try again")}</button>` : ""}
+          ${loadError ? `<button class="btn-ghost" type="button" data-action="retry-overview">${t("Try again")}</button>` : `<button class="btn-gold" type="button" data-action="open-create" ${createDisabledAttr()}>${icons.plus} ${t("New Space")}</button>`}
         </div>`;
     }
 
@@ -1060,6 +1075,13 @@
       const memoryUsed = Number(host.memory_used_gb || 0);
       const tokensToday = state.spaces.reduce((sum, space) => sum + spaceTokensToday(space), 0);
       const requestsToday = state.spaces.reduce((sum, space) => sum + Number((space.usage_today || {}).requests || 0), 0);
+      if (!state.loaded) {
+        return `
+        <main class="page">
+          <header class="${animationClass(1)}"><h1 class="page-title">${t("All Spaces")}</h1><p class="page-subtitle">${t("Shared dev spaces running on this Mac. Guests connect with plain ssh.")}</p></header>
+          <section class="space-list" aria-label="${t("Spaces")}">${renderEmptyState(true)}</section>
+        </main>`;
+      }
       const rows = state.spaces.map(space => {
         const awakeSpace = spaceIsAwake(space);
         const powerLabel = spacePowerLabel(space);
@@ -1160,7 +1182,7 @@
           <div class="access-cmd-row mono"><span class="prompt">$</span><span class="command-name"> ssh</span><span class="command-accent"> ${name}</span><button class="btn-ghost terminal-copy" type="button" data-action="copy-ssh" data-space="${name}">${state.copied === "ssh" ? t("Copied") : t("Copy")}</button></div>
           <span class="access-note">${t("The whole login for a paired guest — Cursor and VS Code Remote-SSH use the same name.")}</span>
           <span class="access-note" style="color:#94A3B8">${t("Ports 3000 · 5173 · 8000 · 8080 · 8888 auto-forward to the guest’s localhost; any other port:")} <span class="mono">ssh -L 4000:localhost:4000 ${name}</span>.</span>
-          <div class="host-key"><span class="label">Host key</span><span class="host-key-value mono">${escapeHTML(space.host_key_fp || t("Not available"))}</span></div>
+          <div class="host-key"><span class="label">${t("Host key")}</span><span class="host-key-value mono">${escapeHTML(space.host_key_fp || t("Not available"))}</span></div>
         </div>`;
     }
 
@@ -1209,7 +1231,7 @@
         <span class="card-heading">${t("Model &amp; network")}</span>
         <label class="field-group"><span class="label">${t("Codex account")}</span>
           <select class="field" aria-label="${t("Codex account")}" data-setting="codex-route" data-space="${escapeHTML(space.name)}" ${busy ? "disabled" : ""}>
-            ${options.routes.map(r => `<option value="${escapeHTML(r.id)}" ${r.id === route ? "selected" : ""} ${!r.configured ? "disabled" : ""}>${escapeHTML(r.label)}${r.configured ? "" : t(" · not configured")}</option>`).join("")}
+            ${options.routes.map(r => `<option value="${escapeHTML(r.id)}" ${r.id === route ? "selected" : ""} ${!r.configured ? "disabled" : ""}>${escapeHTML(t(r.label))}${r.configured ? "" : t(" · not configured")}</option>`).join("")}
           </select>
         </label>
         <label class="field-group"><span class="label">${t("Default Codex model")}</span>
@@ -1267,7 +1289,7 @@
         <div class="modal-backdrop" data-action="close-modal">
           <form class="card modal create-modal ${state.animate ? "scale-in" : ""}" role="dialog" aria-modal="true" aria-labelledby="limits-title" data-form="limits">
             <div class="modal-head"><span class="modal-title" id="limits-title">${t("Limits · {name}", { name: escapeHTML(space.name) })}</span><button class="text-button modal-close" type="button" data-action="close-modal" aria-label="${t("Close")}">${icons.close}</button></div>
-            <label class="field-group"><span class="label">${t("Spend cap (USD, 0 = no cap)")}</span><input class="field mono" id="limit-usd" name="usd" type="number" min="0" step="1" inputmode="decimal" value="${limit || ""}" placeholder="0"></label>
+            <label class="field-group"><span class="label">${t("Spend cap (USD, 0 = no cap)")}</span><input class="field mono" id="limit-usd" name="usd" type="number" min="0" step="0.01" inputmode="decimal" value="${limit || ""}" placeholder="0"></label>
             <label class="field-group"><span class="label">${t("Max concurrent requests")}</span><input class="field mono" id="limit-conc" name="conc" type="number" min="1" step="1" inputmode="numeric" value="${conc || ""}" placeholder="5"></label>
             <div class="modal-actions"><button class="btn-ghost" type="button" data-action="close-modal">${t("Cancel")}</button><button class="btn-gold" type="submit" ${busy ? "disabled" : ""}>${busy ? t("Saving…") : t("Save")}</button></div>
           </form>
@@ -1585,7 +1607,7 @@
       body.usd_limit = usdRaw === "" ? 0 : Number(usdRaw);
       body.max_concurrency = concRaw === "" ? 0 : Number(concRaw);
       if (!Number.isFinite(body.usd_limit) || body.usd_limit < 0) { showError(new Error(t("Spend cap must be a number ≥ 0."))); return; }
-      if (!Number.isFinite(body.max_concurrency) || body.max_concurrency < 0) { showError(new Error(t("Concurrency must be a whole number ≥ 0."))); return; }
+      if (!Number.isInteger(body.max_concurrency) || body.max_concurrency < 0) { showError(new Error(t("Concurrency must be a whole number ≥ 0."))); return; }
       const busy = `limits:${spaceName}`;
       setState({ busy }, false);
       try {
@@ -1644,7 +1666,7 @@
           confirmRevoke: null
         }, true);
         await refreshOverview(true);
-        await loadUsage(name, true);
+        await loadUsage(finalName, true);
       } catch (error) {
         setState({ busy: null }, false);
         showError(error);
@@ -1840,7 +1862,7 @@
         saveTemplate(spaceName);
       } else if (action === "delete-template") {
         deleteTemplate(control.dataset.template);
-      } else if (action === "open-create" && imageReady()) {
+      } else if (action === "open-create" && canCreate()) {
         setState({ modal: "create", newSpace: { name: "", memory_gb: 2, cpus: Math.min(4, (state.host && state.host.cpus) || 4), template: "" }, confirmRevoke: null }, true);
         requestAnimationFrame(() => document.getElementById("new-space-name")?.focus());
       } else if (action === "pick-memory") {
@@ -1878,8 +1900,8 @@
         setState({ toast: null }, false);
       } else if (action === "retry-overview") {
         refreshOverview(true);
-      } else if (action === "toggle-lang") {
-        setLang(lang === "zh" ? "en" : "zh");
+      } else if (action === "set-lang") {
+        if (control.dataset.lang !== lang) setLang(control.dataset.lang);
       }
     });
 
