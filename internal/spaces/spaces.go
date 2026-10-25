@@ -35,7 +35,8 @@ var (
 )
 
 // codexModelCatalog is a snapshot of the official codex model catalog
-// (gpt-6.1 sol / gpt-6 astra / gpt-6 luna, all verified through the gateway). codex only
+// (gpt-6.1-sol / gpt-6-astra / gpt-6-luna; this generation has not been verified
+// through the gateway yet — the previous gpt-5.6 snapshot was). codex only
 // enumerates models for its built-in provider; a custom provider gets an
 // empty /model picker unless a model_catalog_json supplies the entries.
 // Refresh by copying the wanted entries from a current official catalog.
