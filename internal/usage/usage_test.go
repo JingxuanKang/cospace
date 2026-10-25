@@ -69,7 +69,7 @@ func TestRecordCostAndSpendBySpace(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.RecordCost("acme", "anthropic", "claude-3-5-sonnet", 1000, 200, 1.25)
-	s.RecordCost("acme", "openai", "gpt-5.6", 500, 100, 0.75)
+	s.RecordCost("acme", "openai", "gpt-6.1-sol", 500, 100, 0.75)
 	s.RecordCost("thesis", "xai", "grok-4", 300, 50, 0.40)
 	// A plain token row (no cost) must not affect spend totals.
 	s.RecordTokens("acme", "anthropic", 999, 999)

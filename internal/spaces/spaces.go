@@ -35,7 +35,7 @@ var (
 )
 
 // codexModelCatalog is a snapshot of the official codex model catalog
-// (gpt-5.6 sol/terra/luna, all verified through the gateway). codex only
+// (gpt-6.1 sol / gpt-6 astra / gpt-6 luna, all verified through the gateway). codex only
 // enumerates models for its built-in provider; a custom provider gets an
 // empty /model picker unless a model_catalog_json supplies the entries.
 // Refresh by copying the wanted entries from a current official catalog.
@@ -208,9 +208,9 @@ type Manager struct {
 	C          container.Runtime
 	Image      string
 	GatewayURL string // reachable from inside spaces, e.g. http://192.168.64.1:18930
-	CodexModel string // model name codex uses in spaces (host-specific); default gpt-5.6-sol
+	CodexModel string // model name codex uses in spaces (host-specific); default gpt-6.1-sol
 	// ClaudeModel, when set, becomes the default model in every space's managed
-	// claude settings (e.g. "claude-fable-5[1m]"). Useful because claude's
+	// claude settings (e.g. "claude-fable-5-1[1m]"). Useful because claude's
 	// model picker in API-token auth mode doesn't list subscription-tier
 	// models even though the gateway serves them fine. Empty = claude default.
 	ClaudeModel string
@@ -249,7 +249,7 @@ func (m *Manager) lock() func() {
 
 func (m *Manager) codexModel() string {
 	if m.CodexModel == "" {
-		return "gpt-5.6-sol"
+		return "gpt-6.1-sol"
 	}
 	return m.CodexModel
 }

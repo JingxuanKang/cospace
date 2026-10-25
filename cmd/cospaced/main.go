@@ -512,14 +512,14 @@ func (ti *transportInviter) Peek(code string) (string, string, time.Time, error)
 // credPingArgv is the cheapest thing each vendor CLI can do; the point is the
 // side effect (the CLI renews its own credential file), not the answer.
 // The codex backend rejects model_reasoning_effort="minimal" outright, so
-// "low" on the cheapest slug it accepts (gpt-5.6-luna); grok subscriptions
+// "low" on the cheapest slug it accepts (gpt-6-luna); grok subscriptions
 // offer no model cheaper than the default, so it stays unpinned.
 func credPingArgv(provider string) []string {
 	switch provider {
 	case "anthropic":
 		return []string{"claude", "--model", "haiku", "-p", "reply with exactly: ok"}
 	case "openai":
-		return []string{"codex", "exec", "--skip-git-repo-check", "-m", "gpt-5.6-luna", "-c", `model_reasoning_effort="low"`, "reply with exactly: ok"}
+		return []string{"codex", "exec", "--skip-git-repo-check", "-m", "gpt-6-luna", "-c", `model_reasoning_effort="low"`, "reply with exactly: ok"}
 	case "xai":
 		return []string{"grok", "--disable-web-search", "-p", "reply with exactly: ok"}
 	}
@@ -1397,7 +1397,7 @@ func defaultConfig() config {
 	}
 	cfg := config{
 		image:      defaultImage,
-		codexModel: "gpt-5.6-sol",
+		codexModel: "gpt-6.1-sol",
 		runtime:    defaultRuntime(),
 	}
 	if runtime.GOOS == "darwin" {
@@ -1437,7 +1437,7 @@ func addGlobalFlags(fs *flag.FlagSet, cfg *config) {
 	fs.StringVar(&cfg.runtime, "runtime", cfg.runtime, "container engine: apple (macOS) or docker (Linux)")
 	fs.StringVar(&cfg.gatewayURL, "gateway-url", cfg.gatewayURL, "gateway URL visible inside spaces")
 	fs.StringVar(&cfg.codexModel, "codex-model", cfg.codexModel, "model name codex uses in spaces")
-	fs.StringVar(&cfg.claudeModel, "claude-model", cfg.claudeModel, "default claude model in spaces, e.g. claude-fable-5[1m] (empty = claude's own default)")
+	fs.StringVar(&cfg.claudeModel, "claude-model", cfg.claudeModel, "default claude model in spaces, e.g. claude-fable-5-1[1m] (empty = claude's own default)")
 }
 
 func newFlagSet(name string) *flag.FlagSet {

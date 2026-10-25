@@ -127,7 +127,7 @@ func TestCacheTokensAreBilled(t *testing.T) {
 		t.Fatalf("cost %.6f want %.6f", rec.cost, want)
 	}
 	// OpenAI reports cached tokens as a subset of input.
-	in, _, cost := billTokens("gpt-5.6-sol", "openai", 1000, 10, 0, 0, 900)
+	in, _, cost := billTokens("gpt-6.1-sol", "openai", 1000, 10, 0, 0, 900)
 	wantOA := 100*1.25e-6 + 900*1.25e-6*0.1 + 10*10e-6
 	if in != 1000 || cost < wantOA*0.999 || cost > wantOA*1.001 {
 		t.Fatalf("openai cached: in=%d cost=%.8f want %.8f", in, cost, wantOA)
@@ -147,7 +147,7 @@ func (c *costRec) RecordCost(_, _, _ string, in, out int, cost float64) {
 // Streamed chat completions get stream_options.include_usage so they carry a
 // usage block to meter.
 func TestStreamedChatCompletionsRequestUsage(t *testing.T) {
-	r := httptest.NewRequest("POST", "/openai/chat/completions", strings.NewReader(`{"model":"gpt-5.6-sol","stream":true,"messages":[]}`))
+	r := httptest.NewRequest("POST", "/openai/chat/completions", strings.NewReader(`{"model":"gpt-6.1-sol","stream":true,"messages":[]}`))
 	out, err := prepareRequest(r, "openai", "official", true)
 	if err != nil {
 		t.Fatal(err)

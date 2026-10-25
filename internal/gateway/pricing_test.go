@@ -16,7 +16,7 @@ func TestPriceForByModel(t *testing.T) {
 		{"claude-3-5-sonnet-latest", "anthropic", priceSonnet},
 		{"claude-haiku-4-5", "anthropic", priceHaiku},
 		{"grok-4", "xai", priceGrok},
-		{"gpt-5.6-sol", "openai", priceGPT5},
+		{"gpt-6.1-sol", "openai", priceGPT5},
 		{"gpt5-codex", "openai", priceGPT5},
 		{"o3-mini", "openai", priceGPT5},
 		// empty model → provider default

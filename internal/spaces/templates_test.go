@@ -85,8 +85,8 @@ func TestCreateWithOptions(t *testing.T) {
 }
 
 func TestClaudeSettingsJSON(t *testing.T) {
-	full := claudeSettingsJSON(true, "claude-fable-5[1m]")
-	for _, want := range []string{`"statusLine"`, "statusline-command.sh", `"model":"claude-fable-5[1m]"`, `"defaultMode":"bypassPermissions"`} {
+	full := claudeSettingsJSON(true, "claude-fable-5-1[1m]")
+	for _, want := range []string{`"statusLine"`, "statusline-command.sh", `"model":"claude-fable-5-1[1m]"`, `"defaultMode":"bypassPermissions"`} {
 		if !strings.Contains(full, want) {
 			t.Fatalf("settings missing %q: %s", want, full)
 		}

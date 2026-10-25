@@ -1222,11 +1222,11 @@
     function renderExecution(space) {
       const options = state.codexOptions;
       const route = space.codex_route || "official";
-      const model = space.codex_model || "gpt-5.6-sol";
+      const model = space.codex_model || "gpt-6.1-sol";
       const online = space.network_mode !== "gateway-only";
       const busy = !!state.busy || !!space.network_upgrading;
       const models = options.models.includes(model) ? options.models : options.models.concat(model);
-      const modelLabel = m => ({"gpt-6-astra":"GPT-6 Astra", "gpt-5.6-sol":"GPT-5.6 Sol", "gpt-5.6-terra":"GPT-5.6 Terra", "gpt-5.6-luna":"GPT-5.6 Luna"})[m] || m;
+      const modelLabel = m => ({"gpt-6.1-sol":"GPT-6.1 Sol", "gpt-6-astra":"GPT-6 Astra", "gpt-6-luna":"GPT-6 Luna"})[m] || m;
       return `<section class="card resources-card ${animationClass(4)}" aria-label="${t("Model and network settings")}">
         <span class="card-heading">${t("Model &amp; network")}</span>
         <label class="field-group"><span class="label">${t("Codex account")}</span>

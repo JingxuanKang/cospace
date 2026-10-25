@@ -54,7 +54,7 @@ async function route(r) {
   if (p === '/api/spaces') return r.fulfill(json(spaces));
   if (p === '/api/sponsor') return r.fulfill(json({ anthropic: { enabled: true, cred_present: true }, openai: { enabled: true, cred_present: true }, xai: { enabled: true, cred_present: true } }));
   if (p === '/api/templates') return r.fulfill(json([]));
-  if (p === '/api/codex-options') return r.fulfill(json({ models: ['gpt-6-astra', 'gpt-5.6-sol'], routes: [{ id: 'official', label: 'Official account', configured: true }] }));
+  if (p === '/api/codex-options') return r.fulfill(json({ models: ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'], routes: [{ id: 'official', label: 'Official account', configured: true }] }));
   if (p.endsWith('/usage')) return r.fulfill(json(spaces.includes(shopfrontLive) ? usage : []));
   if (p.endsWith('/invites')) return r.fulfill(json(invite));
   return r.fulfill(json({}));

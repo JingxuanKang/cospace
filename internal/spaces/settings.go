@@ -10,7 +10,7 @@ import (
 
 func CodexRoutes() []string { return []string{"official", "sub2api-i", "sub2api-ii"} }
 func CodexModels() []string {
-	return []string{"gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"}
+	return []string{"gpt-6.1-sol", "gpt-6-astra", "gpt-6-luna"}
 }
 
 func contains(values []string, s string) bool {

@@ -22,7 +22,7 @@ func TestTraversalNamesAre400(t *testing.T) {
 		"/api/spaces/acme%2Fworkspace%2Fevil/codex",
 		"/api/spaces/acme%2Fworkspace%2Fevil/network",
 	} {
-		req := httptest.NewRequest("PUT", path, strings.NewReader(`{"enabled":true,"usd_limit":1,"providers":[],"route":"official","model":"gpt-5.6-sol","internet_access":true}`))
+		req := httptest.NewRequest("PUT", path, strings.NewReader(`{"enabled":true,"usd_limit":1,"providers":[],"route":"official","model":"gpt-6.1-sol","internet_access":true}`))
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, req)
 		if w.Code != 400 {
